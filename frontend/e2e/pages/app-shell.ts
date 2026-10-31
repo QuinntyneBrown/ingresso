@@ -13,6 +13,9 @@ export class AppShell {
   readonly avatar: Locator;
   readonly footerNote: Locator;
   readonly brandGuide: Locator;
+  readonly skipLink: Locator;
+  readonly main: Locator;
+  readonly toastRegion: Locator;
 
   constructor(private readonly page: Page) {
     const header = page.getByRole('banner');
@@ -28,11 +31,19 @@ export class AppShell {
     const footer = page.getByRole('contentinfo');
     this.footerNote = footer.getByText('Apps open in a new tab.');
     this.brandGuide = footer.getByRole('link', { name: 'Brand guide' });
+    this.skipLink = page.getByRole('link', { name: 'Skip to content' });
+    this.main = page.getByRole('main');
+    this.toastRegion = page.locator('.toast-region');
   }
 
   /** The toast with this title. */
   toast(title: string): Locator {
     return this.page.locator('ig-toast').filter({ hasText: title });
+  }
+
+  /** Moves focus along the tab order. */
+  async tab(times = 1): Promise<void> {
+    for (let i = 0; i < times; i++) await this.page.keyboard.press('Tab');
   }
 
   async pressSlash(): Promise<void> {

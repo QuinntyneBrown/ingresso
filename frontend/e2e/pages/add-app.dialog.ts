@@ -24,7 +24,7 @@ export class AddAppDialog {
     this.dialog = page.getByRole('dialog', { name: 'Add an app' });
     this.name = this.dialog.getByLabel('Name', { exact: true });
     this.address = this.dialog.getByLabel('Address', { exact: true });
-    this.description = this.dialog.getByLabel('Description', { exact: true });
+    this.description = this.dialog.getByLabel(/^Description/);
     this.initials = this.dialog.getByLabel('Initials', { exact: true });
     this.submit = this.dialog.getByRole('button', { name: 'Add app' });
     this.cancel = this.dialog.getByRole('button', { name: 'Cancel' });
@@ -36,7 +36,7 @@ export class AddAppDialog {
     await this.name.fill(details.name);
     await this.address.fill(details.url);
     if (details.description) await this.description.fill(details.description);
-    if (details.category) await this.dialog.getByLabel('Category', { exact: true }).fill(details.category);
+    if (details.category) await this.dialog.getByLabel(/^Category/).fill(details.category);
     if (details.color) await this.dialog.getByLabel(details.color, { exact: true }).check();
   }
 
