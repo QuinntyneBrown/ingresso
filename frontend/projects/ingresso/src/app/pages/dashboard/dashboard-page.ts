@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Tile } from 'api';
 import {
@@ -156,6 +156,8 @@ export class DashboardPage {
     effect(() => {
       if (!this.wide()) this.store.editing.set(false);
     });
+    // Edit mode holds no unsaved work, and the dashboard always opens in normal mode (L2-020).
+    inject(DestroyRef).onDestroy(() => this.store.editing.set(false));
   }
   protected readonly greeting = computed(() => greetingFor(new Date().getHours()));
   protected readonly firstName = computed(() => this.session.user()?.name.split(' ')[0] ?? '');

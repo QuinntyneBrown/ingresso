@@ -36,6 +36,29 @@ test.describe('Dashboard, visually', () => {
     await expect(page).toHaveScreenshot('phone.png');
   });
 
+  test('editing', async ({ page }) => {
+    const dashboard = await show(page, 1280, 1000);
+    await dashboard.enterEditLayout();
+    await expect(page).toHaveScreenshot('editing.png');
+  });
+
+  test('editing, drop refused', async ({ page }) => {
+    const dashboard = await show(page, 1280, 1000);
+    await dashboard.enterEditLayout();
+    const [first, second] = (await dashboard.grid.layout()).map((t) => t.name);
+    const a = await dashboard.grid.placement(first);
+    const b = await dashboard.grid.placement(second);
+    await dashboard.grid.holdDrag(second, a.x - b.x + 1, a.y - b.y);
+    await expect.poll(() => dashboard.grid.shadowState()).toBe('refused');
+    await expect(page).toHaveScreenshot('editing-refused.png');
+    await dashboard.grid.drop();
+  });
+
+  test('editing is unavailable on a narrow window', async ({ page }) => {
+    await show(page, 900, 1000);
+    await expect(page).toHaveScreenshot('editing-narrow.png');
+  });
+
   test('search results', async ({ page }) => {
     const dashboard = await show(page);
     await dashboard.shell.pressSlash();

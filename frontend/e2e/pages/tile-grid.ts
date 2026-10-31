@@ -112,4 +112,53 @@ export class TileGrid {
     await mouse.move(start.x + columns * pitch.column, start.y + rows * pitch.row, { steps: 20 });
     await mouse.up();
   }
+
+  /** Starts dragging the named tile by whole cells and holds it there, to look at the shadow before dropping. */
+  async holdDrag(name: string, columns: number, rows: number): Promise<void> {
+    await this.item(name).scrollIntoViewIfNeeded();
+    const box = await this.item(name).boundingBox();
+    if (!box) throw new Error(`${name} must be visible to drag`);
+    const pitch = await this.pitch();
+    const start = { x: box.x + 24, y: box.y + 24 };
+    const mouse = this.page.mouse;
+    await mouse.move(start.x, start.y);
+    await mouse.down();
+    await mouse.move(start.x + 8, start.y + 8, { steps: 4 });
+    await mouse.move(start.x + columns * pitch.column, start.y + rows * pitch.row, { steps: 20 });
+  }
+
+  async drop(): Promise<void> {
+    await this.page.mouse.up();
+  }
+
+  /** Whether the drag shadow is showing, and whether it says the drop is allowed. */
+  async shadowState(): Promise<'none' | 'valid' | 'refused'> {
+    if ((await this.shadow.count()) === 0) return 'none';
+    return (await this.shadow.getAttribute('data-valid')) === 'true' ? 'valid' : 'refused';
+  }
+
+  /** The key instructions a screen reader reads for the named tile. */
+  async instructions(name: string): Promise<string> {
+    return this.item(name).evaluate((el) => {
+      const id = el.getAttribute('aria-describedby');
+      return (id ? document.getElementById(id)?.textContent : '')?.trim() ?? '';
+    });
+  }
+
+  /** Presses a key on the named tile and returns how many milliseconds passed before the tile's cell changed. */
+  async millisecondsToMove(name: string, key: string): Promise<number> {
+    await this.item(name).focus();
+    const elapsed = this.item(name).evaluate(
+      (el) =>
+        new Promise<number>((resolve) => {
+          const started = performance.now();
+          new MutationObserver((_records, observer) => {
+            observer.disconnect();
+            resolve(performance.now() - started);
+          }).observe(el, { attributes: true, attributeFilter: ['style'] });
+        }),
+    );
+    await this.page.keyboard.press(key);
+    return elapsed;
+  }
 }

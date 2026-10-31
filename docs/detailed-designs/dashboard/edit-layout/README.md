@@ -89,3 +89,11 @@ A confirmation explains that positions and sizes change and nothing is deleted. 
 Below 1024 px the grid collapses and refuses edit mode. Edit mode in progress ends when the window narrows.
 
 ![Sequence diagram: edit mode on a narrow window](diagrams/sequence-narrow.png)
+
+## Verified in journey 08
+
+- Edit mode is announced by the layout bar's polite status; each tile gets a drag handle, a resize handle and an Edit action. Delete is chosen inside the Edit dialog, so `L2-015` now says so.
+- The dashboard leaves edit mode when it is destroyed, so leaving and coming back opens it in normal mode (`L2-020`); narrowing below 1024 px also ends it (`L2-054`).
+- A refused pointer drop shows a refusal shadow, returns the tile and saves nothing; Escape cancels a drag; a failed save restores the layout and toasts an error (`L2-016`).
+- A move is drawn within 100 ms, before the save returns (`L2-041` 1). The 60 fps drag with 200 tiles is checked with the perf-test `TileGrid` scenario, not in CI.
+- Acceptance tests: `edit-layout.spec.ts`, `arrange-tiles.spec.ts`, `dashboard.visual.spec.ts` and the layout cases in `TilesApiTests`.
