@@ -60,3 +60,10 @@ The controller sends `UpdateTileCommand`. `ValidationBehavior` runs the validato
 The dialog opens with current values. A save replaces the fields and keeps the tile's position. Cancel or Escape closes the dialog without a request.
 
 ![Sequence diagram: edit a tile](diagrams/sequence-edit.png)
+
+## Verified in journey 05
+
+- Edit opens with the current name, address, description, category and colour; saving updates the tile in place, keeps its position and span, stores the address unchanged and shows a "Changes saved" toast (`L2-006`, `L2-003`).
+- Invalid changes keep the dialog open with linked field errors and store nothing (`L2-002`); a failed save shows its alert, scrolled into view on short screens.
+- Cancel and Escape change nothing and return focus to the Edit button.
+- Acceptance tests: `edit-app.spec.ts`, `edit-app.visual.spec.ts` and `TilesApiTests`.

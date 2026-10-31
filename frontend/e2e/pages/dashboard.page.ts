@@ -120,6 +120,11 @@ export class DashboardPage {
     return popup;
   }
 
+  /** The Edit button a tile offers in edit-layout mode. */
+  editButton(name: string): Locator {
+    return this.tile(name).getByRole('button', { name: `Edit ${name}` });
+  }
+
   async editApp(name: string): Promise<void> {
     await this.tile(name)
       .getByRole('button', { name: `Edit ${name}` })
