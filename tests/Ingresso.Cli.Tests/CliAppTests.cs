@@ -43,9 +43,41 @@ public sealed class CliAppTests : IDisposable
     {
         var output = new StringWriter();
 
-        Assert.Equal(0, await CliApp.RunAsync(["reset"], services, output));
+        Assert.Equal(0, await CliApp.RunAsync(["reset", "--confirm"], services, output));
 
         Assert.True(await TileCount() > 0);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-049
+    // Description: Reset deletes data, so it refuses to run without the explicit confirmation flag.
+    [Fact]
+    public async Task Reset_without_the_confirmation_flag_changes_nothing_and_fails()
+    {
+        var output = new StringWriter();
+        await CliApp.RunAsync(["seed"], services, output);
+        var before = await TileCount();
+
+        var code = await CliApp.RunAsync(["reset"], services, output);
+
+        Assert.Equal(1, code);
+        Assert.Contains("--confirm", output.ToString());
+        Assert.Equal(before, await TileCount());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-049
+    // Description: A failing command exits non-zero with a message instead of throwing.
+    [Fact]
+    public async Task A_failing_command_exits_non_zero_with_a_message()
+    {
+        var output = new StringWriter();
+        var broken = new ServiceCollection().AddLogging().BuildServiceProvider();
+
+        var code = await CliApp.RunAsync(["migrate"], broken, output);
+
+        Assert.Equal(1, code);
+        Assert.Contains("failed", output.ToString(), StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
