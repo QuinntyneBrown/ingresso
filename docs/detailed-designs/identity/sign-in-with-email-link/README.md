@@ -23,12 +23,18 @@ The slice runs from the web app to the database and out through the email provid
 - **`RequestSignInLinkCommandHandler`** — enforces the per-address limit, issues a token through `ISecurityTokenService`, and enqueues `SendEmail` on `IOutbox`.
 - **`SecurityTokenService`** — creates the random token, stores its hash in `SecurityToken`, and hashes presented tokens.
 - **`OutboxProcessor` / `SendEmailHandler`** — deliver queued email through `IEmailSender` after commit.
-- **`AuthController.Redeem`** — `GET /auth/redeem?token=`. It sends `RedeemSignInLinkCommand`, signs in through `SessionSignIn`, and redirects. An unusable token redirects to `/sign-in?link=expired`.
+- **`AuthController.Redeem`** — `GET /auth/redeem?token=`. It sends `RedeemSignInLinkCommand`, signs in through `SessionSignIn`, and redirects. An unusable token redirects to `/sign-in?link=used`, `link=expired` or `link=invalid` (unknown or tampered, which says nothing more).
 - **`RedeemSignInLinkCommandHandler`** — marks the token used, creates the `User` on first sign-in, and starts a `Session`.
 
-The current source differs from the requirements in these points. Each is open work for the slice.
+Decisions made while building the slice:
 
-- `L2-027` limits 5 requests per address and 20 per IP in 15 minutes. The source uses 5 per address per hour (`HourlyLimitPerEmail`) and 20 per IP per hour (`SignInRateLimit`).
+- `L2-027` now states the limits as 5 per address and 20 per IP in an hour, which is what the source enforces (`HourlyLimitPerEmail`, `SignInRateLimit`).
+- `RedeemSignInLinkCommand` returns a `RedeemResult` with a `LinkFailure` (`Invalid`, `Used`, `Expired`), so the page can tell a used link from an expired one while a tampered one reveals nothing.
+- The dev mailbox and the test sign-in seam exist only in Development and the test host; `DevMailbox:Expose` and `Auth:TestSignIn:Enabled` do nothing elsewhere.
+- The sign-in screen (`pages/sign-in`) sits outside the shell and is built from `Card`, `Logo`, `FormField`, `Input`, `ErrorSummary`, `Button` and `Alert`.
+
+Still open:
+
 - `SignInRateLimit` still registers a `feed-creation` policy carried over from the source template. No ingresso endpoint uses it.
 
 ## Requirements
@@ -74,6 +80,6 @@ The response is the same for known and unknown addresses. Only the token's hash 
 
 ### Behaviour — redeem a sign-in link
 
-The redeem step is one unit of work, so a token cannot start two sessions. A used, expired or tampered token gets one generic expired message.
+The redeem step is one unit of work, so a token cannot start two sessions. A used or expired token gets its own message on the sign-in page; a tampered or unknown one gets only "That link didn't work".
 
 ![Sequence diagram: redeem a sign-in link](diagrams/sequence-redeem-link.png)
