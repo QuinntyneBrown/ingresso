@@ -24,8 +24,8 @@ public sealed record RedeemResult(SignedIn? SignedIn, LinkFailure? Failure);
 public sealed record RedeemSignInLinkCommand(string Token) : IRequest<RedeemResult>;
 
 /// <summary>
-/// Marks the token used, finds or creates the user, and starts a session, all in one unit of work, so a token can
-/// start at most one session.
+/// Marks the token used, finds or creates the user, verifies their address and starts a session, all in one unit of
+/// work, so a token can start at most one session.
 /// </summary>
 public sealed class RedeemSignInLinkCommandHandler(IAppDbContext db, IClock clock, ISecurityTokenService tokens)
     : IRequestHandler<RedeemSignInLinkCommand, RedeemResult>
@@ -56,6 +56,12 @@ public sealed class RedeemSignInLinkCommandHandler(IAppDbContext db, IClock cloc
         {
             user = User.CreateMember(token.Email, now);
             db.Users.Add(user);
+        }
+
+        // Opening the link proves the person controls this inbox, so the address is verified (L2-029).
+        if (!await db.VerifiedEmails.AnyAsync(v => v.NormalizedEmail == token.Email, cancellationToken))
+        {
+            db.VerifiedEmails.Add(new VerifiedEmail { NormalizedEmail = token.Email, VerifiedAtUtc = now });
         }
 
         var session = Session.Start(user.Id, now);
