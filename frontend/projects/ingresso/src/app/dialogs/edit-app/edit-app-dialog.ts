@@ -35,6 +35,11 @@ export type EditAppOutcome = { kind: 'saved'; tile: Tile } | { kind: 'deleted'; 
             >Try again in a moment.</ig-alert
           >
         }
+        @if (deleteFailed()) {
+          <ig-alert kind="danger" announce="alert" title="We couldn't delete {{ data.tile.name }}"
+            >Nothing was removed. Try again.</ig-alert
+          >
+        }
         @if (confirming()) {
           <ig-alert kind="warning" announce="alert" title="Delete {{ data.tile.name }}?">
             The tile is removed from your dashboard. The app itself is not touched.
@@ -96,6 +101,7 @@ export class EditAppDialog {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
   protected readonly confirming = signal(false);
+  protected readonly deleteFailed = signal(false);
   protected readonly fieldErrors = signal<Record<string, string>>({});
   protected readonly initial = computed<Partial<TileInput>>(() => this.data.tile);
 
@@ -138,7 +144,8 @@ export class EditAppDialog {
       error: () => {
         this.stop();
         this.confirming.set(false);
-        this.failed.set(true);
+        this.deleteFailed.set(true);
+        revealAlert(this.host, this.injector);
       },
     });
   }
@@ -146,6 +153,7 @@ export class EditAppDialog {
   private start(): void {
     this.busy.set(true);
     this.failed.set(false);
+    this.deleteFailed.set(false);
     this.fieldErrors.set({});
     this.ref.disableClose = true;
   }

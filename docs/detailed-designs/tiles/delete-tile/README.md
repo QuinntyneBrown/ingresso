@@ -60,3 +60,11 @@ The controller sends `DeleteTileCommand`. The handler removes the owner's tile.
 The confirmation names the tile. Only a confirmed deletion reaches the API, and success shows a toast.
 
 ![Sequence diagram: delete a tile](diagrams/sequence-delete.png)
+
+## Verified in journey 06
+
+- Delete is reached from the Edit dialog, asks first and names the tile; confirming returns `204`, removes the tile, shows a toast, and every other tile keeps its position and span; keeping the app changes nothing (`L2-007`).
+- A failed delete keeps the tile and says "We couldn't delete {name}. Nothing was removed." (the alert had reused the save wording).
+- Another user's tile returns `404` (`L2-032`).
+- Tests that add tiles remove them afterwards through `DashboardPage.removeApp`.
+- Acceptance tests: `delete-app.spec.ts`, `delete-app.visual.spec.ts` and `TilesApiTests`.
