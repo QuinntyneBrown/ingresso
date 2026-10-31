@@ -9,8 +9,11 @@ using Ingresso.Infrastructure.Persistence;
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.AddJsonConsole(options => options.IncludeScopes = true);
 
-var testSignInEnabled = builder.Configuration.GetValue<bool>("Auth:TestSignIn:Enabled");
-var devMailboxExposed = builder.Configuration.GetValue<bool>("DevMailbox:Expose");
+// The test sign-in seam and the dev mailbox exist only in Development and the test host, whatever the settings
+// say, so a stray production setting cannot expose them (L2-027).
+var devOnly = builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing");
+var testSignInEnabled = devOnly && builder.Configuration.GetValue<bool>("Auth:TestSignIn:Enabled");
+var devMailboxExposed = devOnly && builder.Configuration.GetValue<bool>("DevMailbox:Expose");
 builder.Services.AddControllers(options => options.Conventions.Add(new ConditionalControllersConvention(testSignInEnabled, devMailboxExposed)));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

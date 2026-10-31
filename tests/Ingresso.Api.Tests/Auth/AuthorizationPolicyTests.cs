@@ -43,6 +43,9 @@ public sealed class AuthorizationPolicyTests(AuthorizationPolicyTests.Factory fa
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    // Acceptance Test
+    // Traces to: L2-030
+    // Description: The session cookie is HttpOnly, Secure and SameSite=Lax.
     [Fact]
     public async Task Session_cookie_is_secure_httponly_and_lax()
     {

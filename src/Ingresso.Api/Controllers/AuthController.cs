@@ -20,15 +20,17 @@ public sealed class AuthController(ISender sender, SessionSignIn sessions) : Con
         return Accepted();
     }
 
-    /// <summary>Opens a sign-in link from the email: starts a session and redirects (L2-047).</summary>
+    /// <summary>Opens a sign-in link from the email: starts a session and redirects, or sends the browser to /sign-in?link=used|expired|invalid (L2-028).</summary>
     [HttpGet("auth/redeem")]
     [AllowAnonymous]
     public async Task<IActionResult> Redeem([FromQuery] string? token, CancellationToken cancellationToken)
     {
-        var signedIn = string.IsNullOrWhiteSpace(token) ? null : await sender.Send(new RedeemSignInLinkCommand(token), cancellationToken);
-        if (signedIn is null)
+        var result = string.IsNullOrWhiteSpace(token)
+            ? new RedeemResult(null, LinkFailure.Invalid)
+            : await sender.Send(new RedeemSignInLinkCommand(token), cancellationToken);
+        if (result.SignedIn is not { } signedIn)
         {
-            return Redirect("/sign-in?link=expired");
+            return Redirect($"/sign-in?link={result.Failure.ToString()!.ToLowerInvariant()}");
         }
 
         await sessions.SignInAsync(HttpContext, signedIn);

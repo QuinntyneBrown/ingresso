@@ -7,6 +7,9 @@ namespace Ingresso.Api.Tests.Identity;
 /// <summary>L2-082: sign-in links are limited to 5 an hour per email and 20 an hour per IP address.</summary>
 public sealed class SignInRateLimitTests
 {
+    // Acceptance Test
+    // Traces to: L2-027
+    // Description: The sixth request for one address in an hour gets 429 with Retry-After.
     [Fact]
     public async Task The_sixth_request_in_an_hour_for_one_address_is_429_and_sends_nothing()
     {
@@ -23,6 +26,9 @@ public sealed class SignInRateLimitTests
         Assert.NotNull(response.Headers.RetryAfter);
     }
 
+    // Acceptance Test
+    // Traces to: L2-027
+    // Description: Requests beyond the per-IP limit get 429 with Retry-After.
     [Fact]
     public async Task Requests_beyond_the_per_address_limit_of_one_client_are_429()
     {
