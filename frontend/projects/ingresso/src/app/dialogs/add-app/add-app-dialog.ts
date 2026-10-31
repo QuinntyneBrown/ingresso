@@ -5,6 +5,9 @@ import { Alert, Button, DialogShell, ToastService } from 'components';
 import { TilesStore } from '../../state/tiles-store';
 import { AppForm, APP_FORM_ID } from '../app-form/app-form';
 
+const sameAddress = (a: string, b: string): boolean =>
+  a.trim().replace(/\/+$/, '').toLowerCase() === b.trim().replace(/\/+$/, '').toLowerCase();
+
 export const ADD_APP_TITLE_ID = 'ig-add-app-title';
 
 /** Optional starting values, such as an app picked from the directory. */
@@ -24,6 +27,11 @@ export interface AddAppDialogData {
             Check the details and try again.
           </ig-alert>
         }
+        @if (duplicate()) {
+          <ig-alert kind="warning" announce="alert" title="You already added this address">
+            {{ duplicate()!.name }} is already on your dashboard. Add it again, or cancel.
+          </ig-alert>
+        }
         <ig-app-form
           [value]="data?.prefill ?? null"
           [errors]="fieldErrors()"
@@ -33,7 +41,7 @@ export interface AddAppDialogData {
       </div>
       <button slot="footer" ig-button type="button" [disabled]="busy()" (click)="ref.close()">Cancel</button>
       <button slot="footer" ig-button appearance="primary" type="submit" [attr.form]="formId" [busy]="busy()">
-        Add app
+        {{ duplicate() ? 'Add anyway' : 'Add app' }}
       </button>
     </ig-dialog-shell>
   `,
@@ -55,9 +63,19 @@ export class AddAppDialog {
   protected readonly formId = APP_FORM_ID;
   protected readonly busy = signal(false);
   protected readonly failed = signal(false);
+  /** The existing tile that shares the address being added, until the person continues or cancels. */
+  protected readonly duplicate = signal<Tile | null>(null);
+  private warnedAbout: string | null = null;
   protected readonly fieldErrors = signal<Record<string, string>>({});
 
   protected add(input: TileInput): void {
+    const same = this.store.tiles().find((t) => sameAddress(t.url, input.url));
+    if (same && this.warnedAbout !== input.url) {
+      this.warnedAbout = input.url;
+      this.duplicate.set(same);
+      return;
+    }
+    if (!same) this.duplicate.set(null);
     this.busy.set(true);
     this.failed.set(false);
     this.fieldErrors.set({});

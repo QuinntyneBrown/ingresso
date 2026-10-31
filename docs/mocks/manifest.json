@@ -162,7 +162,7 @@
     {
       "id": "offline",
       "kind": "page",
-      "title": "You\u2019re offline",
+      "title": "You’re offline",
       "states": [
         "default"
       ],
@@ -181,9 +181,11 @@
         "default",
         "busy",
         "invalid",
-        "failed"
+        "failed",
+        "duplicate"
       ],
-      "opens_from": "dashboard"
+      "opens_from": "dashboard",
+      "requirements": []
     },
     {
       "id": "edit-app",

@@ -5,6 +5,7 @@ import {
   effect,
   ElementRef,
   inject,
+  Injector,
   input,
   output,
 } from '@angular/core';
@@ -138,6 +139,7 @@ const toUrl = (value: string): string => {
 })
 export class AppForm {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
 
   /** Values to start from; absent for a new app. */
   readonly value = input<Partial<TileInput> | null>(null);
@@ -196,7 +198,10 @@ export class AppForm {
     this.attempted = true;
     this.form.markAllAsTouched();
     if (this.form.invalid) {
-      this.host.nativeElement.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+      afterNextRender(
+        () => this.host.nativeElement.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(),
+        { injector: this.injector },
+      );
       return;
     }
     const v = this.form.getRawValue();

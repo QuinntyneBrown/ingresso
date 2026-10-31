@@ -51,13 +51,13 @@ Legend: ✅ mock exists · ➖ not applicable (reason in manifest) · ❌ missin
 
 ### Dialogs
 
-| Screen | default | busy | invalid | failed | Requirements |
-|---|---|---|---|---|---|
-| Add app (`add-app`) | [✅](dialogs/add-app/default.html) | [✅](dialogs/add-app/busy.html) | [✅](dialogs/add-app/invalid.html) | [✅](dialogs/add-app/failed.html) |  |
-| Edit app (`edit-app`) | [✅](dialogs/edit-app/default.html) | [✅](dialogs/edit-app/busy.html) | [✅](dialogs/edit-app/invalid.html) | [✅](dialogs/edit-app/failed.html) |  |
-| Delete app (`delete-app`) | [✅](dialogs/delete-app/default.html) | [✅](dialogs/delete-app/busy.html) | ➖ | [✅](dialogs/delete-app/failed.html) |  |
-| Reset layout (`reset-layout`) | [✅](dialogs/reset-layout/default.html) | [✅](dialogs/reset-layout/busy.html) | ➖ |  |  |
-| Sign out (`sign-out`) | [✅](dialogs/sign-out/default.html) | [✅](dialogs/sign-out/busy.html) | ➖ |  |  |
+| Screen | default | busy | invalid | failed | duplicate | Requirements |
+|---|---|---|---|---|---|---|
+| Add app (`add-app`) | [✅](dialogs/add-app/default.html) | [✅](dialogs/add-app/busy.html) | [✅](dialogs/add-app/invalid.html) | [✅](dialogs/add-app/failed.html) | [✅](dialogs/add-app/duplicate.html) |  |
+| Edit app (`edit-app`) | [✅](dialogs/edit-app/default.html) | [✅](dialogs/edit-app/busy.html) | [✅](dialogs/edit-app/invalid.html) | [✅](dialogs/edit-app/failed.html) |  |  |
+| Delete app (`delete-app`) | [✅](dialogs/delete-app/default.html) | [✅](dialogs/delete-app/busy.html) | ➖ | [✅](dialogs/delete-app/failed.html) |  |  |
+| Reset layout (`reset-layout`) | [✅](dialogs/reset-layout/default.html) | [✅](dialogs/reset-layout/busy.html) | ➖ |  |  |  |
+| Sign out (`sign-out`) | [✅](dialogs/sign-out/default.html) | [✅](dialogs/sign-out/busy.html) | ➖ |  |  |  |
 
 ### Notifications
 
