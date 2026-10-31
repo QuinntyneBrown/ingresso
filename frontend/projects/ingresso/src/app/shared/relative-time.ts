@@ -8,16 +8,24 @@ const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ['minute', 60],
 ];
 
-/** "Opened 8 minutes ago", or "Not opened yet" when the app was never opened. */
+/**
+ * "Opened 8 minutes ago", or "Never opened". A time ahead of this browser's clock (the server's clock can run
+ * a little ahead) is never shown as the future: it reads "Opened just now".
+ */
 export function openedLabel(lastOpenedAt: string | null | undefined, now = Date.now()): string {
-  if (!lastOpenedAt) return 'Not opened yet';
-  const seconds = Math.round((new Date(lastOpenedAt).getTime() - now) / 1000);
+  if (!lastOpenedAt) return 'Never opened';
+  const seconds = Math.min(0, Math.round((new Date(lastOpenedAt).getTime() - now) / 1000));
   const abs = Math.abs(seconds);
-  if (abs < 60) return 'Opened just now';
   for (const [unit, size] of UNITS) {
     if (abs >= size) return `Opened ${formatter.format(Math.round(seconds / size), unit)}`;
   }
   return 'Opened just now';
+}
+
+/** The exact time of the last open, such as "Saturday, October 31, 2026 at 9:50 PM"; empty when never opened. */
+export function openedTitle(lastOpenedAt: string | null | undefined): string | null {
+  if (!lastOpenedAt) return null;
+  return new Date(lastOpenedAt).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' });
 }
 
 /** "Good morning", "Good afternoon" or "Good evening" for a local hour. */

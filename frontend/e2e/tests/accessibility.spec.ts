@@ -9,6 +9,7 @@ test.describe('Keyboard and focus', () => {
   test('the skip link is the first stop and jumps to the main content', async ({ page }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.open();
+    await expect(dashboard.tiles.first()).toBeVisible();
 
     await dashboard.shell.tab();
     await expect(dashboard.shell.skipLink).toBeFocused();

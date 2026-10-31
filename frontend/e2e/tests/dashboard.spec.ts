@@ -33,7 +33,7 @@ test.describe('Dashboard', () => {
     expect(await dashboard.smallTiles().count()).toBeGreaterThan(0);
     await expect(dashboard.tiles.first().locator('.tile--large')).toHaveCount(1);
     await expect(dashboard.largeTiles().first()).toContainText('Open');
-    await expect(dashboard.largeTiles().first()).toContainText(/Opened|Not opened yet/);
+    await expect(dashboard.largeTiles().first()).toContainText(/Opened|Never opened/);
   });
 
   // Acceptance Test

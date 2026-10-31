@@ -15,7 +15,7 @@ import {
   ToastService,
 } from 'components';
 import { packMatches } from '../../shared/pack-matches';
-import { greetingFor, openedLabel } from '../../shared/relative-time';
+import { greetingFor, openedLabel, openedTitle } from '../../shared/relative-time';
 import { AppDialogs } from '../../state/app-dialogs';
 import { SessionStore } from '../../state/session-store';
 import { TilesStore } from '../../state/tiles-store';
@@ -109,6 +109,7 @@ import { injectWideViewport } from '../../shared/wide-viewport';
                     [size]="tile.cols >= 4 && tile.rows >= 3 ? 'large' : 'small'"
                     [description]="tile.description ?? null"
                     [openedLabel]="label(tile)"
+                    [openedTitle]="title(tile)"
                     [editing]="store.editing()"
                     [highlighted]="tile.id === store.highlightedTile()?.id"
                     (opened)="store.markOpened(tile.id)"
@@ -176,6 +177,10 @@ export class DashboardPage {
 
   protected label(tile: Tile): string {
     return openedLabel(tile.lastOpenedAt);
+  }
+
+  protected title(tile: Tile): string | null {
+    return openedTitle(tile.lastOpenedAt);
   }
 
   protected add(event: Event): void {

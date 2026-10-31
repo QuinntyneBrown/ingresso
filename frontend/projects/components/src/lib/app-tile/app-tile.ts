@@ -25,7 +25,7 @@ import { Icon } from '../icon/icon';
           <p class="tile__description">{{ description() }}</p>
         }
         <div class="tile__foot">
-          <span class="tile__opened">{{ openedLabel() }}</span>
+          <span class="tile__opened" [attr.title]="openedTitle()">{{ openedLabel() }}</span>
           <span class="tile__open">Open <ig-icon name="external" size="sm" /></span>
         </div>
       }
@@ -61,6 +61,7 @@ import { Icon } from '../icon/icon';
           target="_blank"
           rel="noopener noreferrer"
           [attr.aria-current]="highlighted() ? 'true' : null"
+          [attr.aria-label]="accessibleName()"
           (click)="opened.emit()"
         >
           <ng-container *ngTemplateOutlet="body" />
@@ -79,14 +80,22 @@ export class AppTile {
   readonly color = input.required<string>();
   readonly size = input<'large' | 'small'>('small');
   readonly description = input<string | null>(null);
-  /** The footer text of a large tile, such as "Opened 8 minutes ago". */
-  readonly openedLabel = input('Not opened yet');
+  /** When the app was last opened, such as "Opened 8 minutes ago" or "Never opened": a large tile's footer, and part of every tile's accessible name. */
+  readonly openedLabel = input('Never opened');
+  /** The exact time of the last open, set as the title of the footer text. */
+  readonly openedTitle = input<string | null>(null);
   readonly editing = input(false, { transform: booleanAttribute });
   /** The match Enter will open in quick jump: an accent edge and `aria-current` on the link. */
   readonly highlighted = input(false, { transform: booleanAttribute });
 
   readonly opened = output<void>();
   readonly edit = output<void>();
+
+  /** The link's name: the app and when it was last opened, for large and small tiles alike. */
+  protected readonly accessibleName = computed(() => {
+    const label = this.openedLabel();
+    return `${this.name()}, ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
+  });
 
   protected readonly displayUrl = computed(() =>
     this.url()
