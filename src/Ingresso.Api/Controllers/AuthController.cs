@@ -1,4 +1,6 @@
 using MediatR;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -42,6 +44,20 @@ public sealed class AuthController(ISender sender, SessionSignIn sessions) : Con
     [Authorize]
     public async Task<ActionResult<CurrentUserDto>> Me(CancellationToken cancellationToken) =>
         await sender.Send(new GetCurrentUserQuery(), cancellationToken) is { } user ? user : Unauthorized();
+
+    /// <summary>Signs the current device out: revokes its server session and clears the cookie (L2-031).</summary>
+    [HttpPost("api/auth/sign-out")]
+    [Authorize]
+    public async Task<IActionResult> SignOutUser(CancellationToken cancellationToken)
+    {
+        if (Guid.TryParse(User.FindFirst(SessionSignIn.SessionIdClaim)?.Value, out var sessionId))
+        {
+            await sender.Send(new SignOutCommand(sessionId), cancellationToken);
+        }
+
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return NoContent();
+    }
 
     /// <summary>Redeems an email verification link and returns home with the outcome (L2-085).</summary>
     [HttpGet("auth/verify-email")]
