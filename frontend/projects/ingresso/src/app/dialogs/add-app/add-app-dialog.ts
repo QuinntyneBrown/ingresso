@@ -1,15 +1,8 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
-import {
-  afterNextRender,
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  inject,
-  Injector,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, Injector, signal } from '@angular/core';
 import { ApiError, Tile, TileInput } from 'api';
 import { Alert, Button, DialogShell, ToastService } from 'components';
+import { revealAlert } from '../../shared/reveal-alert';
 import { TilesStore } from '../../state/tiles-store';
 import { AppForm, APP_FORM_ID } from '../app-form/app-form';
 
@@ -83,10 +76,7 @@ export class AddAppDialog {
     if (same && this.warnedAbout !== input.url) {
       this.warnedAbout = input.url;
       this.duplicate.set(same);
-      afterNextRender(
-        () => this.host.nativeElement.querySelector('ig-alert')?.scrollIntoView({ block: 'nearest' }),
-        { injector: this.injector },
-      );
+      revealAlert(this.host, this.injector);
       return;
     }
     if (!same) this.duplicate.set(null);
@@ -112,6 +102,7 @@ export class AddAppDialog {
           );
         } else {
           this.failed.set(true);
+          revealAlert(this.host, this.injector);
         }
       },
     });

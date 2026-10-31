@@ -1,7 +1,16 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  Injector,
+  signal,
+} from '@angular/core';
 import { ApiError, Tile, TileInput } from 'api';
 import { Alert, Button, DialogShell, ToastService } from 'components';
+import { revealAlert } from '../../shared/reveal-alert';
 import { TilesStore } from '../../state/tiles-store';
 import { AppForm, APP_FORM_ID } from '../app-form/app-form';
 
@@ -84,6 +93,8 @@ export class EditAppDialog {
   protected readonly formId = APP_FORM_ID;
   protected readonly busy = signal(false);
   protected readonly failed = signal(false);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
   protected readonly confirming = signal(false);
   protected readonly fieldErrors = signal<Record<string, string>>({});
   protected readonly initial = computed<Partial<TileInput>>(() => this.data.tile);
@@ -107,6 +118,7 @@ export class EditAppDialog {
           );
         } else {
           this.failed.set(true);
+          revealAlert(this.host, this.injector);
         }
       },
     });

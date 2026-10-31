@@ -425,4 +425,51 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
         Assert.Equal("application/problem+json", missing.Content.Headers.ContentType?.MediaType);
     }
+
+    // Acceptance Test
+    // Traces to: L2-006, L2-003
+    // Description: Saving valid changes returns 200 with the new values, the address unchanged, and the tile keeps its position and span.
+    [Fact]
+    public async Task Saving_changes_updates_the_tile_in_place_and_keeps_its_placement()
+    {
+        var client = await SignedIn("edit-place@ingresso.dev");
+        var created = await Json(await client.PostAsJsonAsync("/api/tiles", Body("Before")));
+        var id = created.GetProperty("id").GetString();
+
+        var response = await client.PutAsJsonAsync($"/api/tiles/{id}", new { name = "After", url = "https://after.example.com/app", color = "#0F766E", description = "Changed", category = "Ops" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var saved = await Json(await client.GetAsync($"/api/tiles/{id}"));
+        Assert.Equal("After", saved.GetProperty("name").GetString());
+        Assert.Equal("https://after.example.com/app", saved.GetProperty("url").GetString());
+        Assert.Equal("#0F766E", saved.GetProperty("color").GetString(), ignoreCase: true);
+        Assert.Equal("Changed", saved.GetProperty("description").GetString());
+        foreach (var field in new[] { "x", "y", "cols", "rows" })
+        {
+            Assert.Equal(created.GetProperty(field).GetInt32(), saved.GetProperty(field).GetInt32());
+        }
+    }
+
+    // Acceptance Test
+    // Traces to: L2-006, L2-002, L2-003
+    // Description: Invalid changes are refused with 400 field errors and nothing is stored.
+    [Theory]
+    [InlineData("", "https://ok.example.com", "#2563EB", "name")]
+    [InlineData("Valid", "javascript:alert(1)", "#2563EB", "url")]
+    [InlineData("Valid", "example.com", "#2563EB", "url")]
+    [InlineData("Valid", "https://ok.example.com", "#123456", "color")]
+    public async Task Invalid_changes_are_refused_and_nothing_is_stored(string name, string url, string color, string field)
+    {
+        var client = await SignedIn("edit-invalid@ingresso.dev");
+        var created = await Json(await client.PostAsJsonAsync("/api/tiles", Body("Stays")));
+        var id = created.GetProperty("id").GetString();
+
+        var response = await client.PutAsJsonAsync($"/api/tiles/{id}", new { name, url, color });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.True((await Json(response)).GetProperty("errors").TryGetProperty(field, out _));
+        var stored = await Json(await client.GetAsync($"/api/tiles/{id}"));
+        Assert.Equal("Stays", stored.GetProperty("name").GetString());
+        Assert.Equal("https://jira.example.com", stored.GetProperty("url").GetString());
+    }
 }
