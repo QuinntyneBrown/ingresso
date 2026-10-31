@@ -101,6 +101,19 @@ export class DashboardPage {
   }
 
   /** Clicks a tile and returns the page it opens in a new tab. */
+  /** The link a tile offers for opening its app. */
+  tileLink(name: string): Locator {
+    return this.tile(name).getByRole('link');
+  }
+
+  /** Focuses the tile's link and presses Enter; resolves to the tab it opens. */
+  async openAppWithKeyboard(name: string): Promise<Page> {
+    const popup = this.page.waitForEvent('popup');
+    await this.tileLink(name).focus();
+    await this.page.keyboard.press('Enter');
+    return popup;
+  }
+
   async openApp(name: string): Promise<Page> {
     const popup = this.page.waitForEvent('popup');
     await this.tile(name).getByRole('link').click();

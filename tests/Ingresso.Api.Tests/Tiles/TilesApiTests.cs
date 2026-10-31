@@ -358,6 +358,9 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.All(listed.Values, t => Assert.Equal("https://jira.example.com", t.GetProperty("url").GetString()));
     }
 
+    // Acceptance Test
+    // Traces to: L2-013, L2-038
+    // Description: Opening a tile stores the current UTC time as its last-opened time and changes nothing else.
     [Fact]
     public async Task Mark_opened_stamps_the_last_opened_time()
     {
@@ -368,7 +371,29 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         var response = await client.PostAsync($"/api/tiles/{created.GetProperty("id").GetString()}/opened", null);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(ApiFactory.Today, (await Json(response)).GetProperty("lastOpenedAt").GetDateTimeOffset());
+        var opened = await Json(response);
+        Assert.Equal(ApiFactory.Today, opened.GetProperty("lastOpenedAt").GetDateTimeOffset());
+        Assert.Equal(created.GetProperty("name").GetString(), opened.GetProperty("name").GetString());
+        Assert.Equal(created.GetProperty("url").GetString(), opened.GetProperty("url").GetString());
+        Assert.Equal(created.GetProperty("x").GetInt32(), opened.GetProperty("x").GetInt32());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-013, L2-032
+    // Description: Posting another user's tile id as opened returns 404 and leaves its last-opened time unchanged.
+    [Fact]
+    public async Task Opening_another_users_tile_is_404_and_changes_nothing()
+    {
+        var owner = await SignedIn();
+        var intruder = await SignedIn(HttpClientExtensions.OtherUser);
+        var created = await Json(await owner.PostAsJsonAsync("/api/tiles", Body("Mine")));
+        var id = created.GetProperty("id").GetString();
+
+        var response = await intruder.PostAsync($"/api/tiles/{id}/opened", null);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var after = await Json(await owner.GetAsync($"/api/tiles/{id}"));
+        Assert.Equal(JsonValueKind.Null, after.GetProperty("lastOpenedAt").ValueKind);
     }
 
     [Fact]
