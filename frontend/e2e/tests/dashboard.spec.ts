@@ -36,6 +36,9 @@ test.describe('Dashboard', () => {
     await expect(dashboard.largeTiles().first()).toContainText(/Opened|Not opened yet/);
   });
 
+  // Acceptance Test
+  // Traces to: L2-012, L2-013
+  // Description: Clicking a tile opens its app in a new tab and the dashboard shows it as just opened.
   test('a tile opens its app in a new tab and records that it was opened', async ({ page }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.open();

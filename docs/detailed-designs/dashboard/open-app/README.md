@@ -60,3 +60,10 @@ The browser opens the app directly. In parallel, the web app tells `Ingresso.Api
 The browser opens the app first. The record request runs alongside navigation, and its failure is silent.
 
 ![Sequence diagram: open an app and record it](diagrams/sequence-open.png)
+
+## Verified in journey 04
+
+- The tile link carries `target="_blank"` and `rel="noopener noreferrer"`; Enter and click open it; in edit mode a click opens nothing and records nothing (`L2-012`).
+- Recording is fire-and-forget: a failed `POST /api/tiles/{id}/opened` shows no error and the app still opens; another user's tile id returns 404 and changes nothing (`L2-013`).
+- The record request has no body or query and only ingresso's own origin is contacted (`L2-038`).
+- Acceptance tests: `open-app.spec.ts` and `TilesApiTests`.
