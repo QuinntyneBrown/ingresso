@@ -3,16 +3,18 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace Ingresso.Api.Auth;
 
-/// <summary>Per-IP limits (L2-082): 20 sign-in links and 30 custom feed links an hour; configurable for tests.</summary>
+/// <summary>Per-IP limits (L2-082): 20 sign-in links and 30 custom feed links an hour, and per-account 3 verification emails an hour (L2-029); configurable for tests.</summary>
 public static class SignInRateLimit
 {
     public const string Policy = "sign-in-links";
     public const string FeedCreationPolicy = "feed-creation";
+    public const string VerificationPolicy = "verification-emails";
 
     public static IServiceCollection AddSignInRateLimit(this IServiceCollection services, IConfiguration configuration)
     {
         var perHour = configuration.GetValue("Auth:SignInLinks:PerIpPerHour", 20);
         var feedsPerHour = configuration.GetValue("Feeds:CreatePerIpPerHour", 30);
+        var verificationsPerHour = configuration.GetValue("Auth:Verification:PerUserPerHour", 3);
         var apiPerMinute = configuration.GetValue("RateLimit:ApiPerMinute", 300);
         return services.AddRateLimiter(options =>
         {
@@ -40,6 +42,10 @@ public static class SignInRateLimit
             options.AddPolicy(Policy, context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = perHour, Window = TimeSpan.FromHours(1), QueueLimit = 0 }));
+            // Another verification email: a few an hour per account, so the inbox is not flooded (L2-029).
+            options.AddPolicy(VerificationPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+                context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = verificationsPerHour, Window = TimeSpan.FromHours(1), QueueLimit = 0 }));
             // Custom feed links: 30 an hour per IP address (L2-082, build-custom-feed design).
             options.AddPolicy(FeedCreationPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown",

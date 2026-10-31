@@ -1,5 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  untracked,
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Tile } from 'api';
 import {
   Alert,
@@ -131,6 +140,10 @@ export class DashboardPage {
   protected readonly dialogs = inject(AppDialogs);
   private readonly session = inject(SessionStore);
   private readonly toasts = inject(ToastService);
+  private readonly router = inject(Router);
+
+  /** `1` when the person has just followed a verification link (L2-029). */
+  private readonly emailVerified = toSignal(inject(ActivatedRoute).queryParamMap, { requireSync: false });
 
   protected readonly placeholders = [1, 2, 3];
   private readonly wide = injectWideViewport();
@@ -153,6 +166,18 @@ export class DashboardPage {
   protected readonly byId = computed(() => new Map(this.store.tiles().map((t) => [t.id, t])));
 
   constructor() {
+    effect(() => {
+      if (this.emailVerified()?.get('email-verified') !== '1') return;
+      // Showing the toast reads and writes the toast list, which must not feed back into this effect.
+      untracked(() => {
+        this.toasts.show({ kind: 'success', title: 'Email verified', text: 'Thanks. Your apps are ready.' });
+        void this.router.navigate([], {
+          queryParams: { 'email-verified': null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      });
+    });
     // Edit mode ends when the window narrows below the grid width (L2-054).
     effect(() => {
       if (!this.wide()) this.store.editing.set(false);

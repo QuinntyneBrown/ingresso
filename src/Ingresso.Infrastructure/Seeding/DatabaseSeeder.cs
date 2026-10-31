@@ -20,6 +20,13 @@ public sealed class DatabaseSeeder(AppDbContext db, IClock clock)
             db.Users.Add(user);
         }
 
+        // The seeded person has proved their inbox, so the tile endpoints answer for them (L2-029).
+        var email = SeedData.UserEmail.ToLowerInvariant();
+        if (!await db.VerifiedEmails.AnyAsync(v => v.NormalizedEmail == email, cancellationToken))
+        {
+            db.VerifiedEmails.Add(new VerifiedEmail { NormalizedEmail = email, VerifiedAtUtc = now });
+        }
+
         var placed = await db.Tiles.Where(t => t.OwnerId == user.Id).ToListAsync(cancellationToken);
         var names = placed.Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var order = placed.Count;

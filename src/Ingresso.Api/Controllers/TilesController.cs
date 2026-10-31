@@ -9,9 +9,9 @@ public sealed record TileRequest(string Name, string Url, string? Description, s
 
 public sealed record SaveLayoutRequest(IReadOnlyList<TilePlacement> Tiles);
 
-/// <summary>The signed-in user's tiles. The global CSRF middleware guards the unsafe methods.</summary>
+/// <summary>The signed-in user's tiles; the account's email must be verified (L2-029). The global CSRF middleware guards the unsafe methods.</summary>
 [ApiController]
-[Authorize]
+[Authorize(Policy = Auth.AuthPolicies.VerifiedEmail)]
 [Route("api/tiles")]
 public sealed class TilesController(ISender sender) : ControllerBase
 {

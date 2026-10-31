@@ -17,11 +17,14 @@ The slice runs from the ingresso web app to the ingresso database.
 - **`ResendVerificationCommandHandler`** — issues a new `VerifyEmail` token and enqueues the email, unless the address is already verified.
 - **`VerifiedEmail`** — entity keyed by `NormalizedEmail` with `VerifiedAtUtc`.
 
-The current source differs from the requirements in these points. Each is open work for the slice.
+## Behaviour as built
 
-- `L2-029` requires the first sign-in redemption to mark the address verified. `RedeemSignInLinkCommandHandler` does not write a `VerifiedEmail` row.
-- `L2-029` requires `403` from tile endpoints for an unverified account. `<TO SUPPLY>`: no authorization policy checks verification.
-- `<TO SUPPLY>`: no `AuthController` endpoint sends `ResendVerificationCommand`.
+- Redeeming a sign-in link writes a `VerifiedEmail` row (same unit of work as the session), so a first sign-in verifies the address.
+- `TilesController` requires the `verified-email` policy (`VerifiedEmailHandler` looks the account's email up in `VerifiedEmail`); an unverified account gets `403`.
+- `GET /api/auth/me` reports `emailVerified`; it stays available to unverified accounts so the app can route them.
+- `POST /api/auth/verification-emails` (authorized, CSRF-checked) sends `ResendVerificationCommand`, answers `202` whether or not an email was sent, and is rate limited per account (`Auth:Verification:PerUserPerHour`, default 3; `429` with `Retry-After`).
+- The test sign-in seam can create a new unverified account (`createUnverified`), so tests and demos can run the flow repeatedly.
+- The web app sends an unverified account to `/verify-email` (outside the shell): a Send another email button, a Sign out button, and notices for sent, rate limited, failed and a link that did not work. Following the link lands on the dashboard with an "Email verified" toast.
 
 ## Requirements
 

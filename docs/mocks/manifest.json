@@ -74,6 +74,24 @@
       }
     },
     {
+      "id": "verify-email",
+      "kind": "page",
+      "title": "Verify your email",
+      "states": [
+        "default",
+        "sending",
+        "sent",
+        "rate-limited",
+        "error",
+        "link-invalid"
+      ],
+      "route": "/verify-email",
+      "not_applicable": {
+        "loading": "The screen renders from the signed-in account with no data request.",
+        "empty": "This screen shows a single record, not a collection."
+      }
+    },
+    {
       "id": "reset-password",
       "kind": "page",
       "title": "Reset password",

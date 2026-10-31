@@ -12,6 +12,8 @@ export interface CurrentUser {
   workspace: string | null;
   /** How they signed in, such as "SSO". */
   signInMethod: string | null;
+  /** Whether the address has proved inbox control; unverified accounts cannot use tiles (L2-029). */
+  emailVerified: boolean;
 }
 
 export interface AuthApi {
@@ -19,6 +21,8 @@ export interface AuthApi {
   me(): Observable<CurrentUser>;
   /** Emails a single-use sign-in link. Succeeds the same way whether or not the address has an account. */
   requestSignInLink(email: string): Observable<void>;
+  /** Emails an unverified account another verification link; fails with a rate-limited `ApiError` when asked too often. */
+  resendVerification(): Observable<void>;
   /** Ends this device's session on the server and clears its cookie. */
   signOut(): Observable<void>;
 }
@@ -36,6 +40,10 @@ export class HttpAuthApi implements AuthApi {
 
   requestSignInLink(email: string): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/api/auth/sign-in-links`, { email });
+  }
+
+  resendVerification(): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/api/auth/verification-emails`, null);
   }
 
   signOut(): Observable<void> {

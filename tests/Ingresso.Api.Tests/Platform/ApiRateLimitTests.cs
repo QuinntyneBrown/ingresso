@@ -29,6 +29,7 @@ public sealed class ApiRateLimitTests
         await factory.WithDbAsync(async db =>
         {
             db.Users.Add(new User { Email = HttpClientExtensions.OtherUser, Role = UserRole.Member, CreatedAtUtc = ApiFactory.Today });
+            db.VerifiedEmails.Add(new VerifiedEmail { NormalizedEmail = HttpClientExtensions.OtherUser, VerifiedAtUtc = ApiFactory.Today });
             await db.SaveChangesAsync();
             return 0;
         });

@@ -51,6 +51,12 @@ behind their backdrop; only the dialog is mapped.
   `danger` for link-invalid and error), `SkipLink`.
 - Local: auth layout (`shared/auth-layout`). The screen sits outside the shell: no header, footer or session load.
 
+### Verify your email — `/verify-email` (`pages/verify-email`: default, sending, sent, rate-limited, error, link-invalid)
+
+- Library: `Card`, `Logo`, `Button` (`busy` while sending; Send another email, Sign out), `Alert` (`success` for sent;
+  `warning` for rate-limited and link-invalid; `danger` for error), `SkipLink`.
+- Local: auth layout (`shared/auth-layout`). The screen sits outside the shell; unverified accounts are redirected here.
+
 ### Reset password — `/reset-password` (`pages/reset-password`: default, invalid, submitting, success, error)
 
 - Library: as sign-in, plus `Alert` (`success`).

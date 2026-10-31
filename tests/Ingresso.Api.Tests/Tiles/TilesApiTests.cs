@@ -20,6 +20,7 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
             if (!await db.Users.AnyAsync(u => u.Email == email))
             {
                 db.Users.Add(new User { Email = email, Role = UserRole.Member, CreatedAtUtc = ApiFactory.Today });
+                db.VerifiedEmails.Add(new VerifiedEmail { NormalizedEmail = email, VerifiedAtUtc = ApiFactory.Today });
                 await db.SaveChangesAsync();
             }
 

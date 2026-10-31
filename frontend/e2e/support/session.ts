@@ -9,3 +9,11 @@ export async function signInAs(page: Page, email: string = MAYA): Promise<void> 
   const response = await page.request.post('/api/test/sign-in', { data: { email } });
   if (!response.ok()) throw new Error(`Test sign-in failed for ${email}: ${response.status()}`);
 }
+
+/** Signs the context in as a brand-new account whose email is not yet verified (L2-029). Returns its address. */
+export async function signInAsUnverified(page: Page): Promise<string> {
+  const email = `newcomer-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
+  const response = await page.request.post('/api/test/sign-in', { data: { email, createUnverified: true } });
+  if (!response.ok()) throw new Error(`Test sign-in failed for ${email}: ${response.status()}`);
+  return email;
+}

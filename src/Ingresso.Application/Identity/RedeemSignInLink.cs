@@ -24,8 +24,8 @@ public sealed record RedeemResult(SignedIn? SignedIn, LinkFailure? Failure);
 public sealed record RedeemSignInLinkCommand(string Token) : IRequest<RedeemResult>;
 
 /// <summary>
-/// Marks the token used, finds or creates the user, and starts a session, all in one unit of work, so a token can
-/// start at most one session.
+/// Marks the token used, finds or creates the user, verifies their address and starts a session, all in one unit of
+/// work, so a token can start at most one session.
 /// </summary>
 public sealed class RedeemSignInLinkCommandHandler(IAppDbContext db, IClock clock, ISecurityTokenService tokens)
     : IRequestHandler<RedeemSignInLinkCommand, RedeemResult>
@@ -58,6 +58,12 @@ public sealed class RedeemSignInLinkCommandHandler(IAppDbContext db, IClock cloc
             db.Users.Add(user);
         }
 
+        // Opening the link proves the person controls this inbox, so the address is verified (L2-029).
+        if (!await db.VerifiedEmails.AnyAsync(v => v.NormalizedEmail == token.Email, cancellationToken))
+        {
+            db.VerifiedEmails.Add(new VerifiedEmail { NormalizedEmail = token.Email, VerifiedAtUtc = now });
+        }
+
         var session = Session.Start(user.Id, now);
         db.Sessions.Add(session);
         await db.SaveChangesAsync(cancellationToken);
@@ -67,14 +73,21 @@ public sealed class RedeemSignInLinkCommandHandler(IAppDbContext db, IClock cloc
     }
 }
 
-/// <summary>Starts a session for an existing user; the test sign-in seam uses it (ADR 0002, ADR 0009).</summary>
-public sealed record StartSessionCommand(string Email) : IRequest<SignedIn?>;
+/// <summary>Starts a session for an existing user, or for a new unverified one when asked; the test sign-in seam uses it (ADR 0002, ADR 0009).</summary>
+public sealed record StartSessionCommand(string Email, bool CreateUnverified = false) : IRequest<SignedIn?>;
 
 public sealed class StartSessionCommandHandler(IAppDbContext db, IClock clock) : IRequestHandler<StartSessionCommand, SignedIn?>
 {
     public async Task<SignedIn?> Handle(StartSessionCommand request, CancellationToken cancellationToken)
     {
         var user = await db.Users.SingleOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+        if (user is null && request.CreateUnverified)
+        {
+            // A brand-new account whose address has not proved inbox control, for tests of L2-029.
+            user = User.CreateMember(request.Email, clock.UtcNow);
+            db.Users.Add(user);
+        }
+
         if (user is null)
         {
             return null;

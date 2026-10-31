@@ -79,6 +79,7 @@ const ME = {
   initials: 'MO',
   workspace: 'Northwind',
   signInMethod: 'SSO',
+  emailVerified: true,
 };
 
 const json = (route: Route, body: unknown, status = 200) =>
