@@ -24,6 +24,9 @@ public sealed class CsrfProtectionTests(CsrfProtectionTests.Factory factory) : I
         Assert.DoesNotContain("httponly", cookie, StringComparison.OrdinalIgnoreCase);
     }
 
+    // Acceptance Test
+    // Traces to: L2-034
+    // Description: A cookie-authenticated write without the anti-forgery token is rejected and changes nothing.
     [Fact]
     public async Task Cookie_authenticated_write_without_the_token_is_rejected_before_the_action_runs()
     {
@@ -38,6 +41,9 @@ public sealed class CsrfProtectionTests(CsrfProtectionTests.Factory factory) : I
         Assert.Equal(0, CsrfProbeController.Calls);
     }
 
+    // Acceptance Test
+    // Traces to: L2-034
+    // Description: A write that carries the token succeeds.
     [Fact]
     public async Task Cookie_authenticated_write_with_the_token_succeeds()
     {

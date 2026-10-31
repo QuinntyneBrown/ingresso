@@ -35,7 +35,8 @@ await app.WarnIfPendingAsync();
 
 // Pipeline order is part of the design (platform/observability, platform/security-hardening).
 // 1 request logging, 2 security headers, 3 exception handling, 4 HSTS/HTTPS, 5 Swagger, 6 routing,
-// 7 authentication, 8 authorization, 9 CSRF, 10 endpoints.
+// 7 authentication, 7b rate limiting (after authentication so limits count per session), 8 authorization,
+// 9 CSRF, 10 endpoints.
 // Request logging stays outside the exception handler so handled statuses are logged as returned.
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
@@ -54,8 +55,8 @@ if (app.Configuration.GetValue("Swagger:Enabled", app.Environment.IsDevelopment(
 }
 
 app.UseRouting();
-app.UseRateLimiter();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 app.UseMiddleware<CsrfProtectionMiddleware>();
 app.MapControllers();

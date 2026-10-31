@@ -6,6 +6,9 @@ namespace Ingresso.Api.Tests.Platform;
 /// <summary>L2-083: transport security and response headers on every response.</summary>
 public sealed class SecurityHeadersTests(SecurityHeadersTests.HttpsFactory factory) : IClassFixture<SecurityHeadersTests.HttpsFactory>
 {
+    // Acceptance Test
+    // Traces to: L2-035
+    // Description: Every response carries the hardening headers.
     [Theory]
     [InlineData("/health/live")]
     [InlineData("/api/test-probe/missing")]

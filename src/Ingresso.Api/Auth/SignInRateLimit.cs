@@ -13,6 +13,7 @@ public static class SignInRateLimit
     {
         var perHour = configuration.GetValue("Auth:SignInLinks:PerIpPerHour", 20);
         var feedsPerHour = configuration.GetValue("Feeds:CreatePerIpPerHour", 30);
+        var apiPerMinute = configuration.GetValue("RateLimit:ApiPerMinute", 300);
         return services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -22,6 +23,20 @@ public static class SignInRateLimit
                 context.HttpContext.Response.Headers.RetryAfter = ((int)Math.Ceiling(retry.TotalSeconds)).ToString(System.Globalization.CultureInfo.InvariantCulture);
                 return ValueTask.CompletedTask;
             };
+            // Every /api request counts against the caller's session, or their IP address when anonymous (L2-036).
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            {
+                if (!context.Request.Path.StartsWithSegments("/api"))
+                {
+                    return RateLimitPartition.GetNoLimiter("outside-api");
+                }
+
+                var caller = context.User.Identity?.IsAuthenticated == true
+                    ? "user:" + context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                    : "ip:" + (context.Connection.RemoteIpAddress?.ToString() ?? "unknown");
+                return RateLimitPartition.GetFixedWindowLimiter(caller,
+                    _ => new FixedWindowRateLimiterOptions { PermitLimit = apiPerMinute, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 });
+            });
             options.AddPolicy(Policy, context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = perHour, Window = TimeSpan.FromHours(1), QueueLimit = 0 }));
