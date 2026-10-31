@@ -99,11 +99,12 @@ export class DashboardPage {
   }
 
   /** Tile names in grid order. */
+  /** The names of the tiles shown, once at least one has loaded. */
   async tileNames(): Promise<string[]> {
+    await this.tiles.first().waitFor();
     return this.page.locator('ig-app-tile .tile__name').allInnerTexts();
   }
 
-  /** Clicks a tile and returns the page it opens in a new tab. */
   /** The link a tile offers for opening its app. */
   tileLink(name: string): Locator {
     return this.tile(name).getByRole('link');
@@ -117,6 +118,7 @@ export class DashboardPage {
     return popup;
   }
 
+  /** Clicks a tile and returns the page it opens in a new tab. */
   async openApp(name: string): Promise<Page> {
     const popup = this.page.waitForEvent('popup');
     await this.tile(name).getByRole('link').click();
