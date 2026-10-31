@@ -25,6 +25,7 @@ test.describe('Keyboard and focus', () => {
   }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.open();
+    await expect(dashboard.tiles.first()).toBeVisible();
 
     await dashboard.shell.tab(2);
     await expect(dashboard.shell.brand).toBeFocused();
