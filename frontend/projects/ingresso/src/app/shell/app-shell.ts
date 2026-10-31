@@ -1,10 +1,13 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, viewChild } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import {
   Avatar,
   Button,
   Icon,
   Logo,
+  Menu,
+  MenuItem,
+  MenuTrigger,
   Search,
   SiteFooter,
   SiteHeader,
@@ -25,6 +28,9 @@ import { injectWideViewport } from '../shared/wide-viewport';
     Button,
     Icon,
     Logo,
+    Menu,
+    MenuItem,
+    MenuTrigger,
     RouterLink,
     RouterOutlet,
     Search,
@@ -71,7 +77,23 @@ import { injectWideViewport } from '../shared/wide-viewport';
           <ig-icon name="plus" />Add app
         </button>
         @if (session.user(); as user) {
-          <ig-avatar [initials]="user.initials" />
+          <button
+            #accountButton
+            ig-button
+            type="button"
+            appearance="ghost"
+            iconOnly
+            class="account"
+            aria-label="Account menu"
+            [igMenuTriggerFor]="account"
+          >
+            <ig-avatar [initials]="user.initials" />
+          </button>
+          <ng-template #account>
+            <ig-menu>
+              <button ig-menu-item type="button" (triggered)="signOut()">Sign out</button>
+            </ig-menu>
+          </ng-template>
         }
       </ng-container>
     </ig-site-header>
@@ -102,6 +124,16 @@ import { injectWideViewport } from '../shared/wide-viewport';
     main:focus {
       outline: none;
     }
+    /* The trigger is the avatar itself, so the header keeps its height. */
+    .account.account {
+      padding: 0;
+      border: 0;
+      min-width: 0;
+      min-height: 0;
+      width: auto;
+      height: auto;
+      border-radius: var(--borderRadiusCircular);
+    }
     .brand {
       display: inline-flex;
       color: inherit;
@@ -116,6 +148,7 @@ export class AppShell {
   protected readonly dialogs = inject(AppDialogs);
   protected readonly session = inject(SessionStore);
   protected readonly wide = injectWideViewport();
+  private readonly accountButton = viewChild('accountButton', { read: ElementRef<HTMLElement> });
 
   /** Edit layout is offered only on a window wide enough for the grid (L2-054). */
   protected toggleEditing(): void {
@@ -126,6 +159,11 @@ export class AppShell {
   constructor() {
     this.session.load();
     this.store.load();
+  }
+
+  /** Asks before ending the session; focus returns to the account button afterwards. */
+  protected signOut(): void {
+    this.dialogs.openSignOut(this.accountButton()?.nativeElement);
   }
 
   /** Enter in the search opens the highlighted match in a new tab. */
