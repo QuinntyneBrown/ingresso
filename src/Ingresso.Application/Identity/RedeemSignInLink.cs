@@ -73,14 +73,21 @@ public sealed class RedeemSignInLinkCommandHandler(IAppDbContext db, IClock cloc
     }
 }
 
-/// <summary>Starts a session for an existing user; the test sign-in seam uses it (ADR 0002, ADR 0009).</summary>
-public sealed record StartSessionCommand(string Email) : IRequest<SignedIn?>;
+/// <summary>Starts a session for an existing user, or for a new unverified one when asked; the test sign-in seam uses it (ADR 0002, ADR 0009).</summary>
+public sealed record StartSessionCommand(string Email, bool CreateUnverified = false) : IRequest<SignedIn?>;
 
 public sealed class StartSessionCommandHandler(IAppDbContext db, IClock clock) : IRequestHandler<StartSessionCommand, SignedIn?>
 {
     public async Task<SignedIn?> Handle(StartSessionCommand request, CancellationToken cancellationToken)
     {
         var user = await db.Users.SingleOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+        if (user is null && request.CreateUnverified)
+        {
+            // A brand-new account whose address has not proved inbox control, for tests of L2-029.
+            user = User.CreateMember(request.Email, clock.UtcNow);
+            db.Users.Add(user);
+        }
+
         if (user is null)
         {
             return null;

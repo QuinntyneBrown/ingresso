@@ -8,6 +8,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/sign-in/sign-in-page').then((m) => m.SignInPage),
   },
   {
+    path: 'verify-email',
+    title: 'Verify your email · ingresso',
+    loadComponent: () => import('./pages/verify-email/verify-email-page').then((m) => m.VerifyEmailPage),
+  },
+  {
     // Every other screen sits inside the shell: header, main region and footer.
     path: '',
     component: AppShell,

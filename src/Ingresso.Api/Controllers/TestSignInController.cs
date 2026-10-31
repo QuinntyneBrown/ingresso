@@ -7,7 +7,7 @@ using Ingresso.Application.Identity;
 
 namespace Ingresso.Api.Controllers;
 
-public sealed record TestSignInRequest(string Email);
+public sealed record TestSignInRequest(string Email, bool CreateUnverified = false);
 
 /// <summary>
 /// Test-only seam that signs in a seeded user without the magic-link flow, so integration tests and
@@ -24,7 +24,7 @@ public sealed class TestSignInController(ISender sender, Auth.SessionSignIn sess
     [HttpPost("sign-in")]
     public async Task<IActionResult> SignIn(TestSignInRequest request, CancellationToken cancellationToken)
     {
-        var signedIn = await sender.Send(new StartSessionCommand(request.Email), cancellationToken);
+        var signedIn = await sender.Send(new StartSessionCommand(request.Email, request.CreateUnverified), cancellationToken);
         if (signedIn is null)
         {
             return NotFound();
