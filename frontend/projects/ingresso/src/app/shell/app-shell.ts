@@ -38,7 +38,12 @@ import { injectWideViewport } from '../shared/wide-viewport';
     <ig-skip-link target="main" />
     <ig-site-header>
       <a slot="brand" class="brand" routerLink="/" aria-label="ingresso home"><ig-logo /></a>
-      <ig-search slot="search" [(value)]="store.search" (searched)="jump()" />
+      <ig-search
+        slot="search"
+        [(value)]="store.search"
+        (searched)="jump()"
+        (navigated)="store.moveHighlight($event)"
+      />
       <ng-container slot="actions">
         <button
           ig-button
@@ -123,11 +128,11 @@ export class AppShell {
     this.store.load();
   }
 
-  /** Enter in the search opens the first match in a new tab. */
+  /** Enter in the search opens the highlighted match in a new tab. */
   protected jump(): void {
-    const first = this.store.visible()[0];
-    if (!first || !this.store.search().trim()) return;
-    this.store.markOpened(first.id);
-    window.open(first.url, '_blank', 'noopener,noreferrer');
+    const match = this.store.highlightedTile();
+    if (!match) return;
+    this.store.markOpened(match.id);
+    window.open(match.url, '_blank', 'noopener,noreferrer');
   }
 }

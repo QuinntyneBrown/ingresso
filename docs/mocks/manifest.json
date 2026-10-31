@@ -30,6 +30,7 @@
         "empty",
         "error",
         "no-results",
+        "search-results",
         "editing",
         "offline",
         "editing-refused",

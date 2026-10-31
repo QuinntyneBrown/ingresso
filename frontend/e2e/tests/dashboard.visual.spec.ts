@@ -36,6 +36,14 @@ test.describe('Dashboard, visually', () => {
     await expect(page).toHaveScreenshot('phone.png');
   });
 
+  test('search results', async ({ page }) => {
+    const dashboard = await show(page);
+    await dashboard.shell.pressSlash();
+    await dashboard.shell.typeInSearch('northwind');
+    await expect(dashboard.highlighted).toHaveCount(1);
+    await expect(page).toHaveScreenshot('search-results.png');
+  });
+
   test('loading', async ({ page }) => {
     await slowTiles(page, 20_000);
     await page.setViewportSize({ width: 1280, height: 900 });

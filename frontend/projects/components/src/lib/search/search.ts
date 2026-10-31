@@ -34,6 +34,8 @@ let nextId = 0;
         [value]="value()"
         (input)="value.set(box.value)"
         (keydown.escape)="clear(box)"
+        (keydown.arrowdown)="move($event, 1)"
+        (keydown.arrowup)="move($event, -1)"
       />
       @if (shortcut() && !value()) {
         <kbd class="search__hint" aria-hidden="true">{{ shortcut() }}</kbd>
@@ -56,6 +58,9 @@ export class Search {
   readonly value = model('');
 
   readonly searched = output<string>();
+  /** Down (1) or Up (-1) was pressed in the box. */
+  readonly navigated = output<1 | -1>();
+  private returnTo: HTMLElement | null = null;
 
   focus(): void {
     this.box().nativeElement.focus();
@@ -63,7 +68,15 @@ export class Search {
 
   protected clear(box: HTMLInputElement): void {
     this.value.set('');
-    box.blur();
+    const back = this.returnTo;
+    this.returnTo = null;
+    if (back?.isConnected) back.focus();
+    else box.blur();
+  }
+
+  protected move(event: Event, step: 1 | -1): void {
+    event.preventDefault();
+    this.navigated.emit(step);
   }
 
   protected onDocumentKeydown(event: KeyboardEvent): void {
@@ -73,6 +86,7 @@ export class Search {
     const target = event.target as HTMLElement | null;
     if (target?.closest('input, textarea, select, [contenteditable="true"], [role="dialog"]')) return;
     event.preventDefault();
+    this.returnTo = target && target !== document.body ? target : null;
     this.focus();
   }
 }

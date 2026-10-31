@@ -14,6 +14,7 @@ import {
   TileGridTile,
   ToastService,
 } from 'components';
+import { packMatches } from '../../shared/pack-matches';
 import { greetingFor, openedLabel } from '../../shared/relative-time';
 import { AppDialogs } from '../../state/app-dialogs';
 import { SessionStore } from '../../state/session-store';
@@ -40,6 +41,7 @@ import { injectWideViewport } from '../../shared/wide-viewport';
       <section class="intro">
         <h1>{{ greeting() }}{{ firstName() ? ', ' + firstName() : '' }}</h1>
         <p class="text-muted">{{ summary() }}</p>
+        <p class="visually-hidden" role="status">{{ store.matchSummary() }}</p>
       </section>
 
       @if (store.editing()) {
@@ -108,6 +110,7 @@ import { injectWideViewport } from '../../shared/wide-viewport';
                     [description]="tile.description ?? null"
                     [openedLabel]="label(tile)"
                     [editing]="store.editing()"
+                    [highlighted]="tile.id === store.highlightedTile()?.id"
                     (opened)="store.markOpened(tile.id)"
                     (edit)="dialogs.openEdit(tile)"
                   />
@@ -133,7 +136,7 @@ export class DashboardPage {
 
   /** The visible tiles as grid cells, with ingresso's size limits (L2-051). */
   protected readonly layout = computed<TileGridItem[]>(() =>
-    this.store.visible().map((t) => ({
+    (this.store.search().trim() ? packMatches(this.store.visible()) : this.store.visible()).map((t) => ({
       id: t.id,
       label: t.name,
       x: t.x,

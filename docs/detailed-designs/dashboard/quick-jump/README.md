@@ -13,15 +13,12 @@ The search runs entirely in the browser over the tiles the store already holds. 
 The slice runs from the ingresso web app to the ingresso database.
 
 - **`AppShell`** — places `ig-search` in the header's `search` slot, binds it to `TilesStore.search`, and calls `jump()` on `searched`.
-- **`ig-search`** — library search field. `<TO SUPPLY>`: the global `/` shortcut, its guard against text inputs, and Escape focus return.
-- **`TilesStore`** — computes the filtered list from `search`, matching name, address, category and description case-insensitively.
-- **`AppShell.jump()`** — opens the first match in a new tab and calls `TilesStore.markOpened`.
-- **`DashboardPage`** — renders the filtered tiles, or `ig-empty-state` with Clear the search when nothing matches.
+- **`ig-search`** — library search field. `/` outside a text field or dialog focuses it and remembers where focus was; Escape clears it and returns focus there (when that element is still on the page, otherwise focus is released); Up and Down emit `navigated`.
+- **`TilesStore`** — computes the filtered list (name, address, category and description, case-insensitive), the highlighted match (first by default, reset whenever the query changes, moved and wrapped by `moveHighlight`) and the `matchSummary` ("2 apps match", "1 app matches", "No apps match").
+- **`AppShell.jump()`** — opens the highlighted match in a new tab and calls `TilesStore.markOpened`; with no match it does nothing.
+- **`DashboardPage`** — renders the filtered tiles with the highlighted one marked (`ig-app-tile [highlighted]`, `aria-current` on its link), a visually hidden `role="status"` that carries the count, or `ig-empty-state` with Clear the search when nothing matches.
 
-The current source differs from the requirements in these points. Each is open work for the slice.
-
-- `L2-023` requires Up and Down to move a highlight that wraps at the ends. `AppShell.jump()` always opens the first match, and no highlight exists.
-- `L2-022` requires a polite announcement of the result count. `<TO SUPPLY>`: the live region that carries the count.
+Decisions made in journey 07: the highlight is an accent edge on the tile (`tile--highlighted`, added to the design system and the `search-results` mock); while a query is active the matches close up into the first free spaces in reading order (`packMatches`, never saved; clearing the search restores the saved places); if the tile that had focus is filtered out, Escape cannot return to it and focus is released.
 
 ## Requirements
 

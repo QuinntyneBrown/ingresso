@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { Tile, TileInput, TilePlacement, TILES_API } from 'api';
 import { Observable, tap } from 'rxjs';
 import { LoadStatus } from '../shared/load-state';
@@ -12,6 +12,7 @@ export class TilesStore {
   readonly status = signal<LoadStatus>('loading');
   readonly search = signal('');
   readonly editing = signal(false);
+  private readonly highlightIndex = signal(0);
 
   readonly visible = computed(() => {
     const term = this.search().trim().toLowerCase();
@@ -22,6 +23,34 @@ export class TilesStore {
       ),
     );
   });
+
+  /** The match Enter opens: the first one when a search starts, then wherever the arrows have moved it. */
+  readonly highlightedTile = computed(() => {
+    if (!this.search().trim()) return null;
+    const matches = this.visible();
+    return matches[Math.min(this.highlightIndex(), matches.length - 1)] ?? null;
+  });
+
+  /** "2 apps match", read out politely as the results change. */
+  readonly matchSummary = computed(() => {
+    if (!this.search().trim()) return '';
+    const count = this.visible().length;
+    return count === 0 ? 'No apps match' : count === 1 ? '1 app matches' : `${count} apps match`;
+  });
+
+  constructor() {
+    effect(() => {
+      this.search();
+      this.highlightIndex.set(0);
+    });
+  }
+
+  /** Moves the highlight by one match, wrapping at both ends. */
+  moveHighlight(step: 1 | -1): void {
+    const count = this.visible().length;
+    if (count === 0) return;
+    this.highlightIndex.update((i) => (Math.min(i, count - 1) + step + count) % count);
+  }
 
   load(): void {
     this.status.set('loading');
