@@ -6,7 +6,6 @@ export interface AppDetails {
   description?: string;
   category?: string;
   color?: string;
-  size?: 'Large' | 'Compact';
 }
 
 /** The "Add an app" dialog. */
@@ -39,7 +38,6 @@ export class AddAppDialog {
     if (details.description) await this.description.fill(details.description);
     if (details.category) await this.dialog.getByLabel('Category', { exact: true }).fill(details.category);
     if (details.color) await this.dialog.getByLabel(details.color, { exact: true }).check();
-    if (details.size) await this.dialog.getByLabel(details.size, { exact: true }).check();
   }
 
   async add(details: AppDetails): Promise<void> {

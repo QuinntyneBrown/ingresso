@@ -39,11 +39,6 @@ public static partial class TileRules
 
     public static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
-    public static TileSize ParseSize(string? value) =>
-        Enum.TryParse<TileSize>(value, ignoreCase: true, out var size) ? size : TileSize.Small;
-
-    public static bool IsSize(string? value) => Enum.TryParse<TileSize>(value, ignoreCase: true, out _) && !int.TryParse(value, out _);
-
     public static string InitialFor(string? initial, string name) =>
         string.IsNullOrWhiteSpace(initial) ? char.ToUpperInvariant(name.Trim()[0]).ToString() : initial.Trim();
 }

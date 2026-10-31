@@ -26,12 +26,12 @@ public sealed class DatabaseSeeder(AppDbContext db, IClock clock)
         foreach (var seed in SeedData.Tiles.Where(s => !names.Contains(s.Name)))
         {
             // Large tiles take 4 by 3 and small ones 3 by 2, placed in reading order (L2-009).
-            var (cols, rows) = seed.Size == TileSize.Large ? (4, 3) : (TileLayout.DefaultCols, TileLayout.DefaultRows);
+            var (cols, rows) = seed.Recent ? (4, 3) : (TileLayout.DefaultCols, TileLayout.DefaultRows);
             var (x, y) = TileLayout.FirstFree(placed, cols, rows);
             var tile = new Tile
             {
                 OwnerId = user.Id, Name = seed.Name, Url = seed.Url, Description = seed.Description, Color = seed.Color,
-                Initial = seed.Initial, Category = seed.Category, Size = seed.Size, SortOrder = order, CreatedAt = now.AddSeconds(order++),
+                Initial = seed.Initial, Category = seed.Category, CreatedAt = now.AddSeconds(order++),
                 X = x, Y = y, Cols = cols, Rows = rows,
             };
             placed.Add(tile);

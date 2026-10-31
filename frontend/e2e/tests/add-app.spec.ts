@@ -15,7 +15,7 @@ test.describe('Add an app', () => {
     const before = await dashboard.tiles.count();
 
     await dashboard.shell.addApp.click();
-    await dialog.add({ name, url: 'https://acme.example.com', color: 'Teal', size: 'Compact' });
+    await dialog.add({ name, url: 'https://acme.example.com', color: 'Teal' });
 
     await expect(dialog.dialog).toBeHidden();
     await expect(dashboard.shell.toast('App added')).toBeVisible();

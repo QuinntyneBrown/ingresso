@@ -7,7 +7,7 @@ using Ingresso.Domain.Entities;
 
 namespace Ingresso.Application.Tiles;
 
-public sealed record CreateTileCommand(string Name, string Url, string? Description, string Color, string? Initial, string? Category, string? Size) : IRequest<TileDto>;
+public sealed record CreateTileCommand(string Name, string Url, string? Description, string Color, string? Initial, string? Category) : IRequest<TileDto>;
 
 public sealed class CreateTileCommandValidator : AbstractValidator<CreateTileCommand>
 {
@@ -19,7 +19,6 @@ public sealed class CreateTileCommandValidator : AbstractValidator<CreateTileCom
         RuleFor(c => c.Description).MaximumLength(300);
         RuleFor(c => c.Category).MaximumLength(60);
         RuleFor(c => c.Initial).MaximumLength(2);
-        RuleFor(c => c.Size).Must(s => s is null || TileRules.IsSize(s)).WithMessage("Size must be large or small.");
     }
 }
 
@@ -29,7 +28,6 @@ public sealed class CreateTileCommandHandler(IAppDbContext db, ICurrentUser curr
     {
         var owner = current.UserId ?? throw new ForbiddenAccessException();
         var existing = await db.Tiles.Where(t => t.OwnerId == owner).ToListAsync(cancellationToken);
-        var max = existing.Count == 0 ? (int?)null : existing.Max(t => t.SortOrder);
         var (x, y) = TileLayout.FirstFree(existing, TileLayout.DefaultCols, TileLayout.DefaultRows);
         var name = request.Name.Trim();
         var tile = new Tile
@@ -41,8 +39,6 @@ public sealed class CreateTileCommandHandler(IAppDbContext db, ICurrentUser curr
             Color = request.Color,
             Initial = TileRules.InitialFor(request.Initial, name),
             Category = TileRules.Clean(request.Category),
-            Size = TileRules.ParseSize(request.Size),
-            SortOrder = (max ?? -1) + 1,
             X = x,
             Y = y,
             Cols = TileLayout.DefaultCols,

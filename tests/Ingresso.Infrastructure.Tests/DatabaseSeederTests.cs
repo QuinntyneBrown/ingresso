@@ -19,14 +19,13 @@ public sealed class DatabaseSeederTests : IDisposable
         {
             var db = sp.GetRequiredService<AppDbContext>();
             var dev = await db.Users.SingleAsync(u => u.Email == SeedData.UserEmail);
-            return (dev, await db.Tiles.Where(t => t.OwnerId == dev.Id).OrderBy(t => t.SortOrder).ToListAsync());
+            return (dev, await db.Tiles.Where(t => t.OwnerId == dev.Id).OrderBy(t => t.Y).ThenBy(t => t.X).ToListAsync());
         });
 
         Assert.Equal(UserRole.Member, user.Role);
-        Assert.Equal(3, tiles.Count(t => t.Size == TileSize.Large));
-        Assert.Equal(8, tiles.Count(t => t.Size == TileSize.Small));
+        Assert.Equal(3, tiles.Count(t => t is { Cols: 4, Rows: 3 }));
+        Assert.Equal(8, tiles.Count(t => t is { Cols: 3, Rows: 2 }));
         Assert.Equal(["Gmail", "Slack", "Linear"], tiles.Take(3).Select(t => t.Name));
-        Assert.Equal(Enumerable.Range(0, 11), tiles.Select(t => t.SortOrder));
     }
 
     [Fact]

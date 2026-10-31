@@ -17,8 +17,6 @@ public class Tile
     /// <summary>One or two characters shown on the tile.</summary>
     public string Initial { get; set; } = string.Empty;
     public string? Category { get; set; }
-    public int SortOrder { get; set; }
-    public TileSize Size { get; set; } = TileSize.Small;
 
     /// <summary>Column of the top-left cell on the 12-column dashboard grid, from 0.</summary>
     public int X { get; set; }

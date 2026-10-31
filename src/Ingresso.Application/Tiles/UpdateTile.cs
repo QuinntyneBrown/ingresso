@@ -6,7 +6,7 @@ using Ingresso.Application.Common.Interfaces;
 
 namespace Ingresso.Application.Tiles;
 
-public sealed record UpdateTileCommand(Guid Id, string Name, string Url, string? Description, string Color, string? Initial, string? Category, string? Size) : IRequest<TileDto>;
+public sealed record UpdateTileCommand(Guid Id, string Name, string Url, string? Description, string Color, string? Initial, string? Category) : IRequest<TileDto>;
 
 public sealed class UpdateTileCommandValidator : AbstractValidator<UpdateTileCommand>
 {
@@ -18,7 +18,6 @@ public sealed class UpdateTileCommandValidator : AbstractValidator<UpdateTileCom
         RuleFor(c => c.Description).MaximumLength(300);
         RuleFor(c => c.Category).MaximumLength(60);
         RuleFor(c => c.Initial).MaximumLength(2);
-        RuleFor(c => c.Size).Must(s => s is null || TileRules.IsSize(s)).WithMessage("Size must be large or small.");
     }
 }
 
@@ -36,10 +35,6 @@ public sealed class UpdateTileCommandHandler(IAppDbContext db, ICurrentUser curr
         tile.Color = request.Color;
         tile.Initial = TileRules.InitialFor(request.Initial, name);
         tile.Category = TileRules.Clean(request.Category);
-        if (request.Size is not null)
-        {
-            tile.Size = TileRules.ParseSize(request.Size);
-        }
 
         await db.SaveChangesAsync(cancellationToken);
         return TileDto.From(tile);

@@ -51,7 +51,7 @@ namespace Ingresso.Infrastructure.Persistence.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Type = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    Payload = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Payload = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: false),
                     AttemptCount = table.Column<int>(type: "int", nullable: false),
                     NextAttemptAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     ProcessedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
@@ -143,8 +143,10 @@ namespace Ingresso.Infrastructure.Persistence.Migrations
                     Color = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: false),
                     Initial = table.Column<string>(type: "nvarchar(2)", maxLength: 2, nullable: false),
                     Category = table.Column<string>(type: "nvarchar(60)", maxLength: 60, nullable: true),
-                    SortOrder = table.Column<int>(type: "int", nullable: false),
-                    Size = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    X = table.Column<int>(type: "int", nullable: false),
+                    Y = table.Column<int>(type: "int", nullable: false),
+                    Cols = table.Column<int>(type: "int", nullable: false),
+                    Rows = table.Column<int>(type: "int", nullable: false),
                     LastOpenedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
                 },
@@ -191,9 +193,9 @@ namespace Ingresso.Infrastructure.Persistence.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tiles_OwnerId_SortOrder",
+                name: "IX_Tiles_OwnerId_Y_X",
                 table: "Tiles",
-                columns: new[] { "OwnerId", "SortOrder" });
+                columns: new[] { "OwnerId", "Y", "X" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",
