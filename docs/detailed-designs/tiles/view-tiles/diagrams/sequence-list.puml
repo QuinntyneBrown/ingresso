@@ -1,0 +1,41 @@
+@startuml
+title UML sequence behaviour — List tiles in order
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Dashboard owner" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "TilesStore" as store
+  participant "HttpTilesApi" as client
+end box
+box "Backend — Ingresso.Api" #D1FADF
+  participant "TilesController" as controller
+end box
+box "Backend — Ingresso.Application and Domain" #ECFDF3
+  participant "GetTilesQueryHandler" as handler
+end box
+box "Backend — Ingresso.Infrastructure" #FFF4E5
+  database "ingresso database" as db
+end box
+actor -> store : Open dashboard
+store -> client : list()
+client -> controller : GET /api/tiles
+controller -> handler : Send GetTilesQuery
+handler -> db : SELECT tiles WHERE OwnerId = current ORDER BY SortOrder
+db --> handler : rows
+handler --> controller : TileDto[] in saved order (L2-005)
+controller --> client : 200 OK
+client --> store : Tile[]
+store --> actor : Render tiles
+@enduml

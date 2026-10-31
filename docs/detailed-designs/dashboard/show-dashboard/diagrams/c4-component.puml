@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Show the dashboard
+
+Container_Boundary(spa, "ingresso web app") {
+  Component(page, "DashboardPage", "Angular routed component", "Load states and the grid")
+  Component(grid, "ig-tile-grid", "Component library", "12-column placement, repair, collapse")
+  Component(tile, "ig-app-tile", "Component library", "One tile")
+  Component(store, "TilesStore", "Signal store", "Tiles, layout, search, load status")
+  Component(client, "HttpTilesApi", "TilesApi via TILES_API", "HTTP client")
+}
+Container(api, "Ingresso.Api", "ASP.NET Core", "GET /api/tiles")
+Rel(page, store, "Reads signals from")
+Rel(page, grid, "Passes layout to")
+Rel(grid, tile, "Projects per cell")
+Rel(store, client, "list()")
+Rel(client, api, "GET /api/tiles", "JSON/HTTPS")
+@enduml

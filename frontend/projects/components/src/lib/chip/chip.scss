@@ -1,0 +1,65 @@
+// Ported from docs/design-system/assets/components.css (.chip).
+:host {
+  display: inline-flex;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacingHorizontalXS);
+  min-height: var(--ig-control-height-sm);
+  padding: 0 var(--spacingHorizontalM);
+  border-radius: var(--borderRadiusCircular);
+  border: 1px solid var(--colorNeutralStroke1);
+  background: var(--colorNeutralBackground1);
+  color: var(--colorNeutralForeground1);
+  font: var(--ig-text-label);
+  white-space: nowrap;
+  transition: background-color var(--durationFaster) var(--curveEasyEase);
+}
+button.chip {
+  cursor: pointer;
+}
+button.chip:hover {
+  background: var(--colorSubtleBackgroundHover);
+}
+.chip[aria-pressed='true'] {
+  background: var(--colorBrandBackground2);
+  border-color: var(--colorBrandStroke1);
+  color: var(--colorBrandForeground1);
+}
+.chip[aria-pressed='true']:hover {
+  background: var(--colorBrandBackground2Hover);
+}
+.remove {
+  display: inline-grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: calc(-1 * var(--spacingHorizontalXS));
+  padding: 0;
+  border-radius: var(--borderRadiusCircular);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.remove:hover {
+  background: var(--colorSubtleBackgroundPressed);
+}
+@media (prefers-reduced-motion: reduce) {
+  .chip {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .chip {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+  .chip[aria-pressed='true'] {
+    background: Highlight;
+    color: HighlightText;
+  }
+}

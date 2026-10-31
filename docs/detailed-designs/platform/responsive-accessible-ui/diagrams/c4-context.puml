@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Responsive and accessible UI
+Person(user, "User", "Any person, device or assistive technology")
+System(ingresso, "ingresso", "Front-door dashboard of app tiles")
+Rel(user, ingresso, "Uses", "HTTPS")
+@enduml

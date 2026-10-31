@@ -1,0 +1,1 @@
+A link goes somewhere: another page, or an app in a new tab. Apply `ig-link` to a native `<a href>`. Links are always underlined. `variant="back"` is the standalone back link with a leading arrow; `external` opens in a new tab and announces it.

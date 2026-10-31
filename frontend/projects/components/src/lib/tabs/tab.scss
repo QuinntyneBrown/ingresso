@@ -1,0 +1,55 @@
+// Ported from docs/design-system/assets/components.css (.tab).
+:host {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacingHorizontalS);
+  min-height: var(--ig-target-comfortable);
+  padding: 0 var(--spacingHorizontalM);
+  border: 0;
+  background: none;
+  color: var(--colorNeutralForeground2);
+  font: var(--ig-text-label);
+  cursor: pointer;
+  white-space: nowrap;
+}
+:host::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: transparent;
+  border-radius: 2px 2px 0 0;
+  transition: background-color var(--durationFast) var(--curveEasyEase);
+}
+:host(:hover) {
+  color: var(--colorNeutralForeground1);
+}
+:host(:focus-visible) {
+  outline-offset: calc(var(--ig-focus-ring-width) * -1);
+}
+:host([aria-selected='true']) {
+  color: var(--colorBrandForeground1);
+}
+:host([aria-selected='true'])::after {
+  background: var(--colorBrandBackground);
+}
+:host([aria-disabled='true']) {
+  color: var(--colorNeutralForegroundDisabled);
+  cursor: not-allowed;
+}
+.tab__count {
+  margin-left: var(--spacingHorizontalXS);
+}
+@media (forced-colors: active) {
+  :host([aria-selected='true'])::after {
+    background: Highlight;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :host::after {
+    transition: none;
+  }
+}

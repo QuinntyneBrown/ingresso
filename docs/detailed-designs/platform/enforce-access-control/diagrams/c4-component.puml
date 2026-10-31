@@ -1,0 +1,23 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Enforce access control
+
+Container(spa, "ingresso web app", "Angular", "HttpClient with XSRF, apiErrorInterceptor")
+Container_Boundary(api, "Ingresso.Api") {
+  Component(limit, "Rate limiter", "ASP.NET Core RateLimiter", "Per-session and sign-in policies")
+  Component(auth, "Cookie authentication", "ASP.NET Core", "Session validation")
+  Component(csrf, "CsrfProtectionMiddleware", "Middleware", "Checks X-XSRF-TOKEN")
+  Component(authz, "Authorization", "[Authorize], AuthPolicies", "Requires a session")
+  Component(handler, "Tile handlers", "MediatR handlers", "Owner scope")
+  Component(current, "HttpCurrentUser", "ICurrentUser", "User id from claims")
+}
+ContainerDb(db, "ingresso database", "SQL Server", "Tiles")
+Rel(spa, limit, "Request", "JSON/HTTPS")
+Rel(limit, auth, "Next")
+Rel(auth, csrf, "Next")
+Rel(csrf, authz, "Next")
+Rel(authz, handler, "Dispatch")
+Rel(handler, current, "Reads UserId")
+Rel(handler, db, "WHERE OwnerId = user", "EF Core")
+@enduml

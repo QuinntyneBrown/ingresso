@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Verify an email address
+
+Container_Boundary(api, "Ingresso.Api") {
+  Component(ctrl, "AuthController", "ASP.NET Core controller", "GET /auth/verify-email")
+  Component(verify, "VerifyEmailCommandHandler", "MediatR handler", "Records VerifiedEmail")
+  Component(resend, "ResendVerificationCommandHandler", "MediatR handler", "Issues new token")
+  Component(tok, "SecurityTokenService", "ISecurityTokenService", "Hash and issue")
+}
+ContainerDb(db, "ingresso database", "SQL Server", "SecurityTokens, VerifiedEmails")
+Rel(ctrl, verify, "Sends VerifyEmailCommand")
+Rel(ctrl, resend, "Sends ResendVerificationCommand")
+Rel(verify, tok, "Hash")
+Rel(resend, tok, "Issue")
+Rel(verify, db, "INSERT VerifiedEmail", "EF Core")
+Rel(resend, db, "INSERT token, outbox message", "EF Core")
+@enduml

@@ -1,0 +1,65 @@
+@startuml
+title UML sequence behaviour — Edit a tile
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Dashboard owner" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "EditAppDialog" as dialog
+  participant "TilesStore" as store
+  participant "HttpTilesApi" as client
+end box
+box "Backend — Ingresso.Api" #D1FADF
+  participant "TilesController" as controller
+end box
+box "Backend — Ingresso.Application and Domain" #ECFDF3
+  participant "ValidationBehavior" as validation
+  participant "UpdateTileCommandHandler" as handler
+end box
+box "Backend — Ingresso.Infrastructure" #FFF4E5
+  database "ingresso database" as db
+end box
+actor -> dialog : Open Edit for a tile
+dialog --> actor : Form shows current values (L2-006)
+alt user cancels or presses Escape
+  dialog --> actor : Close, return focus to opener, no request
+else user saves
+  dialog -> store : update(id, TileInput)
+  store -> client : update(id, TileInput)
+  client -> controller : PUT /api/tiles/{id}
+  controller -> validation : Send UpdateTileCommand
+  alt invalid
+    validation --> controller : ValidationException
+    controller --> client : 400 ProblemDetails
+    client --> dialog : field errors
+    dialog --> actor : Stay open, show errors
+  else valid
+    validation -> handler : Handle(command)
+    handler -> db : SELECT WHERE Id = id AND OwnerId = current
+    db --> handler : tile or none
+    opt none
+      handler --> controller : NotFoundException
+      controller --> client : 404 ProblemDetails
+    end
+    handler -> handler : Assign fields, keep SortOrder
+    handler -> db : UPDATE in one unit of work
+    handler --> controller : TileDto
+    controller --> client : 200 OK
+    client --> store : Tile
+    store -> store : Replace tile in place
+    store --> dialog : done
+    dialog --> actor : Close, return focus to opener
+  end
+end
+@enduml

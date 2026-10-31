@@ -1,0 +1,82 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Edit the layout
+
+class TileGridItem <<interface>> {
+  +id: string
+  +x: number
+  +y: number
+  +cols: number
+  +rows: number
+  +locked?: boolean
+  +minCols?: number
+  +maxCols?: number
+  +minRows?: number
+  +maxRows?: number
+  +label?: string
+}
+class TileGrid <<ig-tile-grid>> {
+  +mode: TileGridMode
+  +editable: Signal<boolean>
+  +layoutChange: TileGridItem[]
+  +addTile(request): void
+  +removeTile(id): void
+}
+class GridPointerSession
+class "canPlace()" as canPlace <<function>>
+class "clampSpan()" as clampSpan <<function>>
+class "announcementFor()" as announce <<function>>
+class Tile {
+  +Guid Id
+  +Guid OwnerId
+  +int X
+  +int Y
+  +int Cols
+  +int Rows
+  +DateTimeOffset CreatedAt
+}
+class SaveLayoutCommand <<record>> {
+  +IReadOnlyList<TilePlacement> Tiles
+}
+class TilePlacement <<record>> {
+  +Guid Id
+  +int X
+  +int Y
+  +int Cols
+  +int Rows
+}
+class SaveLayoutCommandValidator
+class SaveLayoutCommandHandler {
+  +Handle(c: SaveLayoutCommand): Task<IReadOnlyList<TileDto>>
+}
+class ResetLayoutCommandHandler {
+  +Handle(c: ResetLayoutCommand): Task<IReadOnlyList<TileDto>>
+}
+class TilesStore {
+  +editing: WritableSignal<boolean>
+  +saveLayout(layout: TileGridItem[]): Observable<Tile[]>
+  +resetLayout(): Observable<Tile[]>
+}
+TileGrid *-- GridPointerSession
+TileGrid ..> canPlace
+TileGrid ..> clampSpan
+TileGrid ..> announce
+TileGrid "1" o-- "*" TileGridItem
+TilesStore ..> TileGridItem : saves
+SaveLayoutCommand *-- "*" TilePlacement
+SaveLayoutCommandValidator ..> SaveLayoutCommand : validates
+SaveLayoutCommandHandler ..> SaveLayoutCommand : handles
+SaveLayoutCommandHandler --> "*" Tile : sets placement
+ResetLayoutCommandHandler --> "*" Tile : packs default
+@enduml

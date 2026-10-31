@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Responsive and accessible UI
+
+Container_Boundary(spa, "ingresso web app") {
+  Component(shell, "AppShell", "Angular component", "Header, skip link, toast region")
+  Component(layout, "ig-layout", "Component library", "1/2/3/4 column grid")
+  Component(header, "ig-site-header", "Component library", "Collapses at XS")
+  Component(dialog, "DialogShell", "CDK dialog chrome", "Full-screen at XS, focus trap")
+  Component(toast, "ToastRegion", "Component library", "Live region")
+  Component(tokens, "Design tokens", "Fluent UI v9 theme", "Light and dark, motion")
+}
+Rel(shell, header, "Composes")
+Rel(shell, layout, "Composes")
+Rel(shell, toast, "Composes")
+Rel(layout, tokens, "Reads")
+Rel(header, tokens, "Reads")
+Rel(dialog, tokens, "Reads")
+@enduml

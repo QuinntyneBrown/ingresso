@@ -1,0 +1,37 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Manage the database
+
+class CliApp {
+  +RunAsync(args): Task<int>
+}
+class DatabaseMaintenance {
+  +MigrateAsync(): Task
+  +ResetAsync(): Task
+}
+class DatabaseSeeder {
+  +SeedAsync(): Task
+}
+class SeedData <<static>> {
+  +Tiles: SeedTile[]
+}
+class SeedTile <<record>>
+class AppDbContext
+CliApp --> DatabaseMaintenance
+CliApp --> DatabaseSeeder
+DatabaseMaintenance --> AppDbContext
+DatabaseSeeder --> AppDbContext
+DatabaseSeeder ..> SeedData
+SeedData *-- SeedTile
+@enduml

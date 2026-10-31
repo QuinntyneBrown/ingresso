@@ -1,0 +1,9 @@
+// Ported from docs/design-system/assets/components.css (.grid).
+:host {
+  display: grid;
+  gap: var(--ig-layout-gutter);
+  grid-template-columns: repeat(var(--ig-layout-columns), minmax(0, 1fr));
+}
+:host(.grid--auto) {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+}

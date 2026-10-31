@@ -1,0 +1,29 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Edit the layout
+
+Container_Boundary(spa, "ingresso web app") {
+  Component(shell, "AppShell", "Angular component", "Edit layout / Done toggle")
+  Component(bar, "ig-layout-bar", "Component library", "Mode message, Reset, Done")
+  Component(grid, "ig-tile-grid", "Component library", "Move, resize, refuse, announce")
+  Component(page, "DashboardPage", "Angular routed component", "Mode, limits, layoutChange")
+  Component(store, "TilesStore", "Signal store", "Optimistic saveLayout with rollback")
+}
+Container_Boundary(api, "Ingresso.Api") {
+  Component(ctrl, "TilesController", "ASP.NET Core controller", "PUT layout, POST reset-layout")
+  Component(save, "SaveLayoutCommandHandler", "MediatR handler", "Validates and writes placements")
+  Component(reset, "ResetLayoutCommandHandler", "MediatR handler", "Packs the default layout")
+}
+ContainerDb(db, "ingresso database", "SQL Server", "Tiles table")
+Rel(shell, store, "Sets editing")
+Rel(page, grid, "mode, layout")
+Rel(grid, page, "layoutChange")
+Rel(page, store, "saveLayout(layout)")
+Rel(bar, page, "Reset layout, Done")
+Rel(store, ctrl, "PUT / POST", "JSON/HTTPS")
+Rel(ctrl, save, "Sends SaveLayoutCommand")
+Rel(ctrl, reset, "Sends ResetLayoutCommand")
+Rel(save, db, "UPDATE X, Y, Cols, Rows", "EF Core")
+Rel(reset, db, "UPDATE X, Y, Cols, Rows", "EF Core")
+@enduml

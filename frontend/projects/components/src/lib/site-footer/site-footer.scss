@@ -1,0 +1,32 @@
+:host {
+  display: block;
+}
+.site-footer {
+  border-top: 1px solid var(--colorNeutralStroke2);
+  color: var(--colorNeutralForeground3);
+  font: var(--ig-text-body-sm);
+}
+.site-footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacingHorizontalL);
+  max-width: var(--ig-content-max-width);
+  margin-inline: auto;
+  padding: var(--spacingVerticalXL) var(--ig-layout-margin);
+}
+.site-footer__note {
+  max-width: none;
+}
+.site-footer__links {
+  display: flex;
+  gap: var(--spacingHorizontalL);
+}
+.site-footer__links ::ng-deep a {
+  color: var(--colorNeutralForeground2Link);
+  text-underline-offset: 0.15em;
+}
+.site-footer__links ::ng-deep a:hover {
+  color: var(--colorNeutralForeground2LinkHover);
+}

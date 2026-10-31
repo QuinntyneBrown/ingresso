@@ -1,0 +1,11 @@
+// Ported from docs/design-system/assets/components.css (.tabs).
+:host {
+  display: block;
+}
+.tabs {
+  display: flex;
+  gap: var(--spacingHorizontalXS);
+  border-bottom: 1px solid var(--colorNeutralStroke2);
+  overflow-x: auto;
+  scrollbar-width: none;
+}

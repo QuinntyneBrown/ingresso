@@ -1,0 +1,64 @@
+@startuml
+title UML sequence behaviour — Create a tile
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Dashboard owner" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "AddAppDialog" as dialog
+  participant "TilesStore" as store
+  participant "HttpTilesApi" as client
+end box
+box "Backend — Ingresso.Api" #D1FADF
+  participant "TilesController" as controller
+end box
+box "Backend — Ingresso.Application and Domain" #ECFDF3
+  participant "ValidationBehavior" as validation
+  participant "CreateTileCommandHandler" as handler
+  participant "Tile" as entity
+end box
+box "Backend — Ingresso.Infrastructure" #FFF4E5
+  database "ingresso database" as db
+end box
+actor -> dialog : Submit name, address, colour, category
+dialog -> dialog : Validate form (mirrors L2-002, L2-003)
+dialog -> store : create(TileInput)
+store -> client : create(TileInput)
+client -> controller : POST /api/tiles with X-XSRF-TOKEN
+controller -> controller : Authorize session (L2-033)
+controller -> validation : Send CreateTileCommand
+alt input invalid (L2-002, L2-003)
+  validation --> controller : ValidationException
+  controller --> client : 400 ProblemDetails with field errors
+  client --> dialog : ApiError(validation)
+  dialog --> actor : Show field errors, focus first invalid field
+else input valid
+  validation -> handler : Handle(command)
+  handler -> db : Count owner tiles, read max SortOrder
+  db --> handler : count, max
+  opt count >= 200 (L2-004)
+    handler --> controller : Conflict
+    controller --> client : 409 ProblemDetails
+  end
+  handler -> entity : new Tile(OwnerId, NormalizeUrl(Url), SortOrder = max + 1)
+  handler -> db : INSERT tile in one unit of work
+  db --> handler : committed
+  handler --> controller : TileDto
+  controller --> client : 201 Created + Location
+  client --> store : Tile
+  store -> store : Append tile to order
+  store --> dialog : Tile
+  dialog --> actor : Close dialog, show tile last on dashboard
+end
+@enduml

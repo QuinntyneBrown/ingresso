@@ -1,0 +1,21 @@
+// Ported from docs/design-system/assets/components.css (.list, .catalog, .card--flush).
+:host {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+:host(.list) {
+  display: flex;
+  flex-direction: column;
+}
+:host(.card) {
+  background: var(--colorNeutralBackground1);
+  border: 1px solid var(--colorNeutralStroke2);
+  border-radius: var(--borderRadius2XLarge);
+  box-shadow: var(--shadow2);
+  overflow: hidden;
+}
+:host(.catalog) {
+  display: grid;
+  gap: var(--spacingVerticalM);
+}

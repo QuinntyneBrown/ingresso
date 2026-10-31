@@ -1,0 +1,39 @@
+@startuml
+title UML sequence behaviour — Verify an email address
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "User" as actor
+box "Backend — Ingresso.Api" #D1FADF
+  participant "AuthController" as controller
+end box
+box "Backend — Ingresso.Application and Domain" #ECFDF3
+  participant "VerifyEmailCommandHandler" as handler
+end box
+box "Backend — Ingresso.Infrastructure" #FFF4E5
+  database "ingresso database" as db
+end box
+actor -> controller : GET /auth/verify-email?token=...
+controller -> handler : Send VerifyEmailCommand(token)
+handler -> db : SELECT SecurityToken by hash, VerifyEmail purpose
+alt unusable
+  handler --> controller : false
+  controller --> actor : 302 /?email-verified=0
+else usable
+  handler -> handler : Mark token used
+  handler -> db : INSERT VerifiedEmail if absent (L2-029)
+  handler --> controller : true
+  controller --> actor : 302 /?email-verified=1
+end
+@enduml

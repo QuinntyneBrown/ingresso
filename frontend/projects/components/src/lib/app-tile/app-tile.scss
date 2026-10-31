@@ -1,0 +1,120 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.tile {
+  position: relative;
+  height: 100%;
+  background: var(--colorNeutralBackground1);
+  border: 1px solid var(--colorNeutralStroke2);
+  border-radius: var(--borderRadius2XLarge);
+  transition:
+    border-color var(--durationFaster) var(--curveEasyEase),
+    box-shadow var(--durationFaster) var(--curveEasyEase),
+    transform var(--durationFaster) var(--curveEasyEase);
+}
+.tile:hover,
+.tile:focus-within {
+  border-color: var(--colorNeutralStroke1);
+  box-shadow: var(--shadow4);
+}
+.tile__surface {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacingVerticalL);
+  height: 100%;
+  padding: var(--spacingHorizontalXL);
+  color: inherit;
+  text-decoration: none;
+  border-radius: inherit;
+}
+.tile--small .tile__surface {
+  padding: var(--spacingHorizontalL);
+}
+a.tile__surface:focus-visible {
+  outline: none;
+  box-shadow: var(--ig-shadow-focus);
+}
+.tile__head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacingHorizontalM);
+  min-width: 0;
+}
+.tile--large .tile__head {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacingVerticalL);
+}
+.tile__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.tile__name {
+  font: var(--ig-text-h4);
+  font-size: var(--fontSizeBase400);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tile--large .tile__name {
+  font-size: var(--fontSizeBase500);
+}
+.tile__url {
+  font: var(--ig-text-code);
+  font-size: var(--fontSizeBase200);
+  color: var(--colorNeutralForeground3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tile__description {
+  color: var(--colorNeutralForeground2);
+  font: var(--ig-text-body-sm);
+}
+.tile__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacingHorizontalM);
+  margin-top: auto;
+  padding-top: var(--spacingVerticalM);
+  border-top: 1px solid var(--colorNeutralStroke2);
+  font: var(--ig-text-caption);
+}
+.tile__opened {
+  color: var(--colorNeutralForeground3);
+}
+.tile__open {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacingHorizontalXS);
+  color: var(--colorBrandForeground1);
+  font-weight: var(--fontWeightMedium);
+}
+.tile--editing {
+  border-style: dashed;
+  border-color: var(--colorNeutralStroke1);
+  cursor: grab;
+}
+.tile__handle {
+  position: absolute;
+  top: var(--spacingVerticalS);
+  left: var(--spacingHorizontalXS);
+  color: var(--colorNeutralForeground3);
+  display: inline-flex;
+}
+.tile--editing .tile__surface {
+  padding-left: var(--spacingHorizontalXXXL);
+}
+.tile__edit {
+  position: absolute;
+  top: var(--spacingVerticalS);
+  right: var(--spacingHorizontalS);
+}
+@media (forced-colors: active) {
+  .tile {
+    border-color: CanvasText;
+  }
+}

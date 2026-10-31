@@ -1,0 +1,1 @@
+The search box jumps to an app by name. It sits in a `role="search"` form with a visually hidden label and shows a keyboard hint for the shortcut that focuses it ("/" by default, ignored while typing in another field). Escape clears it.

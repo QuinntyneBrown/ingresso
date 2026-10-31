@@ -1,0 +1,11 @@
+// Ported from docs/design-system/assets/components.css (.container).
+:host {
+  display: block;
+  width: 100%;
+  max-width: var(--ig-content-max-width);
+  margin-inline: auto;
+  padding-inline: var(--ig-layout-margin);
+}
+:host(.container--narrow) {
+  max-width: 42rem;
+}

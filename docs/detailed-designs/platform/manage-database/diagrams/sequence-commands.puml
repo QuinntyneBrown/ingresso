@@ -1,0 +1,42 @@
+@startuml
+title UML sequence behaviour — Run the database commands
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Operator" as actor
+box "Backend — Ingresso.Infrastructure" #FFF4E5
+  participant "DatabaseMaintenance" as maint
+  participant "DatabaseSeeder" as seeder
+  database "ingresso database" as db
+end box
+box "Backend — Ingresso.Cli" #D1FADF
+  participant "CliApp" as cli
+end box
+actor -> cli : migrate
+cli -> maint : MigrateAsync()
+maint -> db : Apply pending migrations (L2-049)
+cli --> actor : exit 0
+actor -> cli : seed
+cli -> seeder : SeedAsync()
+seeder -> db : Insert rows only when absent (idempotent)
+cli --> actor : exit 0
+actor -> cli : reset
+alt confirmation flag missing (L2-049)
+  cli --> actor : exit 1, explain flag
+else flag present
+  cli -> maint : ResetAsync()
+  maint -> db : Drop data, recreate schema
+  cli --> actor : exit 0
+end
+@enduml

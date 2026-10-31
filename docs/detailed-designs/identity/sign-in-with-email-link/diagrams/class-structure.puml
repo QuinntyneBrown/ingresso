@@ -1,0 +1,84 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Sign in with an email link
+
+enum SecurityTokenPurpose {
+  SignIn
+  VerifyEmail
+}
+class SecurityToken {
+  +Guid Id
+  +string Email
+  +string TokenHash
+  +SecurityTokenPurpose Purpose
+  +DateTimeOffset CreatedAtUtc
+  +DateTimeOffset ExpiresAtUtc
+  +DateTimeOffset? UsedAtUtc
+  +string? ReturnUrl
+  +IsUsable(now): bool
+}
+class User {
+  +Guid Id
+  +string Email
+  +string? Name
+  +UserRole Role
+  +CreateMember(email, now): User
+}
+class Session {
+  +Guid Id
+  +Guid UserId
+  +DateTimeOffset CreatedAtUtc
+  +DateTimeOffset LastSeenAtUtc
+  +DateTimeOffset? RevokedAtUtc
+  +Start(userId, now): Session
+}
+class RequestSignInLinkCommand <<record>> {
+  +string? Email
+  +string? ReturnUrl
+}
+class RedeemSignInLinkCommand <<record>> {
+  +string Token
+}
+class SignedIn <<record>> {
+  +Guid SessionId
+  +Guid UserId
+  +string Email
+  +string RedirectTo
+}
+class RequestSignInLinkCommandHandler {
+  +HourlyLimitPerEmail = 5
+  +Lifetime = 15 min
+}
+class RedeemSignInLinkCommandHandler
+interface ISecurityTokenService {
+  +Issue(email, purpose, lifetime, returnUrl): string
+  +Hash(token): string
+}
+interface IOutbox {
+  +Enqueue(message): void
+}
+class SendEmail <<record>>
+SecurityToken --> SecurityTokenPurpose
+RequestSignInLinkCommandHandler ..> RequestSignInLinkCommand : handles
+RequestSignInLinkCommandHandler --> ISecurityTokenService
+RequestSignInLinkCommandHandler --> IOutbox
+RequestSignInLinkCommandHandler ..> SendEmail : enqueues
+RedeemSignInLinkCommandHandler ..> RedeemSignInLinkCommand : handles
+RedeemSignInLinkCommandHandler --> ISecurityTokenService
+RedeemSignInLinkCommandHandler ..> SecurityToken : marks used
+RedeemSignInLinkCommandHandler ..> User : finds or creates
+RedeemSignInLinkCommandHandler ..> Session : starts
+RedeemSignInLinkCommandHandler ..> SignedIn : returns
+User "1" --> "*" Session
+@enduml

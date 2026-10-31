@@ -1,0 +1,32 @@
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable, InjectionToken } from '@angular/core';
+import { Observable } from 'rxjs';
+import { API_BASE_URL } from '../core/api-config';
+
+/** The signed-in user, as the header and greeting show them. */
+export interface CurrentUser {
+  name: string;
+  email: string;
+  initials: string;
+  /** The workspace the person signed in to, such as "Northwind". */
+  workspace: string | null;
+  /** How they signed in, such as "SSO". */
+  signInMethod: string | null;
+}
+
+export interface AuthApi {
+  /** The signed-in user; fails with a 401 `ApiError` when anonymous. */
+  me(): Observable<CurrentUser>;
+}
+
+export const AUTH_API = new InjectionToken<AuthApi>('AUTH_API');
+
+@Injectable()
+export class HttpAuthApi implements AuthApi {
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = inject(API_BASE_URL);
+
+  me(): Observable<CurrentUser> {
+    return this.http.get<CurrentUser>(`${this.baseUrl}/api/auth/me`);
+  }
+}

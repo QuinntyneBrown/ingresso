@@ -1,0 +1,40 @@
+// Ported from docs/design-system/assets/components.css (.breadcrumb).
+:host {
+  display: block;
+}
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacingHorizontalS);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font: var(--ig-text-body-sm);
+  color: var(--colorNeutralForeground2);
+}
+.breadcrumb li + li::before {
+  content: '/';
+  margin-right: var(--spacingHorizontalS);
+  color: var(--colorNeutralForeground3);
+}
+.breadcrumb a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  color: var(--colorNeutralForeground2);
+  text-decoration: none;
+  border-radius: var(--borderRadiusMedium);
+}
+.breadcrumb a:hover {
+  color: var(--colorNeutralForeground1);
+  text-decoration: underline;
+}
+.breadcrumb a:focus-visible {
+  outline: none;
+  box-shadow: var(--ig-shadow-focus);
+}
+.breadcrumb [aria-current='page'] {
+  color: var(--colorNeutralForeground1);
+  font-weight: var(--fontWeightMedium);
+}

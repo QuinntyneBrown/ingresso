@@ -1,0 +1,41 @@
+@startuml
+title UML sequence behaviour — Log a handled error
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "User" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "apiErrorInterceptor" as interceptor
+end box
+box "Backend — Ingresso.Api" #D1FADF
+  participant "RequestLoggingMiddleware" as log
+  participant "ExceptionHandlingMiddleware" as err
+  participant "TilesController" as controller
+end box
+box "Backend — Ingresso.Application and Domain" #ECFDF3
+  participant "Handler" as handler
+end box
+actor -> interceptor : Request
+interceptor -> log : GET /api/tiles/{id}
+log -> log : Assign correlation id
+log -> err : next
+err -> controller : next
+controller -> handler : Send query
+handler --> err : NotFoundException
+err -> err : Map to 404 ProblemDetails + correlationId (L2-048)
+err --> log : 404
+log -> log : Log method, path, 404, duration, correlation id (L2-047)
+log --> interceptor : 404 application/problem+json, X-Correlation-Id
+interceptor --> actor : ApiError(notFound)
+@enduml

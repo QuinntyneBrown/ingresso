@@ -1,0 +1,71 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Show the dashboard
+
+class TileGridItem <<interface>> {
+  +id: string
+  +x: number
+  +y: number
+  +cols: number
+  +rows: number
+  +locked?: boolean
+  +minCols?: number
+  +maxCols?: number
+  +minRows?: number
+  +maxRows?: number
+  +label?: string
+}
+class DashboardPage {
+  -store: TilesStore
+  #label(tile: Tile): string
+}
+class TilesStore {
+  +tiles: Signal<Tile[]>
+  +layout: Signal<TileGridItem[]>
+  +status: Signal<LoadStatus>
+  +load(): void
+}
+class TileGrid <<ig-tile-grid>> {
+  +layout: TileGridItem[]
+  +mode: TileGridMode
+  +columns = 12
+  +rowHeight = 72
+  +gap = 16
+  +collapsed: Signal<boolean>
+  +layoutChange: TileGridItem[]
+}
+class "normalizeLayout()" as normalize <<function>>
+interface Tile {
+  +id: string
+  +name: string
+  +x: number
+  +y: number
+  +cols: number
+  +rows: number
+  +lastOpenedAt?: string
+}
+enum LoadStatus {
+  loading
+  loaded
+  empty
+  error
+}
+DashboardPage --> TilesStore
+DashboardPage *-- TileGrid
+TilesStore "1" o-- "*" Tile
+TilesStore ..> TileGridItem : maps to
+TileGrid ..> normalize : repairs with
+TileGrid "1" o-- "*" TileGridItem
+TilesStore --> LoadStatus
+@enduml

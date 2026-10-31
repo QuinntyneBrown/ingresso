@@ -1,0 +1,14 @@
+// The app's global styles are the component library's foundations; everything else is encapsulated.
+@use 'ingresso';
+
+// CDK drag-and-drop renders its preview outside the component, so these cannot be encapsulated.
+.cdk-drag-preview {
+  box-shadow: var(--shadow16);
+  border-radius: var(--borderRadius2XLarge);
+}
+.cdk-drag-placeholder {
+  opacity: 0.35;
+}
+.cdk-drag-animating {
+  transition: transform 200ms var(--curveEasyEase);
+}

@@ -1,0 +1,13 @@
+// Ported from docs/design-system/assets/components.css (.cluster).
+:host {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacingHorizontalM);
+  align-items: center;
+}
+:host(.cluster--between) {
+  justify-content: space-between;
+}
+:host(.cluster--end) {
+  justify-content: flex-end;
+}

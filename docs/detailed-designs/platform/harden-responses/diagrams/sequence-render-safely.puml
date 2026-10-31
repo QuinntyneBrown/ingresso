@@ -1,0 +1,36 @@
+@startuml
+title UML sequence behaviour — Serve and render tile content safely
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "User" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "ig-app-tile" as tile
+end box
+box "Backend — Ingresso.Api" #D1FADF
+  participant "RequestLoggingMiddleware" as log
+  participant "SecurityHeadersMiddleware" as headers
+  participant "TilesController" as controller
+end box
+actor -> log : GET /api/tiles
+log -> headers : next
+headers -> controller : next
+controller --> headers : TileDto[] (name may contain <img onerror>)
+headers -> headers : Add CSP, HSTS, nosniff, Referrer-Policy (L2-035)
+headers --> log : response
+log -> log : Log method, path, status, duration; no email, token, cookie, URL (L2-038)
+log --> tile : 200 OK
+tile -> tile : {{ name }} interpolation escapes markup (L2-037)
+tile --> actor : Literal text, no script runs
+@enduml

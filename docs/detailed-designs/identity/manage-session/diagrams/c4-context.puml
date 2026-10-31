@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Manage a session
+Person(user, "User", "Signed-in person")
+System(ingresso, "ingresso", "Front-door dashboard of app tiles")
+Rel(user, ingresso, "Uses", "HTTPS")
+@enduml

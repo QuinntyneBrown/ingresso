@@ -1,0 +1,19 @@
+// Ported from docs/design-system/assets/components.css (.field__help, .field__error).
+:host {
+  display: block;
+}
+.field__help {
+  font: var(--ig-text-body-sm);
+  color: var(--colorNeutralForeground2);
+}
+.field__error {
+  display: flex;
+  gap: var(--spacingHorizontalXS);
+  align-items: flex-start;
+  font: var(--ig-text-body-sm);
+  color: var(--colorStatusDangerForeground1);
+}
+.field__error::before {
+  content: '⚠';
+  flex: none;
+}

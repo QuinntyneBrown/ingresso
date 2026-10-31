@@ -1,0 +1,1 @@
+A switch turns one setting on or off, and the change applies straight away. It renders `button[role=switch]` with `aria-checked`; the projected text is its label. Bind it with `[(checked)]`, or with `formControlName` / `[formControl]` / `ngModel`, because it implements `ControlValueAccessor`. Space or Enter toggles it.

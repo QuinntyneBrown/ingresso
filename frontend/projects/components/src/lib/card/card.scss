@@ -1,0 +1,83 @@
+// Ported from docs/design-system/assets/components.css (.card).
+:host {
+  display: block;
+  background: var(--colorNeutralBackground1);
+  color: var(--colorNeutralForeground1);
+  border: 1px solid var(--colorNeutralStroke2);
+  border-radius: var(--borderRadius2XLarge);
+  box-shadow: var(--shadow2);
+  padding: var(--spacingHorizontalXXL);
+}
+:host(.card--flush) {
+  padding: 0;
+  overflow: hidden;
+}
+:host(.card--interactive) {
+  cursor: pointer;
+  transition:
+    box-shadow var(--durationFaster) var(--curveEasyEase),
+    border-color var(--durationFaster) var(--curveEasyEase),
+    transform var(--durationFaster) var(--curveEasyEase);
+}
+:host(.card--interactive:hover),
+:host(.card--interactive[data-state='hover']) {
+  box-shadow: var(--shadow4);
+  border-color: var(--colorNeutralStroke1);
+  transform: translateY(-1px);
+}
+:host(.card--selected),
+:host([aria-selected='true']) {
+  border-color: var(--colorBrandStroke1);
+  box-shadow: 0 0 0 1px var(--colorBrandStroke1);
+}
+.card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacingHorizontalL);
+  margin-bottom: var(--spacingVerticalL);
+}
+// Nothing in the header: no title and no projected actions.
+.card__header:not(:has(.card__title)):has(.card__actions:empty) {
+  display: none;
+}
+.card__title {
+  font: var(--ig-text-h4);
+  margin: 0;
+}
+.card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacingHorizontalS);
+}
+.card__actions:empty {
+  display: none;
+}
+.card__footer {
+  margin-top: var(--spacingVerticalL);
+  padding-top: var(--spacingVerticalL);
+  border-top: 1px solid var(--colorNeutralStroke2);
+  display: flex;
+  gap: var(--spacingHorizontalM);
+  justify-content: flex-end;
+}
+.card__footer:empty {
+  display: none;
+}
+:host(.card--flush) .card__header {
+  margin: 0;
+  padding: var(--spacingVerticalL) var(--spacingHorizontalXXL) 0;
+}
+:host(.card--flush) .card__footer {
+  margin: 0;
+  padding: var(--spacingVerticalL) var(--spacingHorizontalXXL);
+}
+@media (prefers-reduced-motion: reduce) {
+  :host(.card--interactive) {
+    transition: none;
+  }
+  :host(.card--interactive:hover),
+  :host(.card--interactive[data-state='hover']) {
+    transform: none;
+  }
+}

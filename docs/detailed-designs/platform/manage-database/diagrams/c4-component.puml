@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Manage the database
+
+Container_Boundary(cli, "Ingresso.Cli") {
+  Component(app, "CliApp", ".NET console", "Command dispatch, exit codes")
+  Component(maint, "DatabaseMaintenance", "Infrastructure service", "Migrate and reset")
+  Component(seed, "DatabaseSeeder", "Infrastructure service", "Idempotent seed")
+  Component(ctx, "AppDbContext", "EF Core DbContext", "Schema and data")
+}
+ContainerDb(db, "ingresso database", "SQL Server", "All tables")
+Rel(app, maint, "migrate, reset")
+Rel(app, seed, "seed")
+Rel(maint, ctx, "Database.MigrateAsync")
+Rel(seed, ctx, "Insert when absent")
+Rel(ctx, db, "SQL", "EF Core")
+@enduml

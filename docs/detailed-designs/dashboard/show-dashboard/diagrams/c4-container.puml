@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Show the dashboard
+
+Person(user, "Dashboard owner", "Keeps a front door to the apps they use")
+System_Boundary(ingresso, "ingresso") {
+  Container(spa, "ingresso web app", "Angular", "Dashboard, directory and dialogs")
+  Container(api, "Ingresso.Api", "ASP.NET Core", "REST API, authentication, middleware")
+  ContainerDb(db, "ingresso database", "SQL Server", "Users, sessions, tokens and tiles")
+}
+Rel(user, spa, "Uses", "HTTPS")
+Rel(spa, api, "Calls", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+@enduml

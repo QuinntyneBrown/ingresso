@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Edit a tile
+
+Container(spa, "ingresso web app", "Angular", "EditAppDialog and AppForm")
+Container_Boundary(api, "Ingresso.Api") {
+  Component(ctrl, "TilesController", "ASP.NET Core controller", "PUT /api/tiles/{id}")
+  Component(val, "ValidationBehavior", "MediatR pipeline behavior", "Runs UpdateTileCommandValidator")
+  Component(handler, "UpdateTileCommandHandler", "MediatR handler", "Applies the edit")
+}
+ContainerDb(db, "ingresso database", "SQL Server", "Tiles table")
+Rel(spa, ctrl, "PUT /api/tiles/{id}", "JSON/HTTPS")
+Rel(ctrl, val, "Sends UpdateTileCommand")
+Rel(val, handler, "Passes valid command")
+Rel(handler, db, "UPDATE owner tile", "EF Core")
+@enduml

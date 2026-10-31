@@ -1,0 +1,61 @@
+:host {
+  display: block;
+  width: 100%;
+}
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacingHorizontalS);
+  min-height: var(--ig-control-height-md);
+  padding: 0 var(--spacingHorizontalM);
+  background: var(--colorNeutralBackground1);
+  border: 1px solid var(--colorNeutralStroke2);
+  border-radius: var(--borderRadiusXLarge);
+  color: var(--colorNeutralForeground3);
+  transition: border-color var(--durationFaster) var(--curveEasyEase);
+}
+.search:hover {
+  border-color: var(--colorNeutralStroke1);
+}
+.search:focus-within {
+  border-color: var(--colorBrandStroke1);
+  box-shadow: var(--ig-shadow-focus);
+}
+.search__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  font: var(--ig-text-body-sm);
+  color: var(--colorNeutralForeground1);
+  background: transparent;
+  border: 0;
+  outline: none;
+  appearance: none;
+}
+.search__input::placeholder {
+  color: var(--colorNeutralForeground3);
+}
+.search__input::-webkit-search-cancel-button {
+  appearance: none;
+}
+.search__hint {
+  font: var(--ig-text-code);
+  font-size: var(--fontSizeBase200);
+  padding: 0 var(--spacingHorizontalSNudge);
+  color: var(--colorNeutralForeground3);
+  background: var(--colorNeutralBackground2);
+  border: 1px solid var(--colorNeutralStroke2);
+  border-radius: var(--borderRadiusMedium);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

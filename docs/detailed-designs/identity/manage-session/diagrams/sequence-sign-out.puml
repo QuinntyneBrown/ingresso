@@ -1,0 +1,35 @@
+@startuml
+title UML sequence behaviour — Sign out
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "User" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "AppShell" as shell
+  participant "SessionStore" as session
+end box
+box "Backend — Ingresso.Api" #D1FADF
+  participant "AuthController" as controller
+end box
+box "Backend — Ingresso.Infrastructure" #FFF4E5
+  database "ingresso database" as db
+end box
+actor -> shell : Choose Sign out
+shell -> session : signOut()
+session -> controller : POST /api/auth/sign-out with X-XSRF-TOKEN
+controller -> db : RevokedAtUtc = now (L2-031)
+controller --> session : 204, Set-Cookie expired
+session --> shell : user = null
+shell --> actor : Navigate to sign-in
+@enduml

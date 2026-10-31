@@ -1,0 +1,41 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Verify an email address
+
+class VerifiedEmail {
+  +string NormalizedEmail
+  +DateTimeOffset VerifiedAtUtc
+}
+class SecurityToken {
+  +string Email
+  +string TokenHash
+  +SecurityTokenPurpose Purpose
+  +IsUsable(now): bool
+}
+class VerifyEmailCommand <<record>> {
+  +string Token
+}
+class ResendVerificationCommand <<record>>
+class VerifyEmailCommandHandler {
+  +Handle(c): Task<bool>
+}
+class ResendVerificationCommandHandler
+interface ISecurityTokenService
+VerifyEmailCommandHandler ..> VerifyEmailCommand : handles
+VerifyEmailCommandHandler ..> SecurityToken : uses
+VerifyEmailCommandHandler ..> VerifiedEmail : creates
+ResendVerificationCommandHandler ..> ResendVerificationCommand : handles
+ResendVerificationCommandHandler --> ISecurityTokenService
+VerifyEmailCommandHandler --> ISecurityTokenService
+@enduml

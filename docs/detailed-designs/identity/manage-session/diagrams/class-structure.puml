@@ -1,0 +1,47 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Manage a session
+
+class Session {
+  +IdleLimit = 14 days
+  +Guid Id
+  +Guid UserId
+  +DateTimeOffset CreatedAtUtc
+  +DateTimeOffset LastSeenAtUtc
+  +DateTimeOffset? RevokedAtUtc
+  +IsActive(now): bool
+  +Start(userId, now): Session
+}
+class SessionValidator <<static>> {
+  +ValidateAsync(ctx: CookieValidatePrincipalContext): Task
+}
+class SessionSignIn {
+  +SessionIdClaim = sid
+  +SignInAsync(http, signedIn): Task
+}
+class TouchSessionCommand <<record>> {
+  +Guid SessionId
+}
+class TouchSessionCommandHandler {
+  +Handle(c): Task<bool>
+}
+class SessionStore {
+  +user: Signal<CurrentUser?>
+  +signOut(): void
+}
+SessionValidator ..> TouchSessionCommand : sends
+TouchSessionCommandHandler ..> TouchSessionCommand : handles
+TouchSessionCommandHandler --> Session : reads / slides
+SessionSignIn ..> Session : references by id
+@enduml

@@ -1,0 +1,65 @@
+@startuml
+title UML sequence behaviour — Request a sign-in link
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "User" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "Sign-in page" as page
+  participant "HttpAuthApi" as client
+end box
+box "Backend — Ingresso.Api" #D1FADF
+  participant "SignInRateLimit" as rl
+  participant "AuthController" as controller
+end box
+box "Backend — Ingresso.Application and Domain" #ECFDF3
+  participant "ValidationBehavior" as validation
+  participant "RequestSignInLinkCommandHandler" as handler
+end box
+box "Backend — Ingresso.Infrastructure" #FFF4E5
+  participant "SecurityTokenService" as tokens
+  participant "OutboxProcessor" as outbox
+  database "ingresso database" as db
+end box
+actor -> page : Enter email, submit
+page -> client : requestLink(email)
+client -> rl : POST /api/auth/sign-in-links
+alt per-IP limit exceeded (L2-027)
+  rl --> client : 429 + Retry-After
+else
+  rl -> controller : RequestSignInLink
+  controller -> validation : Send RequestSignInLinkCommand
+  alt malformed email
+    validation --> controller : ValidationException
+    controller --> client : 400 ProblemDetails
+  else
+    validation -> handler : Handle
+    handler -> db : Count recent SignIn tokens for address
+    alt per-address limit exceeded (L2-027)
+      handler --> controller : RateLimitExceededException
+      controller --> client : 429 + Retry-After
+    else
+      handler -> tokens : Issue(email, SignIn, 15 min, returnUrl)
+      tokens -> db : INSERT SecurityToken with SHA-256 hash only (L2-027)
+      handler -> db : INSERT OutboxMessage(SendEmail), commit
+      handler --> controller : done
+      controller --> client : 202 Accepted, same for any address (L2-027)
+      client --> page : ok
+      page --> actor : Check your email
+    end
+  end
+end
+outbox -> db : Read pending SendEmail
+outbox -> outbox : Send via IEmailSender (SMTP)
+@enduml

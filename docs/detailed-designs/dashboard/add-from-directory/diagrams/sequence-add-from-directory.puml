@@ -1,0 +1,42 @@
+@startuml
+title UML sequence behaviour — Add an app from the directory
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Dashboard owner" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "DirectoryPage" as dir
+  participant "AddAppDialog" as dialog
+  participant "TilesStore" as store
+  participant "HttpTilesApi" as client
+end box
+box "Backend — Ingresso.Api" #D1FADF
+  participant "TilesController" as controller
+end box
+actor -> dir : Browse directory (L2-024)
+dir -> store : Read existing tile addresses
+dir --> actor : Apps with name, icon, description; Added badges
+actor -> dir : Type a search term
+dir --> actor : Matching apps only
+actor -> dir : Add on a catalogue app
+dir -> dialog : open with CatalogApp
+dialog --> actor : Form pre-filled (L2-025)
+actor -> dialog : Save
+dialog -> store : create(TileInput)
+store -> client : create(TileInput)
+client -> controller : POST /api/tiles (see create-tile)
+controller --> client : 201 Created
+client --> store : Tile appended last
+dialog --> actor : Close, app marked Added
+@enduml

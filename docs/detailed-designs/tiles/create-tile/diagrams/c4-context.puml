@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Create a tile
+Person(user, "Dashboard owner", "Keeps a front door to the apps they use")
+System(ingresso, "ingresso", "Front-door dashboard of app tiles")
+Rel(user, ingresso, "Uses", "HTTPS")
+@enduml

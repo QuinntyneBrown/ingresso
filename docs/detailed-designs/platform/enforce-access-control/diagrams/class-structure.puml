@@ -1,0 +1,42 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Enforce access control
+
+interface ICurrentUser {
+  +Guid? UserId
+}
+class HttpCurrentUser
+class XsrfTokenService {
+  +HeaderName = X-XSRF-TOKEN
+  +Issue(http): void
+}
+class CsrfProtectionMiddleware {
+  +InvokeAsync(http): Task
+}
+class AuthPolicies <<static>>
+class NotFoundException
+class ForbiddenAccessException
+class GetTileQueryHandler
+class UpdateTileCommandHandler
+class DeleteTileCommandHandler
+HttpCurrentUser ..|> ICurrentUser
+CsrfProtectionMiddleware --> XsrfTokenService
+GetTileQueryHandler --> ICurrentUser
+UpdateTileCommandHandler --> ICurrentUser
+DeleteTileCommandHandler --> ICurrentUser
+GetTileQueryHandler ..> NotFoundException
+UpdateTileCommandHandler ..> NotFoundException
+DeleteTileCommandHandler ..> NotFoundException
+GetTileQueryHandler ..> ForbiddenAccessException : no user
+@enduml

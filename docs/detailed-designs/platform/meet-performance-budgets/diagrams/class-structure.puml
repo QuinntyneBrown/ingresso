@@ -1,0 +1,29 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Meet performance budgets
+
+class TileConfiguration {
+  +Configure(builder): void
+}
+class GetTilesQueryHandler
+class TilesStore {
+  +reorder(ids): Observable<Tile[]>
+}
+class Tile {
+  +Guid OwnerId
+  +int SortOrder
+}
+TileConfiguration ..> Tile : index (OwnerId, SortOrder)
+GetTilesQueryHandler ..> Tile : AsNoTracking projection
+@enduml

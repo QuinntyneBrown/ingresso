@@ -1,0 +1,53 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Open an app
+
+class Tile {
+  +Guid Id
+  +Guid OwnerId
+  +string Name
+  +string Url
+  +string? Description
+  +string Color
+  +string Initial
+  +string? Category
+  +int SortOrder
+  +TileSize Size
+  +DateTimeOffset? LastOpenedAt
+  +DateTimeOffset CreatedAt
+}
+enum TileSize {
+  Large
+  Small
+}
+Tile --> TileSize : has
+class MarkTileOpenedCommand <<record>> {
+  +Guid Id
+}
+class MarkTileOpenedCommandHandler {
+  +Handle(c: MarkTileOpenedCommand): Task<TileDto>
+}
+interface IClock {
+  +DateTimeOffset UtcNow
+}
+class AppTile <<ig-app-tile>> {
+  +href: string
+  +openedLabel: string
+  +editing: boolean
+  +opened: OutputEmitter
+}
+MarkTileOpenedCommandHandler ..> MarkTileOpenedCommand : handles
+MarkTileOpenedCommandHandler --> IClock
+MarkTileOpenedCommandHandler --> Tile : sets LastOpenedAt
+@enduml

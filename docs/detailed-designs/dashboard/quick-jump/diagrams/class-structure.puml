@@ -1,0 +1,39 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Quick jump
+
+class AppShell {
+  -store: TilesStore
+  +onSlash(event: KeyboardEvent): void
+  +jump(): void
+}
+class Search <<ig-search>> {
+  +value: ModelSignal<string>
+  +searched: OutputEmitter
+}
+class TilesStore {
+  +search: WritableSignal<string>
+  +filtered: Signal<Tile[]>
+  +markOpened(id: string): void
+}
+interface Tile {
+  +name: string
+  +url: string
+  +category?: string
+  +description?: string
+}
+AppShell *-- Search
+AppShell --> TilesStore
+TilesStore "1" o-- "*" Tile
+@enduml

@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Manage a session
+
+Container(spa, "ingresso web app", "Angular", "SessionStore, sign-out action")
+Container_Boundary(api, "Ingresso.Api") {
+  Component(cookie, "Cookie authentication", "ASP.NET Core", "Configured by AuthenticationSetup")
+  Component(val, "SessionValidator", "OnValidatePrincipal", "Checks the server session")
+  Component(touch, "TouchSessionCommandHandler", "MediatR handler", "IsActive, slide idle window")
+  Component(ctrl, "AuthController", "ASP.NET Core controller", "GET /api/auth/me, sign-out")
+}
+ContainerDb(db, "ingresso database", "SQL Server", "Sessions")
+Rel(spa, cookie, "Cookie on each request", "HTTPS")
+Rel(cookie, val, "Validates principal")
+Rel(val, touch, "Sends TouchSessionCommand")
+Rel(touch, db, "SELECT / UPDATE session", "EF Core")
+Rel(spa, ctrl, "me, sign-out", "JSON/HTTPS")
+Rel(ctrl, db, "Revoke session", "EF Core")
+@enduml

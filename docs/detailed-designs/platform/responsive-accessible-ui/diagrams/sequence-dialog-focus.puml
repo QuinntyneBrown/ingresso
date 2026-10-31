@@ -1,0 +1,34 @@
+@startuml
+title UML sequence behaviour — Open a dialog on a phone
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "User" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "DashboardPage" as page
+  participant "CDK Dialog" as cdk
+  participant "DialogShell" as dshell
+  participant "ToastRegion" as toast
+end box
+actor -> page : Activate Add an app (keyboard or touch, 44 px target)
+page -> cdk : open(AddAppDialog)
+cdk -> dshell : Render; width < 576 px fills screen (L2-043)
+cdk -> cdk : Trap focus, move to first field (L2-045)
+actor -> dshell : Tab cycles inside dialog
+actor -> dshell : Save
+dshell -> cdk : close
+cdk --> page : Restore focus to opener (L2-045)
+page -> toast : show(success)
+toast --> actor : Live region announcement (L2-046)
+@enduml

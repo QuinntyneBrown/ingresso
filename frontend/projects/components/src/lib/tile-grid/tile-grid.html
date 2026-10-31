@@ -1,0 +1,75 @@
+<!-- Ported from qbc-grid (MIT). Copyright (c) 2026 Quinntyne Brown and qbc-grid contributors. -->
+@if (overlayVisible()) {
+  <div class="ig-tile-grid__overlay" data-ig-overlay aria-hidden="true"></div>
+}
+
+@if (shadow(); as preview) {
+  <div
+    class="ig-tile-grid__shadow"
+    data-ig-shadow
+    aria-hidden="true"
+    [attr.data-valid]="preview.valid"
+    [style.--ig-tile-x]="preview.cell.x"
+    [style.--ig-tile-y]="preview.cell.y"
+    [style.--ig-tile-cols]="preview.cell.cols"
+    [style.--ig-tile-rows]="preview.cell.rows"
+  ></div>
+}
+
+<!--
+  One instruction element for the grid rather than one per tile, because sixty copies of
+  the same sentence are sixty nodes carrying no extra meaning. Announcing a result is not
+  the same as offering a command: without this a screen-reader user reaches a tile, hears
+  its name, and has no way to learn that the arrow keys do anything at all.
+-->
+<p class="ig-tile-grid__hidden" [id]="instructionsId">
+  Arrow keys move this tile one cell. Control with an arrow moves it past an obstruction. Shift with an arrow
+  resizes it. Escape cancels a drag.
+</p>
+
+<!--
+  Two polite regions, written alternately with the other cleared. A live region speaks when
+  its contents change, so a repeated outcome written to a region that already holds it says
+  nothing at all.
+-->
+<p class="ig-tile-grid__hidden" data-ig-announcer aria-live="polite" aria-atomic="true">
+  {{ announcements()[0] }}
+</p>
+<p class="ig-tile-grid__hidden" data-ig-announcer aria-live="polite" aria-atomic="true">
+  {{ announcements()[1] }}
+</p>
+
+@for (tile of orderedTiles(); track tile.id) {
+  <div
+    class="ig-tile-grid__tile"
+    role="listitem"
+    [attr.aria-roledescription]="editable() ? 'dashboard tile' : null"
+    [attr.data-wide]="tile.cols >= 6 ? '' : null"
+    [attr.data-ig-tile]="tile.id"
+    [attr.data-locked]="tile.locked ? '' : null"
+    [attr.tabindex]="tabIndexOf(tile)"
+    [attr.aria-label]="nameOf(tile)"
+    [attr.aria-describedby]="isInteractive(tile) ? instructionsId : null"
+    [style.--ig-tile-x]="tile.x"
+    [style.--ig-tile-y]="tile.y"
+    [style.--ig-tile-cols]="tile.cols"
+    [style.--ig-tile-rows]="tile.rows"
+    (pointerdown)="onPointerDown(tile, $event)"
+    (keydown)="onKeyDown(tile, $event)"
+    (keyup)="closeRun()"
+    (blur)="closeRun()"
+  >
+    <ng-container
+      [ngTemplateOutlet]="tileTemplate()?.templateRef ?? null"
+      [ngTemplateOutletContext]="{ $implicit: tile }"
+    />
+    @if (isInteractive(tile)) {
+      <span
+        class="ig-tile-grid__handle"
+        data-ig-handle
+        aria-hidden="true"
+        (pointerdown)="onHandlePointerDown(tile, $event)"
+      ></span>
+    }
+  </div>
+}

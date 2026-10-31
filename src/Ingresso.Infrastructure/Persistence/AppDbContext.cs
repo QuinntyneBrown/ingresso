@@ -1,0 +1,40 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Ingresso.Application.Common.Interfaces;
+using Ingresso.Domain.Entities;
+
+namespace Ingresso.Infrastructure.Persistence;
+
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IAppDbContext
+{
+    public DbSet<Tile> Tiles => Set<Tile>();
+    public DbSet<User> Users => Set<User>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<SecurityToken> SecurityTokens => Set<SecurityToken>();
+    public DbSet<VerifiedEmail> VerifiedEmails => Set<VerifiedEmail>();
+    public DbSet<Session> Sessions => Set<Session>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+        // SQLite cannot compare or order DateTimeOffset values; store them as sortable binary
+        // in tests and Playwright runs. SQL Server keeps its native datetimeoffset type.
+        if (Database.IsSqlite())
+        {
+            foreach (var property in modelBuilder.Model.GetEntityTypes().SelectMany(t => t.GetProperties()))
+            {
+                if (property.ClrType == typeof(DateTimeOffset))
+                {
+                    property.SetValueConverter(new DateTimeOffsetToBinaryConverter());
+                }
+                else if (property.ClrType == typeof(DateTimeOffset?))
+                {
+                    property.SetValueConverter(new DateTimeOffsetToBinaryConverter());
+                }
+            }
+        }
+    }
+}

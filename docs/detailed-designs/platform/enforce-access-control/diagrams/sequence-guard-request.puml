@@ -1,0 +1,59 @@
+@startuml
+title UML sequence behaviour — Guard a state-changing tile request
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "User" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "HttpTilesApi" as client
+end box
+box "Backend — Ingresso.Api" #D1FADF
+  participant "Rate limiter" as limit
+  participant "Cookie authentication" as auth
+  participant "CsrfProtectionMiddleware" as csrf
+  participant "TilesController" as controller
+end box
+box "Backend — Ingresso.Application and Domain" #ECFDF3
+  participant "Tile handler" as handler
+end box
+box "Backend — Ingresso.Infrastructure" #FFF4E5
+  database "ingresso database" as db
+end box
+actor -> client : Edit, delete, reorder or open
+client -> limit : PUT /api/tiles/{id} + cookie + X-XSRF-TOKEN
+alt over 300 per minute (L2-036)
+  limit --> client : 429 + Retry-After
+else
+  limit -> auth : next
+  alt no valid session (L2-033)
+    auth --> client : 401 ProblemDetails
+  else
+    auth -> csrf : next
+    alt token missing or wrong (L2-034)
+      csrf --> client : 403 ProblemDetails, nothing changed
+    else
+      csrf -> controller : next
+      controller -> handler : Send command
+      handler -> db : SELECT WHERE Id = id AND OwnerId = current (L2-032)
+      alt another user's tile
+        handler --> controller : NotFoundException
+        controller --> client : 404 ProblemDetails
+      else own tile
+        handler -> db : write
+        controller --> client : 2xx
+      end
+    end
+  end
+end
+@enduml

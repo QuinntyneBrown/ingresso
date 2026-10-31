@@ -1,0 +1,64 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Edit a tile
+
+class Tile {
+  +Guid Id
+  +Guid OwnerId
+  +string Name
+  +string Url
+  +string? Description
+  +string Color
+  +string Initial
+  +string? Category
+  +int SortOrder
+  +TileSize Size
+  +DateTimeOffset? LastOpenedAt
+  +DateTimeOffset CreatedAt
+}
+enum TileSize {
+  Large
+  Small
+}
+Tile --> TileSize : has
+class EditAppDialogData <<interface>> {
+  +tile: Tile
+}
+class EditAppDialog {
+  +save(): void
+  +cancel(): void
+}
+class AppForm
+class UpdateTileCommand <<record>> {
+  +Guid Id
+  +string Name
+  +string Url
+  +string? Description
+  +string Color
+  +string? Initial
+  +string? Category
+  +string? Size
+}
+class UpdateTileCommandValidator
+class UpdateTileCommandHandler {
+  +Handle(c: UpdateTileCommand): Task<TileDto>
+}
+class TileRules <<static>>
+EditAppDialog ..> EditAppDialogData : receives
+EditAppDialog *-- AppForm
+UpdateTileCommandValidator ..> UpdateTileCommand : validates
+UpdateTileCommandHandler ..> UpdateTileCommand : handles
+UpdateTileCommandHandler ..> TileRules : uses
+UpdateTileCommandHandler --> Tile : loads / mutates
+@enduml

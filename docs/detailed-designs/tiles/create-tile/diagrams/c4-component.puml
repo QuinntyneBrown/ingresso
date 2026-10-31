@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Create a tile
+
+Container(spa, "ingresso web app", "Angular", "AddAppDialog and AppForm")
+Container_Boundary(api, "Ingresso.Api") {
+  Component(ctrl, "TilesController", "ASP.NET Core controller", "POST /api/tiles")
+  Component(val, "ValidationBehavior", "MediatR pipeline behavior", "Runs CreateTileCommandValidator")
+  Component(handler, "CreateTileCommandHandler", "MediatR handler", "Builds and stores the tile")
+  Component(rules, "TileRules", "Static helpers", "URL, colour, initial and size rules")
+  Component(dbctx, "AppDbContext", "EF Core DbContext", "Implements IAppDbContext")
+}
+ContainerDb(db, "ingresso database", "SQL Server", "Tiles table")
+Rel(spa, ctrl, "POST /api/tiles", "JSON/HTTPS")
+Rel(ctrl, val, "Sends CreateTileCommand")
+Rel(val, handler, "Passes valid command")
+Rel(handler, rules, "Normalizes fields with")
+Rel(handler, dbctx, "Adds Tile and saves")
+Rel(dbctx, db, "INSERT", "EF Core")
+@enduml

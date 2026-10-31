@@ -1,0 +1,39 @@
+@startuml
+title UML sequence behaviour — Add an app by address
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Dashboard owner" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "AddAppDialog" as dialog
+  participant "TilesStore" as store
+  participant "HttpTilesApi" as client
+end box
+box "Backend — Ingresso.Api" #D1FADF
+  participant "TilesController" as controller
+end box
+actor -> dialog : Enter name and address
+dialog -> dialog : Check address (L2-003)
+alt invalid address (L2-026)
+  dialog --> actor : Address field error
+else duplicate address (L2-026)
+  dialog --> actor : Warn, offer Continue or Cancel
+else valid and new, or Continue
+  dialog -> store : create(TileInput)
+  store -> client : create(TileInput)
+  client -> controller : POST /api/tiles
+  controller --> client : 201 Created
+  dialog --> actor : Close, tile on dashboard
+end
+@enduml

@@ -1,0 +1,47 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Delete a tile
+
+class Tile {
+  +Guid Id
+  +Guid OwnerId
+  +string Name
+  +string Url
+  +string? Description
+  +string Color
+  +string Initial
+  +string? Category
+  +int SortOrder
+  +TileSize Size
+  +DateTimeOffset? LastOpenedAt
+  +DateTimeOffset CreatedAt
+}
+enum TileSize {
+  Large
+  Small
+}
+Tile --> TileSize : has
+class DeleteTileCommand <<record>> {
+  +Guid Id
+}
+class DeleteTileCommandHandler {
+  +Handle(c: DeleteTileCommand): Task
+}
+class NotFoundException
+interface IAppDbContext
+DeleteTileCommandHandler ..> DeleteTileCommand : handles
+DeleteTileCommandHandler --> IAppDbContext
+DeleteTileCommandHandler ..> Tile : removes
+DeleteTileCommandHandler ..> NotFoundException : throws
+@enduml

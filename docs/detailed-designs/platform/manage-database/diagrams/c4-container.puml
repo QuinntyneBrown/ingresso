@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Manage the database
+
+Person(user, "Operator", "Person who deploys and runs ingresso")
+System_Boundary(ingresso, "ingresso") {
+  Container(cli, "Ingresso.Cli", ".NET console", "migrate, seed and reset commands")
+  Container(api, "Ingresso.Api", "ASP.NET Core", "REST API, authentication, middleware")
+  ContainerDb(db, "ingresso database", "SQL Server", "Users, sessions, tokens and tiles")
+}
+Rel(user, cli, "Runs migrate, seed, reset", "Terminal")
+Rel(cli, db, "Applies schema, seeds", "EF Core")
+Rel(api, db, "Reads and writes, never migrates", "EF Core")
+@enduml

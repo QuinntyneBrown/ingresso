@@ -1,0 +1,1 @@
+A description list shows facts about one thing as key-value pairs on a native `<dl>`: an app's address and when it was last opened. Pass `items`, each a `term` and a `description`; `mono` sets the value in the monospace face, for addresses and identifiers.

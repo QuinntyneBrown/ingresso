@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Open an app
+
+Container_Boundary(spa, "ingresso web app") {
+  Component(tile, "ig-app-tile", "Component library", "Anchor with noopener noreferrer")
+  Component(store, "TilesStore", "Signal store", "markOpened(id)")
+}
+Container_Boundary(api, "Ingresso.Api") {
+  Component(ctrl, "TilesController", "ASP.NET Core controller", "POST /api/tiles/{id}/opened")
+  Component(handler, "MarkTileOpenedCommandHandler", "MediatR handler", "Stamps LastOpenedAt")
+}
+ContainerDb(db, "ingresso database", "SQL Server", "Tiles table")
+Rel(tile, store, "Emits opened")
+Rel(store, ctrl, "POST", "JSON/HTTPS")
+Rel(ctrl, handler, "Sends MarkTileOpenedCommand")
+Rel(handler, db, "UPDATE LastOpenedAt", "EF Core")
+@enduml

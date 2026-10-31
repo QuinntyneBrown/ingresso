@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Log requests and report errors
+
+Container(spa, "ingresso web app", "Angular", "apiErrorInterceptor, ApiError")
+Container_Boundary(api, "Ingresso.Api") {
+  Component(log, "RequestLoggingMiddleware", "Middleware (outermost)", "One entry per request")
+  Component(err, "ExceptionHandlingMiddleware", "Middleware", "Exceptions to ProblemDetails")
+  Component(mvc, "Controllers and handlers", "ASP.NET Core, MediatR", "Throw typed exceptions")
+}
+Rel(spa, log, "Request", "JSON/HTTPS")
+Rel(log, err, "Next")
+Rel(err, mvc, "Next")
+@enduml

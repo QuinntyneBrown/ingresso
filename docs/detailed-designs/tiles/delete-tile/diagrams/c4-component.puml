@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Delete a tile
+
+Container(spa, "ingresso web app", "Angular", "Confirmation dialog, TilesStore, ToastService")
+Container_Boundary(api, "Ingresso.Api") {
+  Component(ctrl, "TilesController", "ASP.NET Core controller", "DELETE /api/tiles/{id}")
+  Component(handler, "DeleteTileCommandHandler", "MediatR handler", "Removes the owner tile")
+}
+ContainerDb(db, "ingresso database", "SQL Server", "Tiles table")
+Rel(spa, ctrl, "DELETE /api/tiles/{id}", "JSON/HTTPS")
+Rel(ctrl, handler, "Sends DeleteTileCommand")
+Rel(handler, db, "DELETE owner tile", "EF Core")
+@enduml

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="168" height="40" viewBox="0 6 130 34" fill="none" role="img" aria-label="ingresso">
+  <defs>
+    <mask id="ig-door" maskUnits="userSpaceOnUse" x="0" y="0" width="40" height="40">
+      <rect x="0" y="0" width="40" height="40" fill="white"/>
+      <circle cx="21" cy="14.2" r="2.4" fill="black"/>
+      <rect x="19" y="19" width="4" height="17" rx="1" fill="black"/>
+    </mask>
+  </defs>
+  <path d="M12 35V17a9 9 0 0 1 18 0v18z" fill="#CF3B20" mask="url(#ig-door)"/>
+  <path d="M10.4 16.6 4 12.6v25.8l6.4-3.4z" fill="#FFFFFF"/>
+  <text x="40" y="33" font-family="Geist, Inter, system-ui, sans-serif" font-size="25.6" font-weight="600" letter-spacing="-1.15" fill="#FFFFFF">ingresso</text>
+</svg>

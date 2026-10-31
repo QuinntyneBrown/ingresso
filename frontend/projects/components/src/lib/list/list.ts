@@ -1,0 +1,70 @@
+import { booleanAttribute, ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+
+export type ListVariant = 'simple' | 'catalog';
+
+/**
+ * A vertical list of items with a title and a meta line, on a native list: `<ul ig-list>` holding
+ * `<li ig-list-item>` rows. `simple` rows are divided lines (`surface` puts them on a flush card);
+ * `catalog` rows are separate bordered rows with an icon (`[slot=media]`) and an action (`[slot=action]`),
+ * as in the directory of apps to add. Row actions carry the object name ("Add Asana") for screen readers.
+ */
+@Component({
+  selector: 'ul[ig-list], ol[ig-list]',
+  template: '<ng-content />',
+  styleUrl: './list.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[class]': 'classes()' },
+})
+export class List {
+  readonly variant = input<ListVariant>('simple');
+  /** Simple lists only: puts the rows on a bordered surface (`card card--flush`). */
+  readonly surface = input(false, { transform: booleanAttribute });
+
+  protected readonly classes = computed(() =>
+    this.variant() === 'catalog' ? 'catalog' : this.surface() ? 'list card card--flush' : 'list',
+  );
+}
+
+/** One row of an `ig-list`: `title`, an optional `meta` line, `[slot=media]` before and `[slot=action]` after. */
+@Component({
+  selector: 'li[ig-list-item]',
+  template: `
+    <ng-content select="[slot=media]" />
+    @if (catalog()) {
+      <span class="catalog__text">
+        <span class="catalog__name">{{ title() }}</span>
+        @if (meta()) {
+          <span class="catalog__description">{{ meta() }}</span>
+        }
+      </span>
+    } @else {
+      <div class="list__body">
+        <div class="list__title">{{ title() }}</div>
+        @if (meta()) {
+          <div class="list__meta">{{ meta() }}</div>
+        }
+      </div>
+    }
+    <ng-content select="[slot=action]" />
+  `,
+  styleUrl: './list-item.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[class]': 'classes()' },
+})
+export class ListItem {
+  private readonly list = inject(List, { optional: true });
+
+  readonly title = input.required<string>();
+  readonly meta = input<string>();
+  /** Highlights the row on hover; use when the row holds the one link or button it acts on. */
+  readonly interactive = input(false, { transform: booleanAttribute });
+
+  protected readonly catalog = computed(() => this.list?.variant() === 'catalog');
+  protected readonly classes = computed(() =>
+    this.catalog()
+      ? 'catalog__item'
+      : this.interactive()
+        ? 'list__item list__item--interactive'
+        : 'list__item',
+  );
+}

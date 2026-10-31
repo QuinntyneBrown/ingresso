@@ -1,0 +1,42 @@
+@use '../../../../../components/src/lib/styles/breakpoints' as bp;
+
+.page {
+  max-width: var(--ig-content-max-width);
+  margin-inline: auto;
+  padding: var(--ig-space-10) var(--ig-layout-margin) var(--ig-space-16);
+  display: grid;
+  gap: var(--spacingVerticalXXL);
+}
+.intro {
+  display: grid;
+  gap: var(--spacingVerticalXS);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacingHorizontalL);
+}
+.cell {
+  min-width: 0;
+}
+.cell--large {
+  grid-column: 1 / -1;
+}
+@include bp.media-up(md) {
+  .grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+  .cell--large {
+    grid-column: span 4;
+  }
+}
+ig-tile-grid {
+  /* ig-app-tile draws the card, so the grid's own tile chrome is off. */
+  --ig-tile-grid-tile-background: transparent;
+  --ig-tile-grid-tile-border: none;
+  --ig-tile-grid-tile-shadow: none;
+  --ig-tile-grid-tile-radius: var(--borderRadius2XLarge);
+}
+ig-app-tile {
+  block-size: 100%;
+}

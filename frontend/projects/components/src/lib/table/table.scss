@@ -1,0 +1,64 @@
+// Ported from docs/design-system/assets/components.css (.table). The cells are the consumer's markup, so the rules
+// below reach them through ::ng-deep, scoped to this table by :host.
+:host {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--ig-text-body-sm);
+  color: var(--colorNeutralForeground1);
+}
+:host ::ng-deep {
+  caption {
+    padding: var(--spacingVerticalM) var(--spacingHorizontalL);
+    font: var(--ig-text-label);
+    text-align: left;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: var(--spacingVerticalM) var(--spacingHorizontalL);
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+    vertical-align: middle;
+  }
+  th {
+    position: sticky;
+    top: 0;
+    background: var(--colorNeutralBackground2);
+    font: var(--ig-text-label);
+    color: var(--colorNeutralForeground2);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  tbody tr:hover {
+    background: var(--colorNeutralBackground1Hover);
+  }
+  tbody tr[aria-selected='true'] {
+    background: var(--colorBrandBackground2);
+  }
+  .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .mono {
+    font-family: var(--fontFamilyMonospace);
+  }
+  .row-actions {
+    opacity: 0;
+    transition: opacity var(--durationFast) var(--curveEasyEase);
+  }
+  tr:hover .row-actions,
+  tr:focus-within .row-actions {
+    opacity: 1;
+  }
+}
+@media (hover: none) {
+  :host ::ng-deep .row-actions {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :host ::ng-deep .row-actions {
+    transition: none;
+  }
+}

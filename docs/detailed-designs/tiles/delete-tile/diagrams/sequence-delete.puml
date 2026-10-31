@@ -1,0 +1,56 @@
+@startuml
+title UML sequence behaviour — Delete a tile
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Dashboard owner" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "Confirmation dialog" as confirm
+  participant "TilesStore" as store
+  participant "HttpTilesApi" as client
+  participant "ToastService" as toasts
+end box
+box "Backend — Ingresso.Api" #D1FADF
+  participant "TilesController" as controller
+end box
+box "Backend — Ingresso.Application and Domain" #ECFDF3
+  participant "DeleteTileCommandHandler" as handler
+end box
+box "Backend — Ingresso.Infrastructure" #FFF4E5
+  database "ingresso database" as db
+end box
+actor -> confirm : Choose Delete on a tile
+confirm --> actor : Ask to delete the named tile (L2-007)
+alt user cancels
+  confirm --> actor : Close, tile remains
+else user confirms
+  confirm -> store : remove(id)
+  store -> client : delete(id)
+  client -> controller : DELETE /api/tiles/{id}
+  controller -> handler : Send DeleteTileCommand(id)
+  handler -> db : SELECT WHERE Id = id AND OwnerId = current
+  alt not found
+    handler --> controller : NotFoundException
+    controller --> client : 404 ProblemDetails
+  else found
+    handler -> db : DELETE in one unit of work
+    handler --> controller : done
+    controller --> client : 204 No Content
+    client --> store : ok
+    store -> store : Remove tile, keep relative order of others
+    store -> toasts : show(success, tile deleted)
+    toasts --> actor : Announce in live region
+  end
+end
+@enduml

@@ -1,0 +1,1 @@
+A spinner shows a short wait of unknown length. It announces its `label` as a status and stops rotating under reduced motion. Buttons show their own spinner through `busy`; prefer skeletons for page content.

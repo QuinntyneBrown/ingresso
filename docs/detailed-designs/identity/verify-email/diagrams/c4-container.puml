@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Verify an email address
+
+Person(user, "User", "Person who owns the email address")
+System_Boundary(ingresso, "ingresso") {
+  Container(spa, "ingresso web app", "Angular", "Dashboard, directory and dialogs")
+  Container(api, "Ingresso.Api", "ASP.NET Core", "REST API, authentication, middleware")
+  Container(worker, "Outbox processor", "Hosted service in Ingresso.Api", "Sends queued email")
+  ContainerDb(db, "ingresso database", "SQL Server", "Users, sessions, tokens and tiles")
+}
+System_Ext(email, "Email provider", "Delivers sign-in and verification email")
+Rel(user, spa, "Uses", "HTTPS")
+Rel(spa, api, "Calls", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+Rel(worker, email, "Sends verification link", "SMTP")
+Rel(worker, db, "Reads pending messages", "EF Core")
+@enduml

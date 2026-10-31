@@ -1,0 +1,264 @@
+{
+  "project": "ingresso",
+  "required_states": {
+    "page": [
+      "default",
+      "loading",
+      "empty",
+      "error"
+    ],
+    "dialog": [
+      "default",
+      "busy",
+      "invalid"
+    ],
+    "notification": [
+      "info",
+      "success",
+      "warning",
+      "danger"
+    ]
+  },
+  "screens": [
+    {
+      "id": "dashboard",
+      "kind": "page",
+      "title": "Dashboard",
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "no-results",
+        "editing",
+        "offline",
+        "editing-refused",
+        "editing-narrow"
+      ],
+      "route": "/"
+    },
+    {
+      "id": "directory",
+      "kind": "page",
+      "title": "Directory",
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error"
+      ],
+      "route": "/directory"
+    },
+    {
+      "id": "sign-in",
+      "kind": "page",
+      "title": "Sign in",
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "error"
+      ],
+      "route": "/sign-in",
+      "not_applicable": {
+        "loading": "Sign-in renders without a data request.",
+        "empty": "This screen shows a single record, not a collection."
+      }
+    },
+    {
+      "id": "reset-password",
+      "kind": "page",
+      "title": "Reset password",
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "success",
+        "error"
+      ],
+      "route": "/reset-password",
+      "not_applicable": {
+        "loading": "The form renders without a data request.",
+        "empty": "This screen shows a single record, not a collection."
+      }
+    },
+    {
+      "id": "settings",
+      "kind": "page",
+      "title": "Settings",
+      "states": [
+        "default",
+        "loading",
+        "error",
+        "invalid",
+        "success"
+      ],
+      "route": "/settings",
+      "not_applicable": {
+        "empty": "Settings always has values; there is no empty collection."
+      }
+    },
+    {
+      "id": "brand",
+      "kind": "page",
+      "title": "Brand guide",
+      "states": [
+        "default",
+        "loading",
+        "error"
+      ],
+      "route": "/brand",
+      "not_applicable": {
+        "empty": "The guide is static content."
+      }
+    },
+    {
+      "id": "not-found",
+      "kind": "page",
+      "title": "Page not found",
+      "states": [
+        "default"
+      ],
+      "route": "/**",
+      "not_applicable": {
+        "loading": "A status page is static.",
+        "empty": "A status page has no collection.",
+        "error": "This page is itself the error."
+      }
+    },
+    {
+      "id": "forbidden",
+      "kind": "page",
+      "title": "Access denied",
+      "states": [
+        "default"
+      ],
+      "route": "/forbidden",
+      "not_applicable": {
+        "loading": "A status page is static.",
+        "empty": "A status page has no collection.",
+        "error": "This page is itself the error."
+      }
+    },
+    {
+      "id": "server-error",
+      "kind": "page",
+      "title": "Something went wrong",
+      "states": [
+        "default"
+      ],
+      "route": "/error",
+      "not_applicable": {
+        "loading": "A status page is static.",
+        "empty": "A status page has no collection.",
+        "error": "This page is itself the error."
+      }
+    },
+    {
+      "id": "offline",
+      "kind": "page",
+      "title": "You\u2019re offline",
+      "states": [
+        "default"
+      ],
+      "route": "/offline",
+      "not_applicable": {
+        "loading": "A status page is static.",
+        "empty": "A status page has no collection.",
+        "error": "This page is itself the error."
+      }
+    },
+    {
+      "id": "add-app",
+      "kind": "dialog",
+      "title": "Add app",
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ],
+      "opens_from": "dashboard"
+    },
+    {
+      "id": "edit-app",
+      "kind": "dialog",
+      "title": "Edit app",
+      "states": [
+        "default",
+        "busy",
+        "invalid",
+        "failed"
+      ],
+      "opens_from": "dashboard"
+    },
+    {
+      "id": "delete-app",
+      "kind": "dialog",
+      "title": "Delete app",
+      "states": [
+        "default",
+        "busy",
+        "failed"
+      ],
+      "opens_from": "dashboard",
+      "not_applicable": {
+        "invalid": "The dialog has no inputs."
+      }
+    },
+    {
+      "id": "reset-layout",
+      "kind": "dialog",
+      "title": "Reset layout",
+      "states": [
+        "default",
+        "busy"
+      ],
+      "not_applicable": {
+        "invalid": "The dialog has no inputs."
+      }
+    },
+    {
+      "id": "sign-out",
+      "kind": "dialog",
+      "title": "Sign out",
+      "states": [
+        "default",
+        "busy"
+      ],
+      "opens_from": "dashboard",
+      "not_applicable": {
+        "invalid": "The dialog has no inputs."
+      }
+    },
+    {
+      "id": "app-toast",
+      "kind": "notification",
+      "title": "App toast",
+      "states": [
+        "info",
+        "success",
+        "warning",
+        "danger",
+        "with-action",
+        "stacked"
+      ],
+      "opens_from": "dashboard"
+    },
+    {
+      "id": "status-banner",
+      "kind": "notification",
+      "title": "Status banner",
+      "states": [
+        "warning",
+        "success",
+        "persistent"
+      ],
+      "opens_from": "dashboard",
+      "not_applicable": {
+        "info": "Connection and session state has no neutral message.",
+        "danger": "A hard failure shows the error page or a danger toast."
+      }
+    }
+  ]
+}

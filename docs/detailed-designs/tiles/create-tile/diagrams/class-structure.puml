@@ -1,0 +1,91 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Create a tile
+
+class Tile {
+  +Guid Id
+  +Guid OwnerId
+  +string Name
+  +string Url
+  +string? Description
+  +string Color
+  +string Initial
+  +string? Category
+  +int SortOrder
+  +TileSize Size
+  +DateTimeOffset? LastOpenedAt
+  +DateTimeOffset CreatedAt
+}
+enum TileSize {
+  Large
+  Small
+}
+Tile --> TileSize : has
+class TileRequest <<record>> {
+  +string Name
+  +string Url
+  +string? Description
+  +string Color
+  +string? Initial
+  +string? Category
+  +string? Size
+}
+class CreateTileCommand <<record>> {
+  +string Name
+  +string Url
+  +string? Description
+  +string Color
+  +string? Initial
+  +string? Category
+  +string? Size
+}
+class CreateTileCommandValidator
+class CreateTileCommandHandler {
+  +Handle(request: CreateTileCommand): Task<TileDto>
+}
+class TileRules <<static>> {
+  +NormalizeUrl(value: string?): string?
+  +InitialFor(initial: string?, name: string): string
+  +ParseSize(value: string?): TileSize
+  +Clean(value: string?): string?
+}
+class TileDto <<record>> {
+  +From(t: Tile): TileDto
+}
+class TilesController {
+  +Create(body: TileRequest): IActionResult
+}
+interface ICurrentUser {
+  +Guid? UserId
+}
+interface IClock {
+  +DateTimeOffset UtcNow
+}
+interface IAppDbContext {
+  +DbSet<Tile> Tiles
+  +SaveChangesAsync(): Task<int>
+}
+TilesController ..> TileRequest : accepts
+TilesController ..> CreateTileCommand : sends
+CreateTileCommandValidator ..> CreateTileCommand : validates
+CreateTileCommandValidator ..> TileRules : uses
+CreateTileCommandHandler ..> CreateTileCommand : handles
+CreateTileCommandHandler ..> TileRules : uses
+CreateTileCommandHandler --> ICurrentUser
+CreateTileCommandHandler --> IClock
+CreateTileCommandHandler --> IAppDbContext
+CreateTileCommandHandler ..> Tile : creates
+CreateTileCommandHandler ..> TileDto : returns
+IAppDbContext "1" --> "*" Tile
+@enduml

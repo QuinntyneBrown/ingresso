@@ -1,0 +1,22 @@
+// Ported from docs/design-system/assets/components.css (.dl).
+:host {
+  display: block;
+}
+.dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--spacingVerticalS) var(--spacingHorizontalXXL);
+  margin: 0;
+}
+.dl dt {
+  font: var(--ig-text-label);
+  color: var(--colorNeutralForeground2);
+}
+.dl dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.dl .mono {
+  font: var(--ig-text-code);
+}

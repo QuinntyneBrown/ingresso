@@ -1,0 +1,43 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Add from the directory
+
+interface CatalogApp {
+  +name: string
+  +url: string
+  +description: string
+  +category: string
+  +icon: string
+}
+class DirectoryPage {
+  +term: WritableSignal<string>
+  +apps: Signal<CatalogApp[]>
+  +isAdded(app: CatalogApp): boolean
+}
+interface AddAppDialogData {
+  +app?: CatalogApp
+}
+class AddAppDialog
+class AppForm
+class AppDialogs {
+  +openAdd(app?: CatalogApp): DialogRef
+}
+interface TileInput
+DirectoryPage ..> CatalogApp : lists
+DirectoryPage --> AppDialogs
+AppDialogs ..> AddAppDialog : opens
+AddAppDialog ..> AddAppDialogData : receives
+AddAppDialog *-- AppForm
+AppForm ..> TileInput : produces
+@enduml

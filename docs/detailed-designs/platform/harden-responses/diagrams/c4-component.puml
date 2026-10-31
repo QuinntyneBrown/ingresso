@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Harden responses
+
+Container_Boundary(api, "Ingresso.Api") {
+  Component(log, "RequestLoggingMiddleware", "Middleware", "No PII in logs")
+  Component(headers, "SecurityHeadersMiddleware", "Middleware", "CSP, HSTS, nosniff, Referrer-Policy")
+  Component(ctrl, "Controllers", "ASP.NET Core", "JSON responses")
+}
+Container_Boundary(spa, "ingresso web app") {
+  Component(tpl, "Angular templates", "Interpolation and property binding", "Escape tile text")
+  Component(tile, "ig-app-tile", "Component library", "href property binding")
+}
+Rel(log, headers, "Next")
+Rel(headers, ctrl, "Next")
+Rel(ctrl, tpl, "Tile JSON", "HTTPS")
+Rel(tpl, tile, "Renders")
+@enduml

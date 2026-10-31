@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Meet performance budgets
+
+Container_Boundary(spa, "ingresso web app") {
+  Component(routes, "app.routes.ts", "Angular router", "Lazy loadComponent per page")
+  Component(store, "TilesStore", "Signal store", "Optimistic reorder")
+}
+Container_Boundary(api, "Ingresso.Api") {
+  Component(list, "GetTilesQueryHandler", "MediatR handler", "No-tracking projection")
+}
+ContainerDb(db, "ingresso database", "SQL Server", "Index on Tiles(OwnerId, SortOrder)")
+Rel(routes, store, "Dashboard chunk uses")
+Rel(store, list, "GET /api/tiles", "JSON/HTTPS")
+Rel(list, db, "Index range scan", "EF Core")
+@enduml

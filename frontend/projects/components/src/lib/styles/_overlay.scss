@@ -1,0 +1,15 @@
+// Angular CDK overlay foundations and the ingresso dialog backdrop.
+@use '@angular/cdk/overlay-prebuilt.css';
+
+.ig-dialog-backdrop {
+  background: var(--colorBackgroundOverlay);
+  animation: ig-fade-in var(--durationNormal) var(--curveDecelerateMax);
+}
+.cdk-overlay-container {
+  z-index: var(--ig-z-modal);
+}
+@keyframes ig-fade-in {
+  from {
+    opacity: 0;
+  }
+}

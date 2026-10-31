@@ -1,0 +1,47 @@
+@startuml
+title UML sequence behaviour — Redeem a sign-in link
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "User" as actor
+box "Backend — Ingresso.Api" #D1FADF
+  participant "AuthController" as controller
+  participant "SessionSignIn" as signin
+end box
+box "Backend — Ingresso.Application and Domain" #ECFDF3
+  participant "RedeemSignInLinkCommandHandler" as handler
+end box
+box "Backend — Ingresso.Infrastructure" #FFF4E5
+  participant "SecurityTokenService" as tokens
+  database "ingresso database" as db
+end box
+actor -> controller : GET /auth/redeem?token=...
+controller -> handler : Send RedeemSignInLinkCommand(token)
+handler -> tokens : Hash(token)
+tokens --> handler : hash
+handler -> db : SELECT SecurityToken by hash and SignIn purpose
+alt none, used, or expired after 15 min (L2-028)
+  handler --> controller : null
+  controller --> actor : 302 /sign-in?link=expired, no reason given
+else usable
+  handler -> handler : UsedAtUtc = now
+  handler -> db : Find User by email, or create member
+  handler -> handler : Session.Start(user, now)
+  handler -> db : Commit token, user, session together
+  handler --> controller : SignedIn
+  controller -> signin : SignInAsync(session id)
+  signin --> actor : Set-Cookie HttpOnly Secure SameSite=Lax
+  controller --> actor : 302 to ReturnUrl or /
+end
+@enduml

@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Quick jump
+
+Container_Boundary(spa, "ingresso web app") {
+  Component(shell, "AppShell", "Angular component", "Header, / shortcut, jump()")
+  Component(search, "ig-search", "Component library", "Search field")
+  Component(store, "TilesStore", "Signal store", "search signal, filtered list")
+  Component(page, "DashboardPage", "Angular routed component", "Filtered tiles or no-results state")
+}
+Container(api, "Ingresso.Api", "ASP.NET Core", "POST /api/tiles/{id}/opened")
+Rel(shell, search, "Hosts")
+Rel(search, store, "Writes search")
+Rel(page, store, "Reads filtered")
+Rel(shell, api, "markOpened via TilesStore", "JSON/HTTPS")
+@enduml

@@ -1,0 +1,43 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Responsive and accessible UI
+
+class AppShell
+class SiteHeader <<ig-site-header>> {
+  +menuOpen: boolean
+}
+class SkipLink <<ig-skip-link>>
+class Layout <<ig-layout>> {
+  +columns: XS 1, SM 2, MD 3, LG/XL 4
+}
+class DialogShell {
+  +title: string
+}
+class ToastRegion
+class ToastService {
+  +show(toast): void
+}
+class Theme {
+  +light: Tokens
+  +dark: Tokens
+}
+AppShell *-- SiteHeader
+AppShell *-- SkipLink
+AppShell *-- ToastRegion
+AppShell *-- Layout
+ToastService --> ToastRegion
+SiteHeader ..> Theme
+Layout ..> Theme
+DialogShell ..> Theme
+@enduml

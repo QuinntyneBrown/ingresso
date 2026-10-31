@@ -1,0 +1,66 @@
+@startuml
+title UML sequence behaviour — Move or resize a tile
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Dashboard owner" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "ig-tile-grid" as grid
+  participant "DashboardPage" as page
+  participant "TilesStore" as store
+  participant "HttpTilesApi" as client
+end box
+box "Backend — Ingresso.Api" #D1FADF
+  participant "TilesController" as controller
+end box
+box "Backend — Ingresso.Application and Domain" #ECFDF3
+  participant "ValidationBehavior" as validation
+  participant "SaveLayoutCommandHandler" as handler
+end box
+box "Backend — Ingresso.Infrastructure" #FFF4E5
+  database "ingresso database" as db
+end box
+actor -> grid : Drag tile or corner, or arrow / Shift+arrow (L2-016, L2-017)
+grid -> grid : Snap to cells, clampSpan to 2-12 x 1-8 (L2-051)
+alt destination occupied or out of bounds
+  grid --> actor : Refused shadow; tile returns; announce refusal
+else free
+  grid -> grid : Commit placement, announce new position or size
+  grid -> page : layoutChange(TileGridItem[])
+  page -> store : saveLayout(layout)
+  store -> store : Apply now, keep previous (L2-041)
+  store --> actor : New layout visible
+  store -> client : saveLayout(layout)
+  client -> controller : PUT /api/tiles/layout
+  controller -> validation : Send SaveLayoutCommand
+  alt duplicate, span out of range, or past column 12 (L2-052)
+    validation --> controller : ValidationException
+    controller --> client : 400 ProblemDetails
+  else
+    validation -> handler : Handle(command)
+    handler -> db : SELECT owner tiles
+    alt omits or borrows a tile, or overlaps (L2-052)
+      handler --> controller : ValidationException
+      controller --> client : 400 ProblemDetails
+    else complete and valid
+      handler -> db : UPDATE placements in one unit of work
+      controller --> client : 200 OK
+    end
+  end
+  opt request failed
+    store -> store : Restore previous layout (L2-016)
+    store --> actor : Error toast
+  end
+end
+@enduml

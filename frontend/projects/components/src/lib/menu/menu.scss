@@ -1,0 +1,29 @@
+// Ported from docs/design-system/assets/components.css (.menu). CDK Menu positions it in an overlay pane.
+:host {
+  display: block;
+  min-width: 12rem;
+  padding: var(--spacingVerticalXS);
+  margin: var(--spacingVerticalXS) 0;
+  background: var(--colorNeutralBackground4);
+  color: var(--colorNeutralForeground1);
+  border: 1px solid var(--colorNeutralStroke2);
+  border-radius: var(--borderRadiusXLarge);
+  box-shadow: var(--shadow16);
+  transform-origin: top left;
+  animation: menu-scale-in var(--durationFast) var(--curveDecelerateMax);
+}
+:host(.cdk-menu-inline) {
+  margin: 0;
+  animation: none;
+}
+@keyframes menu-scale-in {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    animation: none;
+  }
+}

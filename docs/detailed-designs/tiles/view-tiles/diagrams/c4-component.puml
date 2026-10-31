@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — View tiles
+
+Container(spa, "ingresso web app", "Angular", "TilesStore and HttpTilesApi")
+Container_Boundary(api, "Ingresso.Api") {
+  Component(ctrl, "TilesController", "ASP.NET Core controller", "GET /api/tiles, GET /api/tiles/{id}")
+  Component(list, "GetTilesQueryHandler", "MediatR handler", "Owner tiles in sort order")
+  Component(one, "GetTileQueryHandler", "MediatR handler", "One owner tile or NotFound")
+  Component(err, "ExceptionHandlingMiddleware", "ASP.NET Core middleware", "Maps exceptions to ProblemDetails")
+}
+ContainerDb(db, "ingresso database", "SQL Server", "Tiles table")
+Rel(spa, ctrl, "GET", "JSON/HTTPS")
+Rel(ctrl, list, "Sends GetTilesQuery")
+Rel(ctrl, one, "Sends GetTileQuery")
+Rel(list, db, "SELECT ... ORDER BY SortOrder", "EF Core")
+Rel(one, db, "SELECT by Id and OwnerId", "EF Core")
+Rel(err, ctrl, "Wraps")
+@enduml

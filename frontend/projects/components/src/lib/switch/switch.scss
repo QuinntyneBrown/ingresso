@@ -1,0 +1,61 @@
+// Ported from docs/design-system/assets/components.css (.switch).
+:host {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacingHorizontalM);
+  min-height: var(--ig-target-min);
+  font: var(--ig-text-body);
+  color: var(--colorNeutralForeground1);
+}
+.switch__track {
+  appearance: none;
+  position: relative;
+  flex: none;
+  width: 2.75rem;
+  height: 1.5rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid transparent; // visible in forced-colors mode
+  border-radius: var(--borderRadiusCircular);
+  background: var(--colorNeutralStrokeAccessible);
+  cursor: pointer;
+  transition: background-color var(--durationNormal) var(--curveEasyEase);
+}
+.switch__thumb {
+  position: absolute;
+  top: 0.0625rem;
+  left: 0.0625rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: var(--colorNeutralBackground1);
+  box-shadow: var(--shadow2);
+  transition: translate var(--durationNormal) var(--curveEasyEase);
+}
+.switch__track[aria-checked='true'] {
+  background: var(--colorBrandBackground);
+}
+.switch__track[aria-checked='true'] .switch__thumb {
+  translate: 1.25rem 0;
+}
+.switch__track:focus-visible {
+  outline: var(--ig-focus-ring-width) solid var(--colorStrokeFocus2);
+  outline-offset: var(--ig-focus-ring-offset);
+  border-radius: var(--borderRadiusCircular);
+}
+.switch__label {
+  cursor: pointer;
+}
+:host(.switch--disabled) {
+  opacity: 0.5;
+}
+:host(.switch--disabled) .switch__track,
+:host(.switch--disabled) .switch__label {
+  cursor: not-allowed;
+}
+@media (prefers-reduced-motion: reduce) {
+  .switch__track,
+  .switch__thumb {
+    transition: none;
+  }
+}

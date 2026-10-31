@@ -1,0 +1,38 @@
+@startuml
+' --- shared skin header ---
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+' --------------------------
+title Class structure — Log requests and report errors
+
+class RequestLoggingMiddleware {
+  +CorrelationHeader = X-Correlation-Id
+}
+class ExceptionHandlingMiddleware
+class ValidationException
+class NotFoundException
+class ForbiddenAccessException
+class RateLimitExceededException {
+  +TimeSpan RetryAfter
+}
+class ProblemDetails {
+  +string Type
+  +string Title
+  +int Status
+  +Extensions: correlationId, errors
+}
+RequestLoggingMiddleware --> ExceptionHandlingMiddleware : wraps
+ExceptionHandlingMiddleware ..> ValidationException : 400
+ExceptionHandlingMiddleware ..> NotFoundException : 404
+ExceptionHandlingMiddleware ..> ForbiddenAccessException : 403
+ExceptionHandlingMiddleware ..> RateLimitExceededException : 429
+ExceptionHandlingMiddleware ..> ProblemDetails : writes
+@enduml

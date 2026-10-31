@@ -1,0 +1,49 @@
+@startuml
+title UML sequence behaviour — Jump to an app
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Dashboard owner" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "AppShell" as shell
+  participant "ig-search" as search
+  participant "TilesStore" as store
+  participant "DashboardPage" as page
+end box
+actor -> shell : Press /
+alt focus in a text input (L2-021)
+  shell --> actor : Character typed, search stays closed
+else
+  shell -> search : focus, swallow key
+  actor -> search : Type ma
+  search -> store : search = ma
+  store -> store : filtered = name, url, category, description contain ma (L2-022)
+  store --> page : filtered tiles
+  page --> actor : Matches, count announced politely
+  opt no matches
+    page --> actor : No apps match, Clear the search
+  end
+  actor -> search : Down / Up moves highlight, wraps (L2-023)
+  actor -> search : Enter
+  alt a match is highlighted
+    search -> shell : searched
+    shell -> shell : Open match in new tab
+    shell -> store : markOpened(id) (see open-app)
+  else none
+    shell --> actor : Nothing opens
+  end
+  actor -> search : Escape
+  search --> actor : Close, focus returns (L2-021)
+end
+@enduml

@@ -1,0 +1,12 @@
+// Ported from docs/design-system/assets/components.css (.stack).
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacingVerticalL);
+}
+:host(.stack--sm) {
+  gap: var(--spacingVerticalS);
+}
+:host(.stack--lg) {
+  gap: var(--spacingVerticalXXXL);
+}

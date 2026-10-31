@@ -1,0 +1,32 @@
+// Ported from docs/design-system/assets/components.css (.layout-bar).
+:host {
+  display: block;
+}
+.layout-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacingHorizontalM);
+  margin-bottom: var(--spacingVerticalL);
+  padding: var(--spacingVerticalM) var(--spacingHorizontalL);
+  background: var(--colorNeutralBackground4);
+  border: 1px solid var(--colorBrandStroke1);
+  border-radius: var(--borderRadiusXLarge);
+  color: var(--colorNeutralForeground1);
+}
+.layout-bar--unavailable {
+  border-color: var(--colorNeutralStroke2);
+}
+.layout-bar__message {
+  margin: 0;
+}
+.layout-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacingHorizontalS);
+}
+.layout-bar__actions:empty {
+  display: none;
+}

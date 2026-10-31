@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Verify an email address
+Person(user, "User", "Person who owns the email address")
+System(ingresso, "ingresso", "Front-door dashboard of app tiles")
+System_Ext(email, "Email provider", "Delivers sign-in and verification email")
+Rel(user, ingresso, "Uses", "HTTPS")
+Rel(ingresso, email, "Sends email via", "SMTP")
+@enduml

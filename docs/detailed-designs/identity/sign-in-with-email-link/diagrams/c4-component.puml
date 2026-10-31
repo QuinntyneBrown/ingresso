@@ -1,0 +1,28 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Sign in with an email link
+
+Container(spa, "ingresso web app", "Angular", "Sign-in page")
+Container_Boundary(api, "Ingresso.Api") {
+  Component(ctrl, "AuthController", "ASP.NET Core controller", "sign-in-links, redeem")
+  Component(rl, "SignInRateLimit", "Rate limiter policy", "Per-IP limit")
+  Component(req, "RequestSignInLinkCommandHandler", "MediatR handler", "Issues token, enqueues email")
+  Component(red, "RedeemSignInLinkCommandHandler", "MediatR handler", "Uses token, starts session")
+  Component(tok, "SecurityTokenService", "ISecurityTokenService", "Random token, SHA-256 hash")
+  Component(signin, "SessionSignIn", "Cookie sign-in", "Writes session cookie")
+  Component(outbox, "Outbox / OutboxProcessor", "Hosted service", "Delivers SendEmail")
+}
+ContainerDb(db, "ingresso database", "SQL Server", "SecurityTokens, Users, Sessions, OutboxMessages")
+System_Ext(email, "Email provider", "SMTP")
+Rel(spa, ctrl, "POST", "JSON/HTTPS")
+Rel(rl, ctrl, "Guards")
+Rel(ctrl, req, "Sends RequestSignInLinkCommand")
+Rel(ctrl, red, "Sends RedeemSignInLinkCommand")
+Rel(req, tok, "Issue")
+Rel(red, tok, "Hash")
+Rel(ctrl, signin, "SignInAsync")
+Rel(req, db, "INSERT token, outbox message", "EF Core")
+Rel(red, db, "UPDATE token, INSERT session", "EF Core")
+Rel(outbox, email, "Sends", "SMTP")
+@enduml

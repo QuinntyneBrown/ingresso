@@ -1,0 +1,53 @@
+@startuml
+title UML sequence behaviour — Load the dashboard
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Dashboard owner" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "DashboardPage" as page
+  participant "ig-tile-grid" as grid
+  participant "TilesStore" as store
+  participant "HttpTilesApi" as client
+end box
+box "Backend — Ingresso.Api" #D1FADF
+  participant "TilesController" as controller
+end box
+actor -> page : Navigate to /
+page -> store : load()
+store --> page : status = loading
+page --> actor : Skeleton tiles, aria-busy (L2-011)
+store -> client : list()
+client -> controller : GET /api/tiles
+alt request fails
+  controller --> client : error
+  store --> page : status = error
+  page --> actor : Alert with Retry (L2-011)
+else success
+  controller --> client : TileDto[] with x, y, cols, rows
+  client --> store : Tile[]
+  alt no tiles
+    page --> actor : Empty state with Add an app (L2-010)
+  else tiles
+    store --> page : layout = TileGridItem[]
+    page -> grid : [layout]
+    grid -> grid : normalizeLayout, same result every time (L2-053)
+    alt viewport >= 1024 px
+      grid --> actor : Tiles at saved cells on 12 columns (L2-009)
+    else narrower
+      grid --> actor : Flow list in reading order, no save (L2-042)
+    end
+  end
+end
+@enduml

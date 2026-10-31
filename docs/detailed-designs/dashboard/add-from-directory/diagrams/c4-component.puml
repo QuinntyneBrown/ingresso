@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Add from the directory
+
+Container_Boundary(spa, "ingresso web app") {
+  Component(dir, "DirectoryPage", "Angular routed component", "/directory")
+  Component(catalog, "CATALOG", "Static data", "Common apps")
+  Component(dialogs, "AppDialogs", "Angular service", "Opens dialogs")
+  Component(add, "AddAppDialog", "CDK dialog", "AppForm, pre-filled or empty")
+  Component(store, "TilesStore", "Signal store", "create(), existing addresses")
+}
+Container(api, "Ingresso.Api", "ASP.NET Core", "POST /api/tiles")
+Rel(dir, catalog, "Lists")
+Rel(dir, store, "Reads existing tiles")
+Rel(dir, dialogs, "openAdd(app)")
+Rel(dialogs, add, "Opens")
+Rel(add, store, "create(TileInput)")
+Rel(store, api, "POST", "JSON/HTTPS")
+@enduml

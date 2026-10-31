@@ -1,0 +1,1 @@
+An app tile is one app on the dashboard. A large tile shows the icon, name, address and an "Opened … / Open" footer; a small tile shows the icon, name and address. The tile is a link that opens the app in a new tab. In editing mode it shows a drag handle and an Edit button instead of linking.

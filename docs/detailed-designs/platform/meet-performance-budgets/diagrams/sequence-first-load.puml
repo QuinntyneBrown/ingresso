@@ -1,0 +1,44 @@
+@startuml
+title UML sequence behaviour — First load within budget
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam rectangle {
+  BorderColor #344054
+  FontColor #101828
+}
+skinparam package {
+  BorderColor #667085
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+actor "Dashboard owner" as actor
+box "Frontend — ingresso web app" #E0F2FE
+  participant "Router" as router
+  participant "DashboardPage" as page
+  participant "TilesStore" as store
+end box
+box "Backend — Ingresso.Api" #D1FADF
+  participant "TilesController" as controller
+end box
+box "Backend — Ingresso.Application and Domain" #ECFDF3
+  participant "GetTilesQueryHandler" as handler
+end box
+box "Backend — Ingresso.Infrastructure" #FFF4E5
+  database "ingresso database" as db
+end box
+actor -> router : Navigate to /
+router -> router : Load main + dashboard chunk only (L2-040)
+router -> page : Create
+page -> store : load()
+store -> controller : GET /api/tiles
+controller -> handler : Send GetTilesQuery
+handler -> db : Index range (OwnerId, SortOrder), no tracking
+db --> handler : <= 200 rows
+handler --> controller : TileDto[]
+controller --> store : 200 OK, p95 < 200 ms (L2-039)
+store --> page : tiles
+page --> actor : Interactive < 2 s (L2-040)
+@enduml

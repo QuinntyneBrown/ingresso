@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Sign in with an email link
+
+Person(user, "User", "Person signing in to their dashboard")
+System_Boundary(ingresso, "ingresso") {
+  Container(spa, "ingresso web app", "Angular", "Dashboard, directory and dialogs")
+  Container(api, "Ingresso.Api", "ASP.NET Core", "REST API, authentication, middleware")
+  Container(worker, "Outbox processor", "Hosted service in Ingresso.Api", "Sends queued email")
+  ContainerDb(db, "ingresso database", "SQL Server", "Users, sessions, tokens and tiles")
+}
+System_Ext(email, "Email provider", "Delivers sign-in and verification email")
+Rel(user, spa, "Requests a link", "HTTPS")
+Rel(spa, api, "POST /api/auth/sign-in-links", "JSON/HTTPS")
+Rel(api, db, "Writes SecurityToken and OutboxMessage", "EF Core")
+Rel(worker, db, "Reads pending messages", "EF Core")
+Rel(worker, email, "Sends link", "SMTP")
+Rel(user, api, "Opens /auth/redeem link", "HTTPS")
+@enduml

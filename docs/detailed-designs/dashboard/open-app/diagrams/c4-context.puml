@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Open an app
+Person(user, "Dashboard owner", "Keeps a front door to the apps they use")
+System(ingresso, "ingresso", "Front-door dashboard of app tiles")
+System_Ext(target, "Opened app", "Any app the owner added as a tile")
+Rel(user, ingresso, "Uses", "HTTPS")
+Rel(user, target, "Opens in a new tab", "HTTPS")
+@enduml

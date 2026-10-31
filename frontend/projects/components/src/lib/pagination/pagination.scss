@@ -1,0 +1,51 @@
+// Ported from docs/design-system/assets/components.css (.pagination).
+:host {
+  display: block;
+}
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacingHorizontalXS);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pagination button,
+.pagination__gap {
+  display: inline-grid;
+  place-items: center;
+  min-width: var(--ig-control-height-sm);
+  height: var(--ig-control-height-sm);
+  padding-inline: var(--spacingHorizontalS);
+  border-radius: var(--borderRadiusXLarge);
+  border: 1px solid transparent;
+  color: var(--colorNeutralForeground2);
+  font: var(--ig-text-label);
+}
+.pagination button {
+  background: none;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.pagination button:hover {
+  background: var(--colorSubtleBackgroundHover);
+  color: var(--colorNeutralForeground1);
+}
+.pagination button:focus-visible {
+  outline: none;
+  box-shadow: var(--ig-shadow-focus);
+}
+.pagination [aria-current='page'] {
+  background: var(--colorBrandBackground2);
+  color: var(--colorBrandForeground1);
+  border-color: var(--colorBrandStroke1);
+}
+.pagination [aria-current='page']:hover {
+  background: var(--colorBrandBackground2Hover);
+  color: var(--colorBrandForeground1);
+}
+.pagination [aria-disabled='true'] {
+  opacity: 0.5;
+  pointer-events: none;
+}
