@@ -24,12 +24,13 @@ The slice runs from the ingresso web app to the ingresso database.
 - **`CreateTileCommandHandler`** — resolves the owner from `ICurrentUser`, computes the next `SortOrder`, builds the `Tile`, and saves it in one unit of work.
 - **`Tile`** — domain entity for one tile, scoped to its owner by `OwnerId`.
 
-The current source differs from the requirements in these points. Each is open work for the slice.
+Built to the requirements:
 
-- `L2-002` sets a 60-character name and a 280-character description. `CreateTileCommandValidator` allows 80 and 300.
-- `L2-002` limits colour to the allowed palette values. The validator accepts any six-digit hex colour; the palette lives only in `APP_COLORS` on the frontend.
-- `L2-003` rejects an address without a scheme. `TileRules.NormalizeUrl` instead promotes a bare host such as `example.com` to `https://example.com/`.
-- `L2-004` caps a user at 200 tiles. No handler enforces a cap, and no `409` path exists.
+- `TileRules` holds the limits (name 60, description 280, address 2048, 200 tiles) and the eight-colour `Palette`. `NormalizeUrl` accepts only an absolute `http` or `https` address and returns it unchanged.
+- `CreateTileCommandHandler` throws `ConflictException` at 200 tiles; `ExceptionHandlingMiddleware` answers `409` problem details.
+- The Add app dialog warns when the address already belongs to a tile (`L2-026`): an alert offers Add anyway or Cancel. The check is client-side against the loaded tiles, ignoring case and trailing slashes.
+- The form turns a bare host such as `app.asana.com` into `https://app.asana.com` before it posts, so the server's strict rule never surprises the person typing.
+- Tile text is bound as text everywhere, so markup in a name or description shows literally (`L2-037`).
 
 ## Requirements
 

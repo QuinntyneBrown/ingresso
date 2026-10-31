@@ -75,13 +75,13 @@ behind their backdrop; only the dialog is mapped.
 
 All dialogs open through Angular CDK `Dialog` with `modalDialogConfig` and render inside `DialogShell`.
 
-| Dialog (mock folder: states)                                  | Library components                                                  | Local UI         |
-| ------------------------------------------------------------- | ------------------------------------------------------------------- | ---------------- |
-| Add app (`dialogs/add-app`: default, busy, invalid, failed)   | `DialogShell`, `Button` (`busy`), `Alert` (failed)                  | App form         |
-| Edit app (`dialogs/edit-app`: default, busy, invalid, failed) | `DialogShell`, `Button`, `Alert` (failed, delete confirmation)      | App form         |
-| Delete app (`dialogs/delete-app`: default, busy, failed)      | `DialogShell`, `AppIcon`, `Button` (`appearance="danger"`), `Alert` | Tile preview row |
-| Reset layout (`dialogs/reset-layout`: default, busy)          | `DialogShell`, `Button`, `Alert` (failed)                           | —                |
-| Sign out (`dialogs/sign-out`: default, busy)                  | `DialogShell`, `Button`                                             | —                |
+| Dialog (mock folder: states)                                           | Library components                                                          | Local UI         |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------- | ---------------- |
+| Add app (`dialogs/add-app`: default, busy, invalid, failed, duplicate) | `DialogShell`, `Button` (`busy`), `Alert` (failed; `warning` for duplicate) | App form         |
+| Edit app (`dialogs/edit-app`: default, busy, invalid, failed)          | `DialogShell`, `Button`, `Alert` (failed, delete confirmation)              | App form         |
+| Delete app (`dialogs/delete-app`: default, busy, failed)               | `DialogShell`, `AppIcon`, `Button` (`appearance="danger"`), `Alert`         | Tile preview row |
+| Reset layout (`dialogs/reset-layout`: default, busy)                   | `DialogShell`, `Button`, `Alert` (failed)                                   | —                |
+| Sign out (`dialogs/sign-out`: default, busy)                           | `DialogShell`, `Button`                                                     | —                |
 
 ## Notifications
 

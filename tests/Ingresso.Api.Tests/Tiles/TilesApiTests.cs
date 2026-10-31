@@ -10,7 +10,7 @@ namespace Ingresso.Api.Tests.Tiles;
 
 public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
-    private static object Body(string name = "Jira", string url = "jira.example.com", string color = "#0052cc") =>
+    private static object Body(string name = "Jira", string url = "https://jira.example.com", string color = "#2563EB") =>
         new { name, url, color, description = "Tickets", category = "Work" };
 
     private async Task<HttpClient> SignedIn(string email = HttpClientExtensions.DevUser)
@@ -58,19 +58,37 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.Equal(reading.OrderBy(c => c.Item1).ThenBy(c => c.Item2), reading);
     }
 
+    // Acceptance Test
+    // Traces to: L2-001, L2-003
+    // Description: A valid tile is stored with its address unchanged, gets an initial, and lands after the existing tiles.
     [Fact]
-    public async Task Create_normalizes_the_url_defaults_the_initial_and_appends()
+    public async Task Create_stores_the_address_unchanged_defaults_the_initial_and_appends()
     {
         var client = await SignedIn();
 
-        var response = await client.PostAsJsonAsync("/api/tiles", Body());
+        var response = await client.PostAsJsonAsync("/api/tiles", Body(url: "https://example.com/app?x=1"));
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var tile = await Json(response);
-        Assert.Equal("https://jira.example.com/", tile.GetProperty("url").GetString());
+        Assert.Equal("https://example.com/app?x=1", tile.GetProperty("url").GetString());
         Assert.Equal("J", tile.GetProperty("initial").GetString());
+        Assert.NotEqual(Guid.Empty, tile.GetProperty("id").GetGuid());
         var all = await client.GetFromJsonAsync<JsonElement>("/api/tiles");
-        Assert.Equal(tile.GetProperty("id").GetString(), all[all.GetArrayLength() - 1].GetProperty("id").GetString());
+        Assert.Contains(all.EnumerateArray(), t => t.GetProperty("id").GetString() == tile.GetProperty("id").GetString());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-001
+    // Description: An unauthenticated request to create a tile gets 401 and stores nothing.
+    [Fact]
+    public async Task Anonymous_create_gets_401_and_stores_nothing()
+    {
+        var before = await factory.WithDbAsync(db => db.Tiles.CountAsync());
+
+        var response = await factory.CreateHttpsClient().PostAsJsonAsync("/api/tiles", Body());
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(before, await factory.WithDbAsync(db => db.Tiles.CountAsync()));
     }
 
     // Acceptance Test
@@ -108,7 +126,7 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
     {
         var client = await SignedIn();
 
-        var response = await client.PostAsJsonAsync("/api/tiles", new { name = "Team Mail", url = "mail.example.com", color = "#0052cc", initial = "TM" });
+        var response = await client.PostAsJsonAsync("/api/tiles", new { name = "Team Mail", url = "https://mail.example.com", color = "#2563EB", initial = "TM" });
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         Assert.Equal("TM", (await Json(response)).GetProperty("initial").GetString());
@@ -121,7 +139,7 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         var created = await Json(await client.PostAsJsonAsync("/api/tiles", Body("Round trip")));
         var id = created.GetProperty("id").GetString();
 
-        var updated = await client.PutAsJsonAsync($"/api/tiles/{id}", new { name = "Renamed", url = "https://renamed.example.com", color = "#112233" });
+        var updated = await client.PutAsJsonAsync($"/api/tiles/{id}", new { name = "Renamed", url = "https://renamed.example.com", color = "#6D28D9" });
         var fetched = await client.GetFromJsonAsync<JsonElement>($"/api/tiles/{id}");
         var deleted = await client.DeleteAsync($"/api/tiles/{id}");
         var gone = await client.GetAsync($"/api/tiles/{id}");
@@ -132,30 +150,93 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.Equal(HttpStatusCode.NotFound, gone.StatusCode);
     }
 
+    // Acceptance Test
+    // Traces to: L2-002, L2-003
+    // Description: Invalid name, description, colour or address is refused with 400 problem details naming the field.
     [Theory]
-    [InlineData("", "app.example.com", "#000000", "name")]
-    [InlineData("Valid", "javascript:alert(1)", "#000000", "url")]
-    [InlineData("Valid", "not a url", "#000000", "url")]
-    [InlineData("Valid", "ftp://example.com", "#000000", "url")]
-    [InlineData("Valid", "app.example.com", "red", "color")]
-    public async Task Invalid_input_is_rejected_with_field_errors(string name, string url, string color, string field)
+    [InlineData("", "https://app.example.com", "#2563EB", null, "name")]
+    [InlineData("61 characters", "https://app.example.com", "#2563EB", null, "name")]
+    [InlineData("Valid", "https://app.example.com", "#2563EB", "281 characters", "description")]
+    [InlineData("Valid", "https://app.example.com", "#123456", null, "color")]
+    [InlineData("Valid", "https://app.example.com", "red", null, "color")]
+    [InlineData("Valid", "javascript:alert(1)", "#2563EB", null, "url")]
+    [InlineData("Valid", "data:text/html,hi", "#2563EB", null, "url")]
+    [InlineData("Valid", "file:///etc/passwd", "#2563EB", null, "url")]
+    [InlineData("Valid", "ftp://example.com", "#2563EB", null, "url")]
+    [InlineData("Valid", "example.com", "#2563EB", null, "url")]
+    [InlineData("Valid", "not a url", "#2563EB", null, "url")]
+    [InlineData("Valid", "too long", "#2563EB", null, "url")]
+    public async Task Invalid_input_is_rejected_with_field_errors(string name, string url, string color, string? description, string field)
     {
         var client = await SignedIn();
+        name = name == "61 characters" ? new string('n', 61) : name;
+        description = description == "281 characters" ? new string('d', 281) : description;
+        url = url == "too long" ? "https://example.com/" + new string('a', 2040) : url;
 
-        var response = await client.PostAsJsonAsync("/api/tiles", Body(name, url, color));
+        var response = await client.PostAsJsonAsync("/api/tiles", new { name, url, color, description });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
         Assert.True((await Json(response)).GetProperty("errors").TryGetProperty(field, out _));
     }
 
+    // Acceptance Test
+    // Traces to: L2-002, L2-003
+    // Description: Values at the limits (60-character name, 280-character description, 2048-character address) are accepted.
     [Fact]
-    public async Task A_name_over_80_characters_is_rejected()
+    public async Task Values_at_the_limits_are_accepted()
     {
         var client = await SignedIn();
+        var url = "https://e.com/" + new string('a', 2048 - "https://e.com/".Length);
 
-        var response = await client.PostAsJsonAsync("/api/tiles", Body(new string('a', 81)));
+        var response = await client.PostAsJsonAsync("/api/tiles", new { name = new string('n', 60), url, color = "#2563EB", description = new string('d', 280) });
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    private async Task<HttpClient> UserWithTiles(string email, int count)
+    {
+        var client = await SignedIn(email);
+        await factory.WithDbAsync(async db =>
+        {
+            var owner = await db.Users.SingleAsync(u => u.Email == email);
+            var have = await db.Tiles.CountAsync(t => t.OwnerId == owner.Id);
+            db.Tiles.AddRange(Enumerable.Range(have, count - have).Select(i => new Tile
+            {
+                OwnerId = owner.Id, Name = $"App {i}", Url = $"https://app{i}.example.com", Color = "#2563EB", Initial = "A",
+                CreatedAt = ApiFactory.Today.AddSeconds(i), X = i % 4 * 3, Y = i / 4 * 2, Cols = 3, Rows = 2,
+            }));
+            return await db.SaveChangesAsync();
+        });
+        return client;
+    }
+
+    // Acceptance Test
+    // Traces to: L2-004
+    // Description: A user with 200 tiles cannot create another; the API answers 409 and stores nothing.
+    [Fact]
+    public async Task A_user_with_200_tiles_cannot_create_another()
+    {
+        var client = await UserWithTiles("full@ingresso.dev", 200);
+
+        var response = await client.PostAsJsonAsync("/api/tiles", Body());
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(200, (await client.GetFromJsonAsync<JsonElement>("/api/tiles")).GetArrayLength());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-004
+    // Description: A user with 199 tiles can create one more.
+    [Fact]
+    public async Task A_user_with_199_tiles_can_create_one_more()
+    {
+        var client = await UserWithTiles("almost@ingresso.dev", 199);
+
+        var response = await client.PostAsJsonAsync("/api/tiles", Body());
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
     // Acceptance Test
@@ -274,7 +355,7 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.Equal((9, 0, 3, 2), Rect(listed["D"]));
         Assert.Equal((0, 2, 3, 2), Rect(listed["E"]));
         Assert.Equal(5, listed.Count);
-        Assert.All(listed.Values, t => Assert.Equal("https://jira.example.com/", t.GetProperty("url").GetString()));
+        Assert.All(listed.Values, t => Assert.Equal("https://jira.example.com", t.GetProperty("url").GetString()));
     }
 
     [Fact]

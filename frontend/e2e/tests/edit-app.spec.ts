@@ -8,7 +8,10 @@ const unique = () => `Temp ${Date.now().toString(36)}`;
 /** Adds a tile of its own so the edit and delete tests never touch the seeded apps. */
 async function addTile(dashboard: DashboardPage, page: import('@playwright/test').Page, name: string) {
   await dashboard.shell.addApp.click();
-  await new AddAppDialog(page).add({ name, url: 'https://temp.example.com' });
+  await new AddAppDialog(page).add({
+    name,
+    url: `https://${name.toLowerCase().replace(/\s/g, '-')}.example.com`,
+  });
   await expect(dashboard.tile(name)).toBeVisible();
 }
 
@@ -27,7 +30,7 @@ test.describe('Edit and delete an app', () => {
 
     await expect(edit.dialog).toBeVisible();
     await expect(edit.name).toHaveValue(name);
-    await expect(edit.address).toHaveValue(/^https:\/\/temp\.example\.com\/?$/);
+    await expect(edit.address).toHaveValue(/^https:\/\/temp-[a-z0-9]+\.example\.com$/);
     await edit.deleteApp();
   });
 

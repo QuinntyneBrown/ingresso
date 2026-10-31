@@ -13,10 +13,10 @@ public sealed class CreateTileCommandValidator : AbstractValidator<CreateTileCom
 {
     public CreateTileCommandValidator()
     {
-        RuleFor(c => c.Name).NotEmpty().MaximumLength(80);
+        RuleFor(c => c.Name).NotEmpty().MaximumLength(TileRules.MaxNameLength);
         RuleFor(c => c.Url).MustBeTileUrl();
-        RuleFor(c => c.Color).MustBeHexColor();
-        RuleFor(c => c.Description).MaximumLength(300);
+        RuleFor(c => c.Color).MustBeInPalette();
+        RuleFor(c => c.Description).MaximumLength(TileRules.MaxDescriptionLength);
         RuleFor(c => c.Category).MaximumLength(60);
         RuleFor(c => c.Initial).MaximumLength(2);
     }
@@ -28,6 +28,11 @@ public sealed class CreateTileCommandHandler(IAppDbContext db, ICurrentUser curr
     {
         var owner = current.UserId ?? throw new ForbiddenAccessException();
         var existing = await db.Tiles.Where(t => t.OwnerId == owner).ToListAsync(cancellationToken);
+        if (existing.Count >= TileRules.MaxTilesPerUser)
+        {
+            throw new ConflictException($"You can have up to {TileRules.MaxTilesPerUser} apps. Delete one to add another.");
+        }
+
         var (x, y) = TileLayout.FirstFree(existing, TileLayout.DefaultCols, TileLayout.DefaultRows);
         var name = request.Name.Trim();
         var tile = new Tile
