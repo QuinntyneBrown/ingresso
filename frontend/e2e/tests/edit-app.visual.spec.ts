@@ -33,6 +33,7 @@ test.describe('Edit app dialog, visually', () => {
     await edit.name.fill('');
     await edit.save.click();
     await expect(edit.nameError).toBeVisible();
+    await edit.scrollToTop();
     await expect(edit.dialog).toHaveScreenshot('invalid.png');
   });
 
@@ -45,6 +46,7 @@ test.describe('Edit app dialog, visually', () => {
     const edit = await open(page);
     await edit.save.click();
     await expect(edit.dialog.getByRole('alert')).toBeVisible();
+    await edit.scrollToTop();
     await expect(edit.dialog).toHaveScreenshot('failed.png');
   });
 });
