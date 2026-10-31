@@ -2,6 +2,7 @@ import { Locator, Page } from '@playwright/test';
 import { AppShell } from './app-shell';
 import { TileGrid } from './tile-grid';
 import { signInAs } from '../support/session';
+import { EditAppDialog } from './edit-app.dialog';
 
 /** The dashboard: greeting and the grid of app tiles, with edit-layout mode. */
 export class DashboardPage {
@@ -135,6 +136,14 @@ export class DashboardPage {
   async enterEditLayout(): Promise<void> {
     await this.shell.editLayout.click();
     await this.grid.root.and(this.page.locator('[data-mode="edit"]')).waitFor();
+  }
+
+  /** Deletes the named app from its Edit dialog, turning edit layout on first when it is off. */
+  async removeApp(name: string): Promise<void> {
+    if (!(await this.grid.isEditable())) await this.enterEditLayout();
+    await this.editApp(name);
+    await new EditAppDialog(this.page).deleteApp();
+    await this.tile(name).waitFor({ state: 'detached' });
   }
 
   /** The saved layout as the API returns it, to put back after a test that changes it. */

@@ -27,6 +27,8 @@ test.describe('Add an app', () => {
     await expect(dashboard.tiles).toHaveCount(before + 1);
     await expect(dashboard.tile(name)).toContainText('.example.com');
     await expect(dashboard.tile(name).locator('ig-app-icon')).toHaveText(/^A/);
+
+    await dashboard.removeApp(name);
   });
 
   test('the dialog asks for a name and an address before it saves', async ({ page }) => {
@@ -88,6 +90,9 @@ test.describe('Add an app', () => {
     await dialog.addAnyway.click();
     await expect(dialog.dialog).toBeHidden();
     await expect(dashboard.tiles).toHaveCount(before + 1);
+
+    await dashboard.removeApp(`${name} again`);
+    await dashboard.removeApp(name);
   });
 
   // Acceptance Test
@@ -122,6 +127,8 @@ test.describe('Add an app', () => {
 
     await expect(dashboard.tile(name)).toBeVisible();
     await expect(dashboard.tile(name).locator('b')).toHaveCount(0);
+
+    await dashboard.removeApp(name);
   });
 
   test('initials follow the name until they are edited', async ({ page }) => {

@@ -132,6 +132,9 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.Equal("TM", (await Json(response)).GetProperty("initial").GetString());
     }
 
+    // Acceptance Test
+    // Traces to: L2-006, L2-007
+    // Description: A tile can be read, updated and deleted; delete returns 204 and the tile is then gone.
     [Fact]
     public async Task Get_update_and_delete_round_trip()
     {

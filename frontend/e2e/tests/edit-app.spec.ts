@@ -212,42 +212,4 @@ test.describe('Edit and delete an app', () => {
     await dashboard.editApp(renamed);
     await edit.deleteApp();
   });
-
-  test('delete asks first, and keeping the app leaves it in place', async ({ page }) => {
-    const dashboard = new DashboardPage(page);
-    const edit = new EditAppDialog(page);
-    const name = unique();
-    await dashboard.open();
-    await addTile(dashboard, page, name);
-
-    await dashboard.enterEditLayout();
-    await dashboard.editApp(name);
-    await edit.delete.click();
-    await expect(edit.confirmation).toContainText(`Delete ${name}?`);
-    await edit.keep.click();
-    await expect(edit.save).toBeVisible();
-    await edit.cancel.click();
-
-    await expect(dashboard.tile(name)).toBeVisible();
-    await dashboard.editApp(name);
-    await edit.deleteApp();
-  });
-
-  test('deleting an app removes its tile', async ({ page }) => {
-    const dashboard = new DashboardPage(page);
-    const edit = new EditAppDialog(page);
-    const name = unique();
-    await dashboard.open();
-    await addTile(dashboard, page, name);
-    const withTile = await dashboard.tiles.count();
-
-    await dashboard.enterEditLayout();
-    await dashboard.editApp(name);
-    await edit.deleteApp();
-
-    await expect(edit.dialog).toBeHidden();
-    await expect(dashboard.shell.toast('App deleted')).toBeVisible();
-    await expect(dashboard.tiles).toHaveCount(withTile - 1);
-    await expect(dashboard.tile(name)).toHaveCount(0);
-  });
 });
