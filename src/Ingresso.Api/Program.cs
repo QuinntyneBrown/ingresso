@@ -31,6 +31,7 @@ if (builder.Configuration.GetValue("Outbox:Enabled", true))
 }
 
 var app = builder.Build();
+await app.WarnIfPendingAsync();
 
 // Pipeline order is part of the design (platform/observability, platform/security-hardening).
 // 1 request logging, 2 security headers, 3 exception handling, 4 HSTS/HTTPS, 5 Swagger, 6 routing,
