@@ -54,4 +54,11 @@ export class AddAppDialog {
     await this.fill(details);
     await this.submit.click();
   }
+
+  /** Scrolls every scrolled part of the dialog back to its top, so a capture does not depend on where the fields were focused. */
+  async scrollToTop(): Promise<void> {
+    await this.dialog.evaluate((root) => {
+      for (const el of [root, ...Array.from(root.querySelectorAll<HTMLElement>('*'))]) el.scrollTop = 0;
+    });
+  }
 }

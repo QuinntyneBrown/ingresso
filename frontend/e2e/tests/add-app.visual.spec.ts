@@ -37,7 +37,8 @@ test.describe('Add app dialog, visually', () => {
   test('duplicate address', async ({ page }) => {
     const dialog = await open(page);
     await dialog.add({ name: 'Mail again', url: 'https://mail.google.com' });
-    await expect(dialog.duplicateWarning).toBeVisible();
+    await expect(dialog.duplicateWarning).toBeInViewport();
+    await dialog.scrollToTop();
     await expect(dialog.dialog).toHaveScreenshot('duplicate.png');
   });
 
@@ -49,7 +50,8 @@ test.describe('Add app dialog, visually', () => {
     );
     const dialog = await open(page);
     await dialog.add({ name: 'Unlucky', url: 'https://unlucky.example.com' });
-    await expect(dialog.dialog.getByRole('alert')).toBeVisible();
+    await expect(dialog.dialog.getByRole('alert')).toBeInViewport();
+    await dialog.scrollToTop();
     await expect(dialog.dialog).toHaveScreenshot('failed.png');
   });
 });

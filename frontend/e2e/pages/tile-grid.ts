@@ -147,19 +147,28 @@ export class TileGrid {
 
   /** Presses a key on the named tile and returns how many milliseconds passed before the tile's cell changed. */
   async millisecondsToMove(name: string, key: string): Promise<number> {
-    await this.item(name).focus();
-    const elapsed = this.item(name).evaluate(
-      (el) =>
-        new Promise<number>((resolve) => {
-          const started = performance.now();
-          new MutationObserver((_records, observer) => {
-            observer.disconnect();
-            resolve(performance.now() - started);
-          }).observe(el, { attributes: true, attributeFilter: ['style'] });
-        }),
-    );
+    const tile = this.item(name);
+    await tile.focus();
+    // Watch from inside the page, and start the clock at the key event itself, so the figure is the time the
+    // page took to redraw and not the time the test took to send the key.
+    await tile.evaluate((el) => {
+      const watched = el as HTMLElement & { __moved?: Promise<number> };
+      watched.__moved = new Promise<number>((resolve) => {
+        el.addEventListener(
+          'keydown',
+          () => {
+            const started = performance.now();
+            new MutationObserver((_records, observer) => {
+              observer.disconnect();
+              resolve(performance.now() - started);
+            }).observe(el, { attributes: true, attributeFilter: ['style'] });
+          },
+          { capture: true, once: true },
+        );
+      });
+    });
     await this.page.keyboard.press(key);
-    return elapsed;
+    return tile.evaluate((el) => (el as HTMLElement & { __moved: Promise<number> }).__moved);
   }
 
   /** The first cell, in reading order, where a tile of this span fits without touching another. */
