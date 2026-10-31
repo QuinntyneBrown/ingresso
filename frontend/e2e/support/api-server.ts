@@ -31,7 +31,7 @@ export async function startApi(databaseName = 'e2e'): Promise<ChildProcess> {
     cwd: repoRoot,
     stdio: 'inherit',
   });
-  execFileSync('dotnet', ['run', '--no-build', '--project', 'src/Ingresso.Cli', '--', 'reset'], {
+  execFileSync('dotnet', ['run', '--no-build', '--project', 'src/Ingresso.Cli', '--', 'reset', '--confirm'], {
     cwd: repoRoot,
     env,
     stdio: 'inherit',

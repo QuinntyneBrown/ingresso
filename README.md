@@ -102,7 +102,7 @@ dotnet run --project src/Ingresso.Cli -- migrate
 dotnet run --project src/Ingresso.Cli -- seed
 ```
 
-Seeding is idempotent and safe to re-run. `reset` drops and recreates the database.
+Seeding is idempotent and safe to re-run. `reset --confirm` drops and recreates the database; without the flag it refuses.
 
 To try the app without SQL Server, use SQLite, as the end-to-end tests do
 ([ADR 0001](docs/adr/0001-sqlite-for-tests-and-demos.md)):
@@ -110,7 +110,7 @@ To try the app without SQL Server, use SQLite, as the end-to-end tests do
 ```bash
 export Database__Provider=Sqlite
 export ConnectionStrings__Default="Data Source=ingresso.db"
-dotnet run --project src/Ingresso.Cli -- reset
+dotnet run --project src/Ingresso.Cli -- reset --confirm
 ```
 
 ### Run the app
