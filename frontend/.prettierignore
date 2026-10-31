@@ -12,3 +12,4 @@ projects/components/src/lib/styles/_tokens.scss
 projects/components/src/lib/tokens/tokens.ts
 *.png
 e2e/.data
+e2e/demo/.cache/

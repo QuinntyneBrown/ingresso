@@ -85,6 +85,11 @@ test.describe('On a phone', () => {
       expect(box!.height).toBeGreaterThanOrEqual(44);
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    // Every header control sits fully inside the 390 px screen, not clipped at the edge.
+    for (const control of [dashboard.shell.addApp, dashboard.shell.editLayout, dashboard.shell.avatar]) {
+      const box = (await control.boundingBox())!;
+      expect(box.x + box.width).toBeLessThanOrEqual(390);
+    }
   });
 
   // Acceptance Test
