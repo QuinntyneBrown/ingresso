@@ -78,4 +78,103 @@ public sealed class VerifyEmailTests(ApiFactory factory) : IClassFixture<ApiFact
         Assert.True(seeded.GetProperty("emailVerified").GetBoolean());
         Assert.Equal(HttpStatusCode.OK, (await verified.GetAsync("/api/tiles")).StatusCode);
     }
+
+    private async Task<string> VerificationLink(ApiFactory from, string email)
+    {
+        using (var scope = from.Services.CreateScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<OutboxDispatcher>().ProcessDueAsync(CancellationToken.None);
+        }
+
+        var body = from.Services.GetRequiredService<DevMailbox>().For(email).Last(m => m.Message.Subject == "Verify your email").Message.TextBody;
+        var start = body.IndexOf("/auth/verify-email?token=", StringComparison.Ordinal);
+        return new string(body[start..].TakeWhile(c => !char.IsWhiteSpace(c)).ToArray());
+    }
+
+    private static async Task<string> EmailOf(HttpClient client) =>
+        (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("email").GetString()!;
+
+    // Acceptance Test
+    // Traces to: L2-029
+    // Description: An unverified account can ask for another verification email, and following its link verifies the account.
+    [Fact]
+    public async Task An_unverified_account_can_request_another_email_and_following_it_verifies()
+    {
+        var client = await SignedInUnverified();
+        var email = await EmailOf(client);
+
+        var response = await client.PostAsync("/api/auth/verification-emails", null);
+        var link = await VerificationLink(factory, email);
+        var opened = await client.GetAsync(link);
+
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, opened.StatusCode);
+        Assert.Equal("/?email-verified=1", opened.Headers.Location?.OriginalString);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/tiles")).StatusCode);
+        Assert.True((await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("emailVerified").GetBoolean());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-029
+    // Description: A verified account asking again is answered the same way but no email is sent.
+    [Fact]
+    public async Task A_verified_account_is_not_sent_another_email()
+    {
+        var client = factory.CreateHttpsClient();
+        await client.SignInAsAsync(HttpClientExtensions.DevUser);
+        var before = factory.Services.GetRequiredService<DevMailbox>().For(HttpClientExtensions.DevUser).Count();
+
+        var response = await client.PostAsync("/api/auth/verification-emails", null);
+
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        Assert.Equal(before, factory.Services.GetRequiredService<DevMailbox>().For(HttpClientExtensions.DevUser).Count());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-029
+    // Description: Asking without a session is refused with 401.
+    [Fact]
+    public async Task Asking_for_a_verification_email_needs_a_session()
+    {
+        var response = await factory.CreateHttpsClient().PostAsync("/api/auth/verification-emails", null);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-029
+    // Description: Verification emails are rate limited per account, and the answer says when to try again.
+    [Fact]
+    public async Task Verification_emails_are_rate_limited()
+    {
+        using var small = new TwoPerHourFactory();
+        var email = NewEmail();
+        await small.WithDbAsync(async db =>
+        {
+            db.Users.Add(new User { Email = email, Role = UserRole.Member, CreatedAtUtc = ApiFactory.Today });
+            return await db.SaveChangesAsync();
+        });
+        var client = small.CreateHttpsClient();
+        await client.SignInAsAsync(email);
+
+        var statuses = new List<HttpStatusCode>();
+        HttpResponseMessage last = null!;
+        for (var i = 0; i < 3; i++)
+        {
+            last = await client.PostAsync("/api/auth/verification-emails", null);
+            statuses.Add(last.StatusCode);
+        }
+
+        Assert.Equal([HttpStatusCode.Accepted, HttpStatusCode.Accepted, HttpStatusCode.TooManyRequests], statuses);
+        Assert.True(last.Headers.Contains("Retry-After"));
+    }
+
+    private sealed class TwoPerHourFactory : ApiFactory
+    {
+        protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
+        {
+            base.ConfigureWebHost(builder);
+            builder.UseSetting("Auth:Verification:PerUserPerHour", "2");
+        }
+    }
 }

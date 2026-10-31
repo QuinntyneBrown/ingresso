@@ -39,6 +39,16 @@ public sealed class AuthController(ISender sender, SessionSignIn sessions) : Con
         return Redirect(signedIn.RedirectTo);
     }
 
+    /// <summary>Emails the signed-in, unverified account a new verification link; always 202, rate limited per account (L2-029).</summary>
+    [HttpPost("api/auth/verification-emails")]
+    [Authorize]
+    [EnableRateLimiting(SignInRateLimit.VerificationPolicy)]
+    public async Task<IActionResult> ResendVerification(CancellationToken cancellationToken)
+    {
+        await sender.Send(new ResendVerificationCommand(), cancellationToken);
+        return Accepted();
+    }
+
     /// <summary>The signed-in user for the header (L2-050); 401 when anonymous.</summary>
     [HttpGet("api/auth/me")]
     [Authorize]
