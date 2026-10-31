@@ -142,6 +142,14 @@ export class DashboardPage {
     await this.grid.root.and(this.page.locator('[data-mode="edit"]')).waitFor();
   }
 
+  /** Navigates inside the running app, the way a link would, without reloading the page. */
+  async navigateWithinApp(path: string): Promise<void> {
+    await this.page.evaluate((target) => {
+      history.pushState({}, '', target);
+      window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
+    }, path);
+  }
+
   /** Deletes the named app from its Edit dialog, turning edit layout on first when it is off. */
   async removeApp(name: string): Promise<void> {
     if (!(await this.grid.isEditable())) await this.enterEditLayout();

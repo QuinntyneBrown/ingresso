@@ -15,6 +15,8 @@ import { demoPaths, FRONTEND } from './paths';
 export const TODAY = new Date('2026-11-02T14:00:00Z');
 
 export interface ShotOptions {
+  /** Leave the pointer where it is, for beats captured mid-drag. */
+  keepPointer?: boolean;
   /** Capture the full page instead of the 1280 × 720 viewport. */
   fullPage?: boolean;
   /** Frame a phone-width capture in the middle of a 1280 × 720 canvas. */
@@ -101,7 +103,7 @@ export async function runJourney(journey: string): Promise<string[]> {
         index++;
         const target = options?.page ?? page;
         // Park the pointer in the left margin so no row or link shows a hover state.
-        await target.mouse.move(4, (target.viewportSize()?.height ?? 720) - 4);
+        if (!options?.keepPointer) await target.mouse.move(4, (target.viewportSize()?.height ?? 720) - 4);
         await target.waitForTimeout(400);
         const file = resolve(paths.screenshots, `${String(index).padStart(2, '0')}-${beat}.png`);
         if (options?.phone) {
