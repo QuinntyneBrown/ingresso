@@ -91,6 +91,24 @@ test.describe('Add an app', () => {
   });
 
   // Acceptance Test
+  // Traces to: L2-026
+  // Description: On a short screen the duplicate warning is scrolled into view when it appears, so the person sees why nothing was added.
+  test('the duplicate warning is brought into view on a short screen', async ({ page }) => {
+    const dashboard = new DashboardPage(page);
+    const dialog = new AddAppDialog(page);
+    await page.setViewportSize({ width: 1280, height: 480 });
+    await dashboard.open();
+    await dashboard.shell.addApp.click();
+    await dialog.fill({ name: 'Mail again', url: 'https://mail.google.com' });
+    await dialog.initials.scrollIntoViewIfNeeded();
+
+    await dialog.submit.click();
+
+    await expect(dialog.duplicateWarning).toBeVisible();
+    await expect(dialog.duplicateWarning).toBeInViewport({ ratio: 1 });
+  });
+
+  // Acceptance Test
   // Traces to: L2-037
   // Description: A name containing markup is shown as plain text, never as HTML.
   test('tile text renders as text, not markup', async ({ page }) => {

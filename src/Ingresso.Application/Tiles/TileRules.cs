@@ -8,7 +8,7 @@ public static partial class TileRules
     /// <summary>The icon colours a tile may use (L2-002); the web app offers the same eight.</summary>
     public static readonly IReadOnlySet<string> Palette = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "#CF3B20", "#2563EB", "#1B6B3C", "#B26F00", "#6D28D9", "#0F766E", "#BE185D", "#17181C",
+        "#CF3B20", "#2563EB", "#1B6B3C", "#A15F00", "#6D28D9", "#0F766E", "#BE185D", "#17181C",
     };
 
     public const int MaxNameLength = 60;

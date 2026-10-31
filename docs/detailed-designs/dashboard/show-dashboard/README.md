@@ -35,7 +35,7 @@ The feature realizes the following level-2 (L2) requirements. Each L2 requiremen
 
 | L2 ID | Refines (L1) | Requirement |
 |-------|--------------|-------------|
-| `L2-008` | `L1-002` | The dashboard shall render every tile in the user's saved order, showing name, address host, category and colour. |
+| `L2-008` | `L1-002` | The dashboard shall render every tile in the user's saved order, showing name, address host, description (on large tiles) and colour. |
 | `L2-009` | `L1-002` | Each tile shall occupy a rectangle of cells on a 12-column grid, given by its column, row, column span and row span. A tile's size is its span; the default span for a new tile is 3 columns by 2 rows. |
 | `L2-010` | `L1-002` | A user with no tiles shall see an empty state with a call to action. |
 | `L2-011` | `L1-002` | The dashboard shall show a skeleton while loading and a retryable error if loading fails. |
@@ -73,3 +73,10 @@ Within the web app, `DashboardPage` reads `TilesStore` and hands the layout to `
 The page shows skeletons until the list arrives. It then renders the empty state, the grid, or an alert with Retry. The grid repairs an invalid stored layout before it renders.
 
 ![Sequence diagram: load the dashboard](diagrams/sequence-load.png)
+
+## Decisions made in journey 03
+
+- A tile shows name, host, description (large tiles) and colour; category is not shown ([ADR 0012](../../../adr/0012-tiles-do-not-show-a-category.md)).
+- While loading, the skeleton grid is marked `aria-busy` and a polite status says "Loading apps…" (`L2-011`).
+- The Amber icon colour is `#A15F00` (5.06:1 with white) so every palette colour keeps AA contrast for its initial (`L2-008`).
+- Acceptance tests: `dashboard-grid.spec.ts` (placement, repair, responsive collapse, 200 tiles) and `dashboard-states.spec.ts`.

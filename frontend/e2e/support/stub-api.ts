@@ -66,7 +66,7 @@ export const DEFAULT_TILES: FakeTile[] = pack([
   seed(3, 'Statuspage', 'https://status.northwind.example', '#0F766E', 'S', 'small', null),
   seed(4, 'Ledger', 'https://ledger.northwind.example', '#6D28D9', 'L', 'small', null),
   seed(5, 'Docs', 'https://docs.northwind.example', '#17181C', 'D', 'small', null),
-  seed(6, 'Metrics', 'https://metrics.northwind.example', '#B26F00', 'M', 'small', null),
+  seed(6, 'Metrics', 'https://metrics.northwind.example', '#A15F00', 'M', 'small', null),
   seed(7, 'Support Desk', 'https://support.northwind.example', '#BE185D', 'SD', 'small', null),
   seed(8, 'Wiki', 'https://wiki.northwind.example', '#2563EB', 'W', 'small', null),
   seed(9, 'Deploys', 'https://deploys.northwind.example', '#1B6B3C', 'DP', 'small', null),

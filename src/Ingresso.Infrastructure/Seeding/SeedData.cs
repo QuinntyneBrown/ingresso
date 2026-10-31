@@ -16,7 +16,7 @@ public static class SeedData
         new("Figma", "https://figma.com", "Design", "#BE185D", "F", "Design"),
         new("Notion", "https://notion.so", "Docs and notes", "#17181C", "N", "Productivity"),
         new("Salesforce", "https://salesforce.com", "CRM", "#2563EB", "S", "Business"),
-        new("Workday", "https://workday.com", "HR", "#B26F00", "W", "Business"),
+        new("Workday", "https://workday.com", "HR", "#A15F00", "W", "Business"),
         new("Zoom", "https://zoom.us", "Video meetings", "#2563EB", "Z", "Communication"),
         new("1Password", "https://1password.com", "Passwords", "#0F766E", "1", "Security"),
         new("Datadog", "https://datadoghq.com", "Monitoring", "#6D28D9", "D", "Engineering"),

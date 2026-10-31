@@ -39,7 +39,7 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
     }
 
     // Acceptance Test
-    // Traces to: L2-009
+    // Traces to: L2-005, L2-009
     // Description: Tiles list in reading order and carry their placement and span, not a separate size or sort order.
     [Fact]
     public async Task Lists_the_seeded_tiles_in_reading_order_with_placement_and_no_size_or_sort_order()
@@ -380,5 +380,24 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         var response = await client.PostAsJsonAsync("/api/tiles", Body());
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-005
+    // Description: A user's tile is returned by id with 200, and an unknown id gets 404 problem details.
+    [Fact]
+    public async Task A_tile_is_fetched_by_id_and_an_unknown_id_is_404_problem_details()
+    {
+        var client = await SignedIn();
+        var created = await Json(await client.PostAsJsonAsync("/api/tiles", Body("Findable")));
+        var id = created.GetProperty("id").GetString();
+
+        var found = await client.GetAsync($"/api/tiles/{id}");
+        var missing = await client.GetAsync($"/api/tiles/{Guid.NewGuid()}");
+
+        Assert.Equal(HttpStatusCode.OK, found.StatusCode);
+        Assert.Equal("Findable", (await Json(found)).GetProperty("name").GetString());
+        Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+        Assert.Equal("application/problem+json", missing.Content.Headers.ContentType?.MediaType);
     }
 }

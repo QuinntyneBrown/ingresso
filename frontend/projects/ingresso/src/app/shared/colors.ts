@@ -3,7 +3,7 @@ export const APP_COLORS: { value: string; label: string }[] = [
   { value: '#CF3B20', label: 'Vermilion' },
   { value: '#2563EB', label: 'Blue' },
   { value: '#1B6B3C', label: 'Green' },
-  { value: '#B26F00', label: 'Amber' },
+  { value: '#A15F00', label: 'Amber' },
   { value: '#6D28D9', label: 'Violet' },
   { value: '#0F766E', label: 'Teal' },
   { value: '#BE185D', label: 'Pink' },
