@@ -56,7 +56,7 @@ import { injectWideViewport } from '../../shared/wide-viewport';
       @switch (store.status()) {
         @case ('loading') {
           <p class="visually-hidden" role="status">Loading apps…</p>
-          <div class="grid" aria-hidden="true">
+          <div class="grid" aria-busy="true">
             @for (n of placeholders; track n) {
               <div class="cell cell--large"><ig-skeleton variant="rect" height="9rem" /></div>
             }
@@ -157,6 +157,7 @@ export class DashboardPage {
   protected readonly greeting = computed(() => greetingFor(new Date().getHours()));
   protected readonly firstName = computed(() => this.session.user()?.name.split(' ')[0] ?? '');
   protected readonly summary = computed(() => {
+    if (this.store.status() === 'loading') return 'Loading your apps…';
     const count = this.store.tiles().length;
     const user = this.session.user();
     const parts = [`${count} ${count === 1 ? 'app' : 'apps'}`];

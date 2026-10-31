@@ -14,6 +14,7 @@ export class DashboardPage {
   readonly noMatches: Locator;
   readonly clearSearch: Locator;
   readonly loadFailed: Locator;
+  readonly busyGrid: Locator;
   readonly tryAgain: Locator;
   readonly layoutBar: Locator;
   readonly resetLayout: Locator;
@@ -32,6 +33,7 @@ export class DashboardPage {
     this.addFirstApp = page.getByRole('button', { name: 'Add your first app' });
     this.noMatches = page.getByRole('heading', { name: 'No apps match that search' });
     this.clearSearch = page.getByRole('button', { name: 'Clear the search' });
+    this.busyGrid = page.locator('[aria-busy="true"]');
     this.loadFailed = page.getByRole('alert').filter({ hasText: "We couldn't load your apps" });
     this.tryAgain = this.loadFailed.getByRole('button', { name: 'Try again' });
     this.layoutBar = page.locator('.layout-bar');
@@ -46,6 +48,39 @@ export class DashboardPage {
   async open(): Promise<void> {
     await signInAs(this.page);
     await this.page.goto('/');
+  }
+
+  /** Contrast ratio of each tile icon's initial against its colour, lowest first. */
+  async iconContrasts(): Promise<number[]> {
+    return this.page.locator('ig-app-icon .app-icon').evaluateAll((icons) => {
+      const channels = (css: string) => (css.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+      const luminance = ([r, g, b]: number[]) => {
+        const f = (c: number) => ((c /= 255) <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+        return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+      };
+      return icons
+        .map((icon) => {
+          const style = getComputedStyle(icon);
+          const a = luminance(channels(style.color));
+          const b = luminance(channels(style.backgroundColor));
+          return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+        })
+        .sort((x, y) => x - y);
+    });
+  }
+
+  /** Counts layout saves sent from now on. */
+  watchLayoutSaves(): () => number {
+    let saves = 0;
+    this.page.on('request', (request) => {
+      if (request.method() === 'PUT' && request.url().includes('/api/tiles/layout')) saves++;
+    });
+    return () => saves;
+  }
+
+  /** Whether the page scrolls sideways. */
+  async scrollsSideways(): Promise<boolean> {
+    return this.page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   }
 
   tile(name: string): Locator {
