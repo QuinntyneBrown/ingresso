@@ -46,6 +46,7 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run tokens:check
+      - run: npx ng build components
       - run: npm run build
       - run: npm run build-storybook
 

@@ -7,8 +7,8 @@ import { Button, StatusPage } from 'components';
   selector: 'ig-not-found-page',
   imports: [RouterLink, Button, StatusPage],
   template: `
-    <ig-status-page code="404" heading="We can't find that page">
-      <p slot="message">The page may have moved, or the link has a typo.</p>
+    <ig-status-page code="404" heading="That door doesn’t open anywhere">
+      <p slot="message">The page you’re looking for moved or never existed.</p>
       <ng-container slot="actions">
         <a ig-button appearance="primary" routerLink="/">Back to your apps</a>
       </ng-container>

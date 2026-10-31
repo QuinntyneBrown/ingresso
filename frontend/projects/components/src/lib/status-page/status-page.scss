@@ -13,6 +13,16 @@
 .status-page__code span {
   color: var(--ig-color-brand);
 }
+.status-page__icon {
+  width: 4rem;
+  height: 4rem;
+  margin-inline: auto;
+  border-radius: var(--borderRadiusCircular);
+  display: grid;
+  place-items: center;
+  background: var(--colorBrandBackground2);
+  color: var(--colorBrandForeground2);
+}
 .status-page h1 {
   margin-top: var(--spacingHorizontalL);
   font: var(--ig-text-h2);
