@@ -17,7 +17,6 @@ public sealed class ResetLayoutCommandHandler(IAppDbContext db, ICurrentUser cur
         var perRow = TileLayout.Columns / TileLayout.DefaultCols;
         for (var i = 0; i < tiles.Count; i++)
         {
-            tiles[i].SortOrder = i;
             tiles[i].X = i % perRow * TileLayout.DefaultCols;
             tiles[i].Y = i / perRow * TileLayout.DefaultRows;
             tiles[i].Cols = TileLayout.DefaultCols;

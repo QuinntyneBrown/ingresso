@@ -3,12 +3,12 @@ using Ingresso.Infrastructure.Seeding;
 
 namespace Ingresso.Infrastructure.Persistence;
 
-/// <summary>Migrate, seed and reset, used by the CLI. SQL Server applies migrations; SQLite builds the schema from the model.</summary>
+/// <summary>Migrate, seed and reset, used by the CLI. Relational providers (SQL Server and SQLite) apply migrations; only the in-memory test provider builds the schema from the model.</summary>
 public sealed class DatabaseMaintenance(AppDbContext db, DatabaseSeeder seeder)
 {
     public async Task MigrateAsync(CancellationToken cancellationToken = default)
     {
-        if (db.Database.IsSqlite() || !db.Database.IsRelational())
+        if (!db.Database.IsRelational())
         {
             await db.Database.EnsureCreatedAsync(cancellationToken);
             return;

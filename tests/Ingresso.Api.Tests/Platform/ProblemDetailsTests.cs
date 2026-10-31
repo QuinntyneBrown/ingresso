@@ -9,6 +9,9 @@ namespace Ingresso.Api.Tests.Platform;
 /// <summary>L2-102: errors are RFC 9457 problem details; unhandled ones carry a logged reference code.</summary>
 public sealed partial class ProblemDetailsTests(PlatformFactory factory) : IClassFixture<PlatformFactory>
 {
+    // Acceptance Test
+    // Traces to: L2-048
+    // Description: An unhandled exception returns 500 problem details with a reference and no stack trace.
     [Fact]
     public async Task Unhandled_error_returns_500_problem_details_with_a_reference_code_and_no_internals()
     {
@@ -55,6 +58,9 @@ public sealed partial class ProblemDetailsTests(PlatformFactory factory) : IClas
         Assert.Equal("What's new in the .NET 11 previews", problem.GetProperty("resourceTitle").GetString());
     }
 
+    // Acceptance Test
+    // Traces to: L2-048
+    // Description: A validation failure returns problem+json 400 with per-field errors.
     [Fact]
     public async Task Validation_failure_maps_to_400_with_errors_keyed_by_camel_case_field()
     {

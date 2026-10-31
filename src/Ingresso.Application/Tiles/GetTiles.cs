@@ -12,7 +12,7 @@ public sealed class GetTilesQueryHandler(IAppDbContext db, ICurrentUser current)
     public async Task<IReadOnlyList<TileDto>> Handle(GetTilesQuery request, CancellationToken cancellationToken)
     {
         var owner = current.UserId ?? throw new ForbiddenAccessException();
-        var tiles = await db.Tiles.AsNoTracking().Where(t => t.OwnerId == owner).OrderBy(t => t.SortOrder).ThenBy(t => t.CreatedAt).ToListAsync(cancellationToken);
+        var tiles = await db.Tiles.AsNoTracking().Where(t => t.OwnerId == owner).OrderBy(t => t.Y).ThenBy(t => t.X).ThenBy(t => t.CreatedAt).ToListAsync(cancellationToken);
         return tiles.Select(TileDto.From).ToList();
     }
 }

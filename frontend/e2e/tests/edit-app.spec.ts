@@ -27,7 +27,7 @@ test.describe('Edit and delete an app', () => {
 
     await expect(edit.dialog).toBeVisible();
     await expect(edit.name).toHaveValue(name);
-    await expect(edit.address).toHaveValue('https://temp.example.com');
+    await expect(edit.address).toHaveValue(/^https:\/\/temp\.example\.com\/?$/);
     await edit.deleteApp();
   });
 

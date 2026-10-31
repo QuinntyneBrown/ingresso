@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TileInput, TileSize } from 'api';
+import { TileInput } from 'api';
 import { AppIcon, Check, Choice, describedBy, FieldSet, FormField, Input } from 'components';
 import { APP_COLORS, initialsOf } from '../../shared/colors';
 
@@ -113,16 +113,6 @@ const toUrl = (value: string): string => {
           (input)="initialEdited = true"
         />
       </ig-form-field>
-      <ig-field-set legend="Tile size" controlId="app-size">
-        <div class="app-form__choices">
-          <label ig-choice card hint="Shows the description and when you last opened it">
-            <input ig-check type="radio" formControlName="size" value="large" />Large
-          </label>
-          <label ig-choice card hint="Icon, name and address only">
-            <input ig-check type="radio" formControlName="size" value="small" />Compact
-          </label>
-        </div>
-      </ig-field-set>
     </form>
   `,
   styles: `
@@ -173,7 +163,6 @@ export class AppForm {
     category: new FormControl('', { nonNullable: true }),
     color: new FormControl(APP_COLORS[0].value, { nonNullable: true }),
     initial: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    size: new FormControl<TileSize>('small', { nonNullable: true }),
   });
 
   constructor() {
@@ -187,7 +176,6 @@ export class AppForm {
         category: v.category ?? '',
         color: v.color ?? APP_COLORS[0].value,
         initial: v.initial ?? initialsOf(v.name ?? ''),
-        size: v.size ?? 'small',
       });
       this.initialEdited = !!v.initial;
     });
@@ -219,7 +207,6 @@ export class AppForm {
       category: v.category.trim() || null,
       color: v.color,
       initial: v.initial.trim().toUpperCase(),
-      size: v.size,
     });
   }
 }

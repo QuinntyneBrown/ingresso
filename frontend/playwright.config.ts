@@ -4,6 +4,8 @@ import { defineConfig, devices } from '@playwright/test';
 const external = process.env['PW_BASE_URL'];
 // E2E_FAKE_API=1 answers /api in the browser (e2e/support/stub-api.ts) so the suite runs without the .NET API.
 const fake = !!process.env['E2E_FAKE_API'];
+// PW_WEB_PORT and PW_API_PORT move the dev server and the API off 4200 and 5100.
+const webUrl = `http://localhost:${process.env['PW_WEB_PORT'] ?? '4200'}`;
 
 /**
  * Playwright runs in Chromium only (AGENTS.md) against `ng serve` proxying to the API, which the global
@@ -23,7 +25,7 @@ export default defineConfig({
     toHaveScreenshot: { maxDiffPixelRatio: 0.01, animations: 'disabled', caret: 'hide' },
   },
   use: {
-    baseURL: external ?? 'http://localhost:4200',
+    baseURL: external ?? webUrl,
     trace: 'retain-on-failure',
     viewport: { width: 1280, height: 720 },
     locale: 'en-US',
@@ -43,8 +45,8 @@ export default defineConfig({
       ? []
       : [
           {
-            command: 'npx ng serve ingresso --port 4200',
-            url: 'http://localhost:4200',
+            command: `npx ng serve ingresso --port ${process.env['PW_WEB_PORT'] ?? '4200'}`,
+            url: webUrl,
             reuseExistingServer: !process.env['CI'],
             timeout: 180_000,
           },

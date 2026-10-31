@@ -15,8 +15,7 @@ public sealed class TileConfiguration : IEntityTypeConfiguration<Tile>
         builder.Property(t => t.Color).HasMaxLength(7).IsRequired();
         builder.Property(t => t.Initial).HasMaxLength(2).IsRequired();
         builder.Property(t => t.Category).HasMaxLength(60);
-        builder.Property(t => t.Size).HasConversion<string>().HasMaxLength(10);
         builder.HasOne<User>().WithMany().HasForeignKey(t => t.OwnerId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasIndex(t => new { t.OwnerId, t.SortOrder });
+        builder.HasIndex(t => new { t.OwnerId, t.Y, t.X });
     }
 }

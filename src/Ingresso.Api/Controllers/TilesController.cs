@@ -5,7 +5,7 @@ using Ingresso.Application.Tiles;
 
 namespace Ingresso.Api.Controllers;
 
-public sealed record TileRequest(string Name, string Url, string? Description, string Color, string? Initial, string? Category, string? Size);
+public sealed record TileRequest(string Name, string Url, string? Description, string Color, string? Initial, string? Category);
 
 public sealed record SaveLayoutRequest(IReadOnlyList<TilePlacement> Tiles);
 
@@ -24,13 +24,13 @@ public sealed class TilesController(ISender sender) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(TileRequest body, CancellationToken ct)
     {
-        var tile = await sender.Send(new CreateTileCommand(body.Name, body.Url, body.Description, body.Color, body.Initial, body.Category, body.Size), ct);
+        var tile = await sender.Send(new CreateTileCommand(body.Name, body.Url, body.Description, body.Color, body.Initial, body.Category), ct);
         return CreatedAtAction(nameof(Get), new { id = tile.Id }, tile);
     }
 
     [HttpPut("{id:guid}")]
     public async Task<TileDto> Update(Guid id, TileRequest body, CancellationToken ct) =>
-        await sender.Send(new UpdateTileCommand(id, body.Name, body.Url, body.Description, body.Color, body.Initial, body.Category, body.Size), ct);
+        await sender.Send(new UpdateTileCommand(id, body.Name, body.Url, body.Description, body.Color, body.Initial, body.Category), ct);
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)

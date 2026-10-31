@@ -1,5 +1,3 @@
-import { TileSize } from 'api';
-
 /** A common app people add from the directory. */
 export interface CatalogApp {
   name: string;
@@ -8,7 +6,6 @@ export interface CatalogApp {
   color: string;
   initial: string;
   category: string;
-  size: TileSize;
 }
 
 export const CATALOG: CatalogApp[] = [
@@ -19,7 +16,6 @@ export const CATALOG: CatalogApp[] = [
     color: '#17181C',
     initial: 'GH',
     category: 'Engineering',
-    size: 'small',
   },
   {
     name: 'Slack',
@@ -28,7 +24,6 @@ export const CATALOG: CatalogApp[] = [
     color: '#6D28D9',
     initial: 'S',
     category: 'Communication',
-    size: 'small',
   },
   {
     name: 'Linear',
@@ -37,7 +32,6 @@ export const CATALOG: CatalogApp[] = [
     color: '#2563EB',
     initial: 'L',
     category: 'Engineering',
-    size: 'small',
   },
   {
     name: 'Notion',
@@ -46,7 +40,6 @@ export const CATALOG: CatalogApp[] = [
     color: '#17181C',
     initial: 'N',
     category: 'Docs',
-    size: 'small',
   },
   {
     name: 'Figma',
@@ -55,7 +48,6 @@ export const CATALOG: CatalogApp[] = [
     color: '#BE185D',
     initial: 'F',
     category: 'Design',
-    size: 'small',
   },
   {
     name: 'Google Drive',
@@ -64,7 +56,6 @@ export const CATALOG: CatalogApp[] = [
     color: '#1B6B3C',
     initial: 'GD',
     category: 'Docs',
-    size: 'small',
   },
   {
     name: 'Google Calendar',
@@ -73,7 +64,6 @@ export const CATALOG: CatalogApp[] = [
     color: '#2563EB',
     initial: 'GC',
     category: 'Productivity',
-    size: 'small',
   },
   {
     name: 'Zoom',
@@ -82,7 +72,6 @@ export const CATALOG: CatalogApp[] = [
     color: '#2563EB',
     initial: 'Z',
     category: 'Communication',
-    size: 'small',
   },
   {
     name: 'Jira',
@@ -91,7 +80,6 @@ export const CATALOG: CatalogApp[] = [
     color: '#2563EB',
     initial: 'J',
     category: 'Engineering',
-    size: 'small',
   },
   {
     name: 'Sentry',
@@ -100,7 +88,6 @@ export const CATALOG: CatalogApp[] = [
     color: '#6D28D9',
     initial: 'SE',
     category: 'Engineering',
-    size: 'small',
   },
   {
     name: 'Stripe',
@@ -109,7 +96,6 @@ export const CATALOG: CatalogApp[] = [
     color: '#6D28D9',
     initial: 'ST',
     category: 'Finance',
-    size: 'small',
   },
   {
     name: 'Vercel',
@@ -118,6 +104,5 @@ export const CATALOG: CatalogApp[] = [
     color: '#17181C',
     initial: 'V',
     category: 'Engineering',
-    size: 'small',
   },
 ];

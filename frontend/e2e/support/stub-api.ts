@@ -9,8 +9,6 @@ export interface FakeTile {
   color: string;
   initial: string;
   category: string | null;
-  sortOrder: number;
-  size: 'large' | 'small';
   lastOpenedAt: string | null;
   createdAt: string;
   x: number;
@@ -19,13 +17,13 @@ export interface FakeTile {
   rows: number;
 }
 
-/** Packs tiles in order: large ones 4 by 3, others 3 by 2, each at the first free cell in reading order. */
+/** Packs tiles in order, each at its own span (reset: 3 by 2), at the first free cell in reading order. */
 const pack = (tiles: FakeTile[], reset = false): FakeTile[] => {
   const placed: FakeTile[] = [];
   const free = (x: number, y: number, cols: number, rows: number) =>
     placed.every((t) => x >= t.x + t.cols || t.x >= x + cols || y >= t.y + t.rows || t.y >= y + rows);
   for (const tile of tiles) {
-    const [cols, rows] = reset ? [3, 2] : tile.size === 'large' ? [4, 3] : [3, 2];
+    const [cols, rows] = reset ? [3, 2] : [tile.cols, tile.rows];
     let spot: [number, number] | null = null;
     for (let y = 0; spot === null; y++) {
       for (let x = 0; x + cols <= 12 && spot === null; x++) if (free(x, y, cols, rows)) spot = [x, y];
@@ -52,14 +50,12 @@ const seed = (
   color,
   initial,
   category: null,
-  sortOrder: i,
-  size,
   lastOpenedAt: openedMinutesAgo === null ? null : new Date(NOW - openedMinutesAgo * 60_000).toISOString(),
   createdAt: new Date(NOW - 86_400_000 + i * 1000).toISOString(),
   x: 0,
   y: 0,
-  cols: 3,
-  rows: 2,
+  cols: size === 'large' ? 4 : 3,
+  rows: size === 'large' ? 3 : 2,
 });
 
 /** Eleven apps: three large tiles, then eight compact ones, packed onto the grid. */
@@ -96,7 +92,6 @@ export async function installFakeApi(page: Page, initial: FakeTile[] = DEFAULT_T
   let tiles = initial.map((t) => ({ ...t }));
   let nextId = 100;
   const ordered = () => [...tiles].sort((a, b) => a.y - b.y || a.x - b.x);
-  const renumber = () => tiles.forEach((t, i) => (t.sortOrder = i));
 
   await page.route('**/api/auth/me', (route) => json(route, ME));
   await page.route(/\/api\/tiles(\/.*)?$/, async (route) => {
@@ -107,14 +102,13 @@ export async function installFakeApi(page: Page, initial: FakeTile[] = DEFAULT_T
 
     if (path === '' && method === 'GET') return json(route, ordered());
     if (path === '' && method === 'POST') {
-      const spot = pack([...tiles, { size: 'small' } as FakeTile]).at(-1)!;
+      const spot = pack([...tiles, { cols: 3, rows: 2 } as FakeTile]).at(-1)!;
       const tile: FakeTile = {
         description: null,
         category: null,
         lastOpenedAt: null,
         ...body(),
         id: `tile-${nextId++}`,
-        sortOrder: tiles.length,
         createdAt: new Date(NOW).toISOString(),
         x: spot.x,
         y: spot.y,
@@ -134,7 +128,6 @@ export async function installFakeApi(page: Page, initial: FakeTile[] = DEFAULT_T
         [...tiles].sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.name.localeCompare(b.name)),
         true,
       );
-      renumber();
       return json(route, ordered());
     }
     const [id, action] = path.split('/');
@@ -151,7 +144,6 @@ export async function installFakeApi(page: Page, initial: FakeTile[] = DEFAULT_T
     }
     if (!action && method === 'DELETE') {
       tiles = tiles.filter((t) => t.id !== id);
-      renumber();
       return route.fulfill({ status: 204 });
     }
     return route.fallback();

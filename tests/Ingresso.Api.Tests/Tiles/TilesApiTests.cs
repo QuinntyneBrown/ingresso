@@ -11,7 +11,7 @@ namespace Ingresso.Api.Tests.Tiles;
 public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private static object Body(string name = "Jira", string url = "jira.example.com", string color = "#0052cc") =>
-        new { name, url, color, description = "Tickets", category = "Work", size = "small" };
+        new { name, url, color, description = "Tickets", category = "Work" };
 
     private async Task<HttpClient> SignedIn(string email = HttpClientExtensions.DevUser)
     {
@@ -38,8 +38,11 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.Equal(HttpStatusCode.Unauthorized, (await factory.CreateHttpsClient().GetAsync("/api/tiles")).StatusCode);
     }
 
+    // Acceptance Test
+    // Traces to: L2-009
+    // Description: Tiles list in reading order and carry their placement and span, not a separate size or sort order.
     [Fact]
-    public async Task Lists_the_seeded_tiles_in_order()
+    public async Task Lists_the_seeded_tiles_in_reading_order_with_placement_and_no_size_or_sort_order()
     {
         var client = await SignedIn();
 
@@ -47,7 +50,12 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
 
         Assert.True(tiles.GetArrayLength() >= 11);
         Assert.Equal("Gmail", tiles[0].GetProperty("name").GetString());
-        Assert.Equal("large", tiles[0].GetProperty("size").GetString());
+        Assert.Equal(4, tiles[0].GetProperty("cols").GetInt32());
+        Assert.Equal(3, tiles[0].GetProperty("rows").GetInt32());
+        Assert.False(tiles[0].TryGetProperty("size", out _));
+        Assert.False(tiles[0].TryGetProperty("sortOrder", out _));
+        var reading = tiles.EnumerateArray().Select(t => (t.GetProperty("y").GetInt32(), t.GetProperty("x").GetInt32())).ToList();
+        Assert.Equal(reading.OrderBy(c => c.Item1).ThenBy(c => c.Item2), reading);
     }
 
     [Fact]
@@ -63,7 +71,6 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.Equal("J", tile.GetProperty("initial").GetString());
         var all = await client.GetFromJsonAsync<JsonElement>("/api/tiles");
         Assert.Equal(tile.GetProperty("id").GetString(), all[all.GetArrayLength() - 1].GetProperty("id").GetString());
-        Assert.Equal(all.GetArrayLength() - 1, tile.GetProperty("sortOrder").GetInt32());
     }
 
     // Acceptance Test
@@ -114,14 +121,13 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         var created = await Json(await client.PostAsJsonAsync("/api/tiles", Body("Round trip")));
         var id = created.GetProperty("id").GetString();
 
-        var updated = await client.PutAsJsonAsync($"/api/tiles/{id}", new { name = "Renamed", url = "https://renamed.example.com", color = "#112233", size = "large" });
+        var updated = await client.PutAsJsonAsync($"/api/tiles/{id}", new { name = "Renamed", url = "https://renamed.example.com", color = "#112233" });
         var fetched = await client.GetFromJsonAsync<JsonElement>($"/api/tiles/{id}");
         var deleted = await client.DeleteAsync($"/api/tiles/{id}");
         var gone = await client.GetAsync($"/api/tiles/{id}");
 
         Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
         Assert.Equal("Renamed", fetched.GetProperty("name").GetString());
-        Assert.Equal("large", fetched.GetProperty("size").GetString());
         Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, gone.StatusCode);
     }

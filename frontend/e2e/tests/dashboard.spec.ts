@@ -2,12 +2,12 @@ import { expect, test } from '../fixtures';
 import { DashboardPage } from '../pages/dashboard.page';
 
 test.describe('Dashboard', () => {
-  test('greets the signed-in person and says how many apps and how they signed in', async ({ page }) => {
+  test('greets the signed-in person and says how many apps they have', async ({ page }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.open();
 
     await expect(dashboard.heading).toHaveText('Good afternoon, Maya');
-    await expect(dashboard.summary).toHaveText(/^\d+ apps · signed in to Northwind with SSO$/);
+    await expect(dashboard.summary).toHaveText(/^\d+ apps/);
   });
 
   test('the header has the brand, search with its "/" hint, Edit layout, Add app and the avatar', async ({

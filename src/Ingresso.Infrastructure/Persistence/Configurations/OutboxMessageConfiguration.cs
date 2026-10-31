@@ -10,6 +10,8 @@ public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outbox
     {
         builder.HasKey(m => m.Id);
         builder.Property(m => m.Type).HasMaxLength(500).IsRequired();
+        // Bounded so the migration uses no SQL Server-only nvarchar(max) and also applies on SQLite.
+        builder.Property(m => m.Payload).HasMaxLength(4000).IsRequired();
         builder.Property(m => m.CorrelationId).HasMaxLength(64);
         builder.Property(m => m.LastError).HasMaxLength(2000);
         builder.HasIndex(m => new { m.ProcessedAtUtc, m.FailedAtUtc, m.NextAttemptAtUtc });

@@ -15,7 +15,7 @@ test.describe('Add an app', () => {
     const before = await dashboard.tiles.count();
 
     await dashboard.shell.addApp.click();
-    await dialog.add({ name, url: 'https://acme.example.com', color: 'Teal', size: 'Compact' });
+    await dialog.add({ name, url: 'https://acme.example.com', color: 'Teal' });
 
     await expect(dialog.dialog).toBeHidden();
     await expect(dashboard.shell.toast('App added')).toBeVisible();
@@ -58,17 +58,17 @@ test.describe('Add an app', () => {
     await directory.open();
 
     await expect(directory.heading).toBeVisible();
-    await directory.addFromCatalog('Figma');
+    await directory.addFromCatalog('Sentry');
 
-    await expect(dialog.name).toHaveValue('Figma');
-    await expect(dialog.address).toHaveValue('https://www.figma.com');
+    await expect(dialog.name).toHaveValue('Sentry');
+    await expect(dialog.address).toHaveValue('https://sentry.io');
     await dialog.submit.click();
     await expect(dashboard.shell.toast('App added')).toBeVisible();
 
     // Clean up so the run leaves the dashboard as it found it.
     await page.goto('/');
     await dashboard.enterEditLayout();
-    await dashboard.editApp('Figma');
+    await dashboard.editApp('Sentry');
     await new EditAppDialog(page).deleteApp();
   });
 

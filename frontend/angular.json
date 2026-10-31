@@ -96,7 +96,7 @@
           },
           "defaultConfiguration": "development",
           "options": {
-            "proxyConfig": "projects/ingresso/proxy.conf.json",
+            "proxyConfig": "projects/ingresso/proxy.conf.js",
             "port": 4200,
             "allowedHosts": ["host.docker.internal"]
           }

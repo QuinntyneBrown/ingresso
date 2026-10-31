@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +29,10 @@ public static class DependencyInjection
         {
             if (string.Equals(provider, "Sqlite", StringComparison.OrdinalIgnoreCase))
             {
-                options.UseSqlite(connectionString ?? "Data Source=ingresso.db");
+                // The migrations are generated against SQL Server (ADR 0010); SQLite applies the same files, so its
+                // provider-specific model differences are expected and not a pending change.
+                options.UseSqlite(connectionString ?? "Data Source=ingresso.db")
+                    .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
             }
             else
             {

@@ -35,15 +35,15 @@ yourself, so the dashboard always matches the apps you actually use. ingresso ne
 
 ## Features
 
-| Area          | What you can do                                                                                         |
-| ------------- | ------------------------------------------------------------------------------------------------------- |
-| Tiles         | Create, read, update and delete app tiles with a name, address, description, colour and category.       |
-| Dashboard     | See every app as a tile, with large tiles for recent apps and compact tiles for the rest.              |
-| Edit layout   | Drag tiles to reorder them, finish editing, or reset the layout to its default.                         |
-| Jump to an app | Search tiles from anywhere with the `/` shortcut and open the match with Enter.                        |
-| Add an app    | Add from a directory of common apps, or add any app by its web address.                                 |
-| Recently used | Each tile shows when you last opened it.                                                                |
-| Accounts      | Sign in with a secure session, keep a dashboard per user, and sign out.                                 |
+| Area           | What you can do                                                                                   |
+| -------------- | ------------------------------------------------------------------------------------------------- |
+| Tiles          | Create, read, update and delete app tiles with a name, address, description, colour and category. |
+| Dashboard      | See every app as a tile, with large tiles for recent apps and compact tiles for the rest.         |
+| Edit layout    | Drag tiles to reorder them, finish editing, or reset the layout to its default.                   |
+| Jump to an app | Search tiles from anywhere with the `/` shortcut and open the match with Enter.                   |
+| Add an app     | Add from a directory of common apps, or add any app by its web address.                           |
+| Recently used  | Each tile shows when you last opened it.                                                          |
+| Accounts       | Sign in with a secure session, keep a dashboard per user, and sign out.                           |
 
 Every screen is responsive from phone to desktop, supports light and dark themes, meets WCAG 2.2 AA, and
 uses no tracking.
@@ -102,7 +102,7 @@ dotnet run --project src/Ingresso.Cli -- migrate
 dotnet run --project src/Ingresso.Cli -- seed
 ```
 
-Seeding is idempotent and safe to re-run. `reset` drops and recreates the database.
+Seeding is idempotent and safe to re-run. `reset --confirm` drops and recreates the database; without the flag it refuses.
 
 To try the app without SQL Server, use SQLite, as the end-to-end tests do
 ([ADR 0001](docs/adr/0001-sqlite-for-tests-and-demos.md)):
@@ -110,7 +110,7 @@ To try the app without SQL Server, use SQLite, as the end-to-end tests do
 ```bash
 export Database__Provider=Sqlite
 export ConnectionStrings__Default="Data Source=ingresso.db"
-dotnet run --project src/Ingresso.Cli -- reset
+dotnet run --project src/Ingresso.Cli -- reset --confirm
 ```
 
 ### Run the app
@@ -129,11 +129,14 @@ In development, emails such as sign-in links go to a local dev mailbox instead o
 
 ### Tests
 
-| Suite           | Command                                                               | Notes                                                                                       |
-| --------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Backend         | `dotnet test`                                                         | In-memory SQLite and EF Core InMemory. No database server needed.                           |
-| SQL Server only | `INGRESSO_TEST_SQLSERVER=1 dotnet test --filter Category=SqlServer`   | Runs `[SqlServerFact]` tests against a real SQL Server.                                     |
-| End to end      | `cd frontend && npm run e2e`                                          | Playwright in Chromium against the API on a seeded SQLite database, with visual regression. |
+| Suite           | Command                                                             | Notes                                                                                       |
+| --------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Backend         | `dotnet test`                                                       | In-memory SQLite and EF Core InMemory. No database server needed.                           |
+| SQL Server only | `INGRESSO_TEST_SQLSERVER=1 dotnet test --filter Category=SqlServer` | Runs `[SqlServerFact]` tests against a real SQL Server.                                     |
+| Performance     | `INGRESSO_TEST_PERF=1 dotnet test --filter Category=Performance`    | Opt-in: p95 under 200 ms for tile requests with 200 tiles (L2-039).                         |
+| End to end      | `cd frontend && npm run e2e`                                        | Playwright in Chromium against the API on a seeded SQLite database, with visual regression. |
+
+If ports 4200 or 5100 are taken, run the end-to-end suite with `PW_WEB_PORT` and `PW_API_PORT` set to free ports.
 
 ### Frontend tasks
 
@@ -147,6 +150,7 @@ Run these from `frontend/`:
 | `npm run storybook` / `npm run build-storybook` | Component library docs                                      |
 | `npm run perf-test`                             | Component performance scenarios                             |
 | `npm run e2e:serve`                             | Run the API on seeded SQLite and the app, for manual checks |
+| `npm run demo -- <nn>-<slug>`                   | Record, narrate and build a journey's demo video            |
 
 A husky pre-commit hook formats and lints staged frontend files. CI runs every check above on each pull request.
 
@@ -165,12 +169,12 @@ docs/                requirements, designs, mocks, design system, journeys, prom
 
 ## Documentation
 
-| Document                                      | Contents                                                |
-| --------------------------------------------- | ------------------------------------------------------- |
-| [Architecture decisions](docs/adr/README.md)  | Records of choices the designs leave open               |
-| [Design system](docs/design-system/README.md) | Tokens, foundations, components and patterns            |
-| [Brand assets](docs/assets/)                  | The ingresso mark and logo, in light and dark variants  |
-| [Agent instructions](AGENTS.md)               | Architecture rules and the delivery workflow            |
+| Document                                      | Contents                                               |
+| --------------------------------------------- | ------------------------------------------------------ |
+| [Architecture decisions](docs/adr/README.md)  | Records of choices the designs leave open              |
+| [Design system](docs/design-system/README.md) | Tokens, foundations, components and patterns           |
+| [Brand assets](docs/assets/)                  | The ingresso mark and logo, in light and dark variants |
+| [Agent instructions](AGENTS.md)               | Architecture rules and the delivery workflow           |
 
 ## Contributing
 

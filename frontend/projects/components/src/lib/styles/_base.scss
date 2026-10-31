@@ -228,3 +228,12 @@ hr,
     display: none !important;
   }
 }
+
+// Touch devices get 44 by 44 CSS pixel targets (L2-043). Declared after the generated tokens, so it wins.
+@media (pointer: coarse) {
+  :root {
+    --ig-control-height-sm: 2.75rem;
+    --ig-control-height-md: 2.75rem;
+    --ig-control-height-lg: 3rem;
+  }
+}

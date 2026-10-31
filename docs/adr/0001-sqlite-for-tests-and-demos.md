@@ -1,6 +1,6 @@
 # 0001 SQLite for tests and demos
 
-- Status: accepted (journey 00)
+- Status: accepted (journey 00); amended in the scaffold run: SQLite applies the migrations
 
 ## Context
 
@@ -11,8 +11,11 @@ database. The EF Core migrations target SQL Server, and SQLite cannot compare `D
 
 - `Database:Provider` selects `SqlServer` (default) or `Sqlite`; `ConnectionStrings:Default` is the
   connection string for either.
-- On SQLite, the CLI `migrate` command builds the schema from the model (`EnsureCreated`) instead of applying
-  the SQL Server migrations. `reset` drops, recreates and seeds.
+- The CLI `migrate` command applies the EF Core migrations on both providers. The migrations are generated
+  against SQL Server and kept provider-neutral (no `nvarchar(max)`, so every string column is bounded), and the
+  SQLite provider ignores `PendingModelChangesWarning` because its model differs only in provider
+  annotations. Only the in-memory provider used by Application and CLI tests builds the schema from the model.
+  `reset` drops, migrates and seeds.
 - `AppDbContext` stores `DateTimeOffset` as sortable binary on SQLite only.
 - `Clock:FixedUtcNow` fixes "today" (Monday, November 2, 2026 in tests, Playwright and demos).
 

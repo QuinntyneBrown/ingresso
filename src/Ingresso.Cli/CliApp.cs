@@ -6,19 +6,40 @@ namespace Ingresso.Cli;
 /// <summary>Runs one database command: migrate, seed or reset.</summary>
 public static class CliApp
 {
-    public const string Usage = "Usage: ingresso <migrate|seed|reset>";
+    public const string Usage = "Usage: ingresso <migrate|seed|reset --confirm>";
 
     public static async Task<int> RunAsync(string[] args, IServiceProvider services, TextWriter output, CancellationToken cancellationToken = default)
     {
-        if (args.Length != 1)
+        var command = args.Length > 0 ? args[0].ToLowerInvariant() : "";
+        var confirmed = args.Length == 2 && args[1] == "--confirm";
+        if (args.Length == 0 || (args.Length != 1 && !(command == "reset" && confirmed)))
         {
             await output.WriteLineAsync(Usage);
             return 1;
         }
 
+        if (command == "reset" && !confirmed)
+        {
+            await output.WriteLineAsync($"reset deletes all data. Run it again with --confirm. {Usage}");
+            return 1;
+        }
+
+        try
+        {
+            return await ExecuteAsync(command, args[0], services, output, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            await output.WriteLineAsync($"Command '{command}' failed: {ex.Message}");
+            return 1;
+        }
+    }
+
+    private static async Task<int> ExecuteAsync(string command, string raw, IServiceProvider services, TextWriter output, CancellationToken cancellationToken)
+    {
         using var scope = services.CreateScope();
         var maintenance = scope.ServiceProvider.GetRequiredService<DatabaseMaintenance>();
-        switch (args[0].ToLowerInvariant())
+        switch (command)
         {
             case "migrate":
                 await maintenance.MigrateAsync(cancellationToken);
@@ -33,7 +54,7 @@ public static class CliApp
                 await output.WriteLineAsync("Database reset, migrated and seeded.");
                 return 0;
             default:
-                await output.WriteLineAsync($"Unknown command '{args[0]}'. {Usage}");
+                await output.WriteLineAsync($"Unknown command '{raw}'. {Usage}");
                 return 1;
         }
     }

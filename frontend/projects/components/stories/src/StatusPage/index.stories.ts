@@ -15,3 +15,4 @@ export default meta;
 
 export { Default } from './StatusPageDefault.stories';
 export { ServerError } from './StatusPageServerError.stories';
+export { Offline } from './StatusPageOffline.stories';

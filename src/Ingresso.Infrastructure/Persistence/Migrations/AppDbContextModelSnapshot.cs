@@ -122,7 +122,8 @@ namespace Ingresso.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Payload")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<DateTimeOffset?>("ProcessedAtUtc")
                         .HasColumnType("datetimeoffset");
@@ -221,6 +222,9 @@ namespace Ingresso.Infrastructure.Persistence.Migrations
                         .HasMaxLength(7)
                         .HasColumnType("nvarchar(7)");
 
+                    b.Property<int>("Cols")
+                        .HasColumnType("int");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -244,12 +248,7 @@ namespace Ingresso.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Size")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<int>("SortOrder")
+                    b.Property<int>("Rows")
                         .HasColumnType("int");
 
                     b.Property<string>("Url")
@@ -257,9 +256,15 @@ namespace Ingresso.Infrastructure.Persistence.Migrations
                         .HasMaxLength(2048)
                         .HasColumnType("nvarchar(2048)");
 
+                    b.Property<int>("X")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Y")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("OwnerId", "SortOrder");
+                    b.HasIndex("OwnerId", "Y", "X");
 
                     b.ToTable("Tiles");
                 });

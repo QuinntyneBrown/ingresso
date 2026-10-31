@@ -11,6 +11,9 @@ namespace Ingresso.Api.Tests.Auth;
 /// <summary>L2-080: authorized endpoints need a session.</summary>
 public sealed class AuthorizationPolicyTests(AuthorizationPolicyTests.Factory factory) : IClassFixture<AuthorizationPolicyTests.Factory>
 {
+    // Acceptance Test
+    // Traces to: L2-033
+    // Description: An anonymous caller to a protected endpoint gets 401.
     [Fact]
     public async Task Anonymous_caller_gets_401_from_an_authorized_endpoint()
     {

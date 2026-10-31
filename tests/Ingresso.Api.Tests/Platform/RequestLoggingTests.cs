@@ -6,6 +6,9 @@ namespace Ingresso.Api.Tests.Platform;
 /// <summary>L2-101: one structured log entry per request, outside the exception handler, with a correlation id.</summary>
 public sealed class RequestLoggingTests(PlatformFactory factory) : IClassFixture<PlatformFactory>
 {
+    // Acceptance Test
+    // Traces to: L2-047
+    // Description: A request log entry carries method, path, status, duration and a correlation id.
     [Fact]
     public async Task Response_carries_the_correlation_id_that_the_request_log_records()
     {
@@ -21,6 +24,9 @@ public sealed class RequestLoggingTests(PlatformFactory factory) : IClassFixture
         Assert.DoesNotContain("priya@gtaazure.ca", entry.Message);
     }
 
+    // Acceptance Test
+    // Traces to: L2-047
+    // Description: A handled exception is logged with its handled status, not 500.
     [Fact]
     public async Task Handled_error_is_logged_with_its_final_status()
     {

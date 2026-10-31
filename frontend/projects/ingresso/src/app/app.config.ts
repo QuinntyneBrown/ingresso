@@ -4,6 +4,7 @@ import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from 
 import { provideIngressoOverlays } from 'components';
 import { apiErrorInterceptor, AUTH_API, HttpAuthApi, HttpTilesApi, TILES_API } from 'api';
 import { routes } from './app.routes';
+import { unauthorizedInterceptor } from './shared/unauthorized.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -17,7 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withFetch(),
       withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' }),
-      withInterceptors([apiErrorInterceptor]),
+      withInterceptors([unauthorizedInterceptor, apiErrorInterceptor]),
     ),
     { provide: AUTH_API, useClass: HttpAuthApi },
     { provide: TILES_API, useClass: HttpTilesApi },

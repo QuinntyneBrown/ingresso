@@ -1,5 +1,3 @@
-export type TileSize = 'large' | 'small';
-
 /** One app tile on the dashboard, as the API returns it. */
 export interface Tile {
   id: string;
@@ -11,8 +9,6 @@ export interface Tile {
   /** One or two characters shown in the icon. */
   initial: string;
   category?: string | null;
-  sortOrder: number;
-  size: TileSize;
   /** ISO 8601 instant; absent when the app was never opened from ingresso. */
   lastOpenedAt?: string | null;
   createdAt: string;
@@ -43,5 +39,4 @@ export interface TileInput {
   color: string;
   initial: string;
   category?: string | null;
-  size: TileSize;
 }
