@@ -69,4 +69,45 @@ public sealed class SessionTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.True(sessions >= 2);
     }
+
+    // Acceptance Test
+    // Traces to: L2-031
+    // Description: Signing out deletes the server session, clears the cookie and leaves the client anonymous.
+    [Fact]
+    public async Task Sign_out_revokes_the_session_and_clears_the_cookie()
+    {
+        var client = factory.CreateHttpsClient();
+        await client.SignInAsAsync(HttpClientExtensions.DevUser);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me")).StatusCode);
+        var active = await factory.WithDbAsync(db => db.Sessions.CountAsync(s => s.RevokedAtUtc == null));
+
+        var response = await client.PostAsync("/api/auth/sign-out", null);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Contains(response.Headers.GetValues("Set-Cookie"), c => c.StartsWith(Ingresso.Api.Auth.AuthPolicies.SessionCookie + "=;", StringComparison.Ordinal));
+        Assert.Equal(active - 1, await factory.WithDbAsync(db => db.Sessions.CountAsync(s => s.RevokedAtUtc == null)));
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/auth/me")).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-031
+    // Description: Replaying a signed-out session id is refused with 401.
+    [Fact]
+    public async Task A_signed_out_session_id_is_refused_when_replayed()
+    {
+        var client = factory.CreateHttpsClient();
+        var signIn = await client.PostAsJsonAsync("/api/test/sign-in", new { email = HttpClientExtensions.DevUser });
+        var cookies = signIn.Headers.GetValues("Set-Cookie").Select(c => c.Split(';')[0]).ToList();
+        var session = cookies.Single(c => c.StartsWith(Ingresso.Api.Auth.AuthPolicies.SessionCookie + "=", StringComparison.Ordinal));
+        var xsrf = cookies.Single(c => c.StartsWith("XSRF-TOKEN=", StringComparison.Ordinal))["XSRF-TOKEN=".Length..];
+        client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", Uri.UnescapeDataString(xsrf));
+        await client.PostAsync("/api/auth/sign-out", null);
+
+        var replay = factory.CreateHttpsClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/auth/me");
+        request.Headers.Add("Cookie", session);
+        var response = await replay.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }

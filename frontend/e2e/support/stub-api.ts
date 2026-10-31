@@ -94,6 +94,7 @@ export async function installFakeApi(page: Page, initial: FakeTile[] = DEFAULT_T
   const ordered = () => [...tiles].sort((a, b) => a.y - b.y || a.x - b.x);
 
   await page.route('**/api/auth/me', (route) => json(route, ME));
+  await page.route('**/api/auth/sign-out', (route) => route.fulfill({ status: 204 }));
   await page.route(/\/api\/tiles(\/.*)?$/, async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname.replace(/^\/api\/tiles\/?/, '');

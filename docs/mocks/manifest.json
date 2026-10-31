@@ -34,7 +34,8 @@
         "editing",
         "offline",
         "editing-refused",
-        "editing-narrow"
+        "editing-narrow",
+        "account-menu"
       ],
       "route": "/"
     },
@@ -233,7 +234,8 @@
       "title": "Sign out",
       "states": [
         "default",
-        "busy"
+        "busy",
+        "failed"
       ],
       "opens_from": "dashboard",
       "not_applicable": {

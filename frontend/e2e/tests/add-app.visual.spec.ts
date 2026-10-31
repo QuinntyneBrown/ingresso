@@ -31,6 +31,7 @@ test.describe('Add app dialog, visually', () => {
     const dialog = await open(page);
     await dialog.submit.click();
     await expect(dialog.nameError).toBeVisible();
+    await dialog.scrollToTop();
     await expect(dialog.dialog).toHaveScreenshot('invalid.png');
   });
 

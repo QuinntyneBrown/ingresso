@@ -12,7 +12,7 @@ behind their backdrop; only the dialog is mapped.
 | Part        | Library components                                                                                                                                                                                                                                   | Local UI         |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
 | Skip link   | `SkipLink`                                                                                                                                                                                                                                           | —                |
-| Header      | `SiteHeader`, `Logo`, `Search` (`/` shortcut), `Button` (Edit layout / Done, Add app), `Tooltip` (`placement="below"`, edit unavailable below 1024px), `Avatar`, `MenuTrigger` + `Menu` + `MenuItem` (account menu: Settings, Brand guide, Sign out) | —                |
+| Header      | `SiteHeader`, `Logo`, `Search` (`/` shortcut), `Button` (Edit layout / Done, Add app), `Tooltip` (`placement="below"`, edit unavailable below 1024px), `Avatar`, `MenuTrigger` + `Menu` + `MenuItem` (account menu: Sign out so far; Settings and Brand guide join in their journeys; the trigger is a ghost icon `Button` holding the `Avatar`) | —                |
 | Footer      | `SiteFooter`                                                                                                                                                                                                                                         | Footer note copy |
 | Toasts      | `ToastService`, `ToastRegion`, `Toast`                                                                                                                                                                                                               | —                |
 | Site banner | `Alert` with `banner`                                                                                                                                                                                                                                | —                |
@@ -83,7 +83,7 @@ All dialogs open through Angular CDK `Dialog` with `modalDialogConfig` and rende
 | Edit app (`dialogs/edit-app`: default, busy, invalid, failed)          | `DialogShell`, `Button`, `Alert` (failed, delete confirmation)              | App form         |
 | Delete app (`dialogs/delete-app`: default, busy, failed)               | `DialogShell`, `AppIcon`, `Button` (`appearance="danger"`), `Alert`         | Tile preview row |
 | Reset layout (`dialogs/reset-layout`: default, busy)                   | `DialogShell`, `Button`, `Alert` (failed)                                   | —                |
-| Sign out (`dialogs/sign-out`: default, busy)                           | `DialogShell`, `Button`                                                     | —                |
+| Sign out (`dialogs/sign-out`: default, busy, failed)                   | `DialogShell`, `Button` (`busy`), `Alert` (failed)                          | —                |
 
 ## Notifications
 

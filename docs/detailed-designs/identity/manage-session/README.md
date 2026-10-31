@@ -20,12 +20,12 @@ The slice runs from the ingresso web app to the ingresso database.
 - **`TouchSessionCommandHandler`** — loads the session, checks `Session.IsActive(now)`, and updates `LastSeenAtUtc`.
 - **`Session`** — entity with `IdleLimit` of 14 days and `RevokedAtUtc`.
 - **`SessionStore`** — web-app state for the current user, loaded from `GET /api/auth/me`.
-- **Sign-out endpoint** — `<TO SUPPLY>`: `POST /api/auth/sign-out` that revokes the session and clears the cookie.
+- **Sign-out endpoint** — `POST /api/auth/sign-out` (authorized, CSRF-checked) sends `SignOutCommand`, which sets `Session.RevokedAtUtc`, then clears the cookie and returns 204. Replaying the old cookie is anonymous, so it gets 401.
+- **Account menu and `SignOutDialog`** — the header avatar opens an account menu whose Sign out item opens a confirmation dialog (busy, and a failed state that keeps the person signed in). On success `SessionStore.signOut` forgets the user and the router goes to `/sign-in`.
 
 The current source differs from the requirements in these points. Each is open work for the slice.
 
 - `L2-030` sets a 30-day absolute limit. `Session.IsActive` checks only the 14-day idle limit.
-- `L2-031` requires sign-out from any screen. Only `TestSignInController` exposes `sign-out`, and only in test environments.
 
 ## Requirements
 

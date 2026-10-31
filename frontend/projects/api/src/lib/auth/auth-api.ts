@@ -19,6 +19,8 @@ export interface AuthApi {
   me(): Observable<CurrentUser>;
   /** Emails a single-use sign-in link. Succeeds the same way whether or not the address has an account. */
   requestSignInLink(email: string): Observable<void>;
+  /** Ends this device's session on the server and clears its cookie. */
+  signOut(): Observable<void>;
 }
 
 export const AUTH_API = new InjectionToken<AuthApi>('AUTH_API');
@@ -34,5 +36,9 @@ export class HttpAuthApi implements AuthApi {
 
   requestSignInLink(email: string): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/api/auth/sign-in-links`, { email });
+  }
+
+  signOut(): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/api/auth/sign-out`, null);
   }
 }
