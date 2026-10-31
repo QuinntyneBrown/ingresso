@@ -53,6 +53,9 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
             case AntiforgeryValidationException:
                 problem = new ProblemDetails { Status = StatusCodes.Status400BadRequest, Title = "Your session token is missing or out of date. Reload the page and try again." };
                 break;
+            case ConflictException conflict:
+                problem = new ProblemDetails { Status = StatusCodes.Status409Conflict, Title = conflict.Message };
+                break;
             case NotFoundException:
                 problem = new ProblemDetails { Status = StatusCodes.Status404NotFound, Title = "Not found." };
                 break;

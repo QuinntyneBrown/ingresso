@@ -12,10 +12,10 @@ public sealed class UpdateTileCommandValidator : AbstractValidator<UpdateTileCom
 {
     public UpdateTileCommandValidator()
     {
-        RuleFor(c => c.Name).NotEmpty().MaximumLength(80);
+        RuleFor(c => c.Name).NotEmpty().MaximumLength(TileRules.MaxNameLength);
         RuleFor(c => c.Url).MustBeTileUrl();
-        RuleFor(c => c.Color).MustBeHexColor();
-        RuleFor(c => c.Description).MaximumLength(300);
+        RuleFor(c => c.Color).MustBeInPalette();
+        RuleFor(c => c.Description).MaximumLength(TileRules.MaxDescriptionLength);
         RuleFor(c => c.Category).MaximumLength(60);
         RuleFor(c => c.Initial).MaximumLength(2);
     }

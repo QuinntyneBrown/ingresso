@@ -50,7 +50,7 @@ public sealed class ApiResponseTimeTests
             db.Users.Add(user);
             var tiles = Enumerable.Range(0, 200).Select(i => new Tile
             {
-                OwnerId = user.Id, Name = $"App {i}", Url = $"https://app{i}.example.com/", Color = "#0052cc", Initial = "A",
+                OwnerId = user.Id, Name = $"App {i}", Url = $"https://app{i}.example.com/", Color = "#2563EB", Initial = "A",
                 CreatedAt = ApiFactory.Today.AddSeconds(i), X = i % 4 * 3, Y = i / 4 * 2, Cols = 3, Rows = 2,
             }).ToList();
             db.Tiles.AddRange(tiles);
@@ -67,10 +67,10 @@ public sealed class ApiResponseTimeTests
             ["list"] = await P95(_ => client.GetAsync("/api/tiles")),
             ["create"] = await P95(async i =>
             {
-                var response = await client.PostAsJsonAsync("/api/tiles", new { name = $"New {i}", url = $"new{i}.example.com", color = "#0052cc" });
+                var response = await client.PostAsJsonAsync("/api/tiles", new { name = $"New {i}", url = $"https://new{i}.example.com", color = "#2563EB" });
                 created.Add((await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetString()!);
             }),
-            ["edit"] = await P95(i => client.PutAsJsonAsync($"/api/tiles/{tileIds[i]}", new { name = $"Edited {i}", url = "https://edited.example.com", color = "#112233" })),
+            ["edit"] = await P95(i => client.PutAsJsonAsync($"/api/tiles/{tileIds[i]}", new { name = $"Edited {i}", url = "https://edited.example.com", color = "#6D28D9" })),
             ["layout"] = await P95(_ => client.PutAsJsonAsync("/api/tiles/layout", layout)),
             ["delete"] = await P95(i => client.DeleteAsync($"/api/tiles/{created[i]}")),
         };

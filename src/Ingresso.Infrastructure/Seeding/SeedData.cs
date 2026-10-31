@@ -9,16 +9,16 @@ public static class SeedData
 
     public static readonly IReadOnlyList<SeedTile> Tiles =
     [
-        new("Gmail", "https://mail.google.com", "Email", "#d93025", "G", "Communication", true),
-        new("Slack", "https://slack.com", "Team chat", "#611f69", "S", "Communication", true),
-        new("Linear", "https://linear.app", "Issue tracking", "#5e6ad2", "L", "Engineering", true),
-        new("GitHub", "https://github.com", "Code hosting", "#24292f", "G", "Engineering"),
-        new("Figma", "https://figma.com", "Design", "#a259ff", "F", "Design"),
-        new("Notion", "https://notion.so", "Docs and notes", "#000000", "N", "Productivity"),
-        new("Salesforce", "https://salesforce.com", "CRM", "#00a1e0", "S", "Business"),
-        new("Workday", "https://workday.com", "HR", "#f38b00", "W", "Business"),
-        new("Zoom", "https://zoom.us", "Video meetings", "#0b5cff", "Z", "Communication"),
-        new("1Password", "https://1password.com", "Passwords", "#0572ec", "1", "Security"),
-        new("Datadog", "https://datadoghq.com", "Monitoring", "#632ca6", "D", "Engineering"),
+        new("Gmail", "https://mail.google.com", "Email", "#CF3B20", "G", "Communication", true),
+        new("Slack", "https://slack.com", "Team chat", "#6D28D9", "S", "Communication", true),
+        new("Linear", "https://linear.app", "Issue tracking", "#2563EB", "L", "Engineering", true),
+        new("GitHub", "https://github.com", "Code hosting", "#17181C", "G", "Engineering"),
+        new("Figma", "https://figma.com", "Design", "#BE185D", "F", "Design"),
+        new("Notion", "https://notion.so", "Docs and notes", "#17181C", "N", "Productivity"),
+        new("Salesforce", "https://salesforce.com", "CRM", "#2563EB", "S", "Business"),
+        new("Workday", "https://workday.com", "HR", "#B26F00", "W", "Business"),
+        new("Zoom", "https://zoom.us", "Video meetings", "#2563EB", "Z", "Communication"),
+        new("1Password", "https://1password.com", "Passwords", "#0F766E", "1", "Security"),
+        new("Datadog", "https://datadoghq.com", "Monitoring", "#6D28D9", "D", "Engineering"),
     ];
 }

@@ -17,7 +17,7 @@ public sealed class LogPrivacyTests(PlatformFactory factory) : IClassFixture<Pla
         await client.SignInAsAsync(HttpClientExtensions.DevUser);
         var address = "https://private-app.example.com/secret-path?token=abc123";
 
-        var created = await client.PostAsJsonAsync("/api/tiles", new { name = "Private", url = address, color = "#0052cc" });
+        var created = await client.PostAsJsonAsync("/api/tiles", new { name = "Private", url = address, color = "#2563EB" });
         created.EnsureSuccessStatusCode();
         await client.GetAsync("/api/tiles");
 

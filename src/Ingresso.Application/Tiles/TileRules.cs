@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using FluentValidation;
 using Ingresso.Domain.Enums;
 
@@ -6,36 +5,36 @@ namespace Ingresso.Application.Tiles;
 
 public static partial class TileRules
 {
-    [GeneratedRegex("^#[0-9a-fA-F]{6}$")]
-    private static partial Regex HexColor();
+    /// <summary>The icon colours a tile may use (L2-002); the web app offers the same eight.</summary>
+    public static readonly IReadOnlySet<string> Palette = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "#CF3B20", "#2563EB", "#1B6B3C", "#B26F00", "#6D28D9", "#0F766E", "#BE185D", "#17181C",
+    };
 
-    [GeneratedRegex(@"^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)+(:\d+)?([/?#].*)?$")]
-    private static partial Regex BareHost();
+    public const int MaxNameLength = 60;
+    public const int MaxDescriptionLength = 280;
+    public const int MaxAddressLength = 2048;
+    public const int MaxTilesPerUser = 200;
 
-    /// <summary>Returns an absolute http(s) URL, turning a bare host such as app.example.com into https; null when invalid.</summary>
+    /// <summary>The address as typed, trimmed, when it is an absolute http or https URL of at most 2048 characters; otherwise null (L2-003).</summary>
     public static string? NormalizeUrl(string? value)
     {
         var text = value?.Trim();
-        if (string.IsNullOrEmpty(text) || text.Length > 2048 || text.Any(char.IsWhiteSpace))
+        if (string.IsNullOrEmpty(text) || text.Length > MaxAddressLength || text.Any(char.IsWhiteSpace) || !text.Contains("://", StringComparison.Ordinal))
         {
             return null;
         }
 
-        if (text.Contains("://", StringComparison.Ordinal))
-        {
-            return Uri.TryCreate(text, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) && !string.IsNullOrEmpty(uri.Host)
-                ? uri.ToString()
-                : null;
-        }
-
-        return BareHost().IsMatch(text) && Uri.TryCreate("https://" + text, UriKind.Absolute, out var bare) ? bare.ToString() : null;
+        return Uri.TryCreate(text, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) && !string.IsNullOrEmpty(uri.Host)
+            ? text
+            : null;
     }
 
     public static IRuleBuilderOptions<T, string?> MustBeTileUrl<T>(this IRuleBuilder<T, string?> rule) =>
-        rule.Must(v => NormalizeUrl(v) is not null).WithMessage("Enter a valid web address, such as app.example.com or https://app.example.com");
+        rule.Must(v => NormalizeUrl(v) is not null).WithMessage("Enter a full web address that starts with http:// or https://");
 
-    public static IRuleBuilderOptions<T, string?> MustBeHexColor<T>(this IRuleBuilder<T, string?> rule) =>
-        rule.Must(v => v is not null && HexColor().IsMatch(v)).WithMessage("Use a hex colour such as #0f6cbd");
+    public static IRuleBuilderOptions<T, string?> MustBeInPalette<T>(this IRuleBuilder<T, string?> rule) =>
+        rule.Must(v => v is not null && Palette.Contains(v)).WithMessage("Choose one of the colours offered.");
 
     public static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
