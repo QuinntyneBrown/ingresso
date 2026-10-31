@@ -31,7 +31,12 @@ import { Icon } from '../icon/icon';
       }
     </ng-template>
 
-    <article class="tile" [class]="'tile tile--' + size()" [class.tile--editing]="editing()">
+    <article
+      class="tile"
+      [class]="'tile tile--' + size()"
+      [class.tile--editing]="editing()"
+      [class.tile--highlighted]="highlighted()"
+    >
       @if (editing()) {
         <div class="tile__surface">
           <span class="tile__handle" aria-hidden="true"><ig-icon name="grip" /></span>
@@ -55,6 +60,7 @@ import { Icon } from '../icon/icon';
           [href]="url()"
           target="_blank"
           rel="noopener noreferrer"
+          [attr.aria-current]="highlighted() ? 'true' : null"
           (click)="opened.emit()"
         >
           <ng-container *ngTemplateOutlet="body" />
@@ -76,6 +82,8 @@ export class AppTile {
   /** The footer text of a large tile, such as "Opened 8 minutes ago". */
   readonly openedLabel = input('Not opened yet');
   readonly editing = input(false, { transform: booleanAttribute });
+  /** The match Enter will open in quick jump: an accent edge and `aria-current` on the link. */
+  readonly highlighted = input(false, { transform: booleanAttribute });
 
   readonly opened = output<void>();
   readonly edit = output<void>();

@@ -36,18 +36,18 @@ Legend: ✅ mock exists · ➖ not applicable (reason in manifest) · ❌ missin
 
 ### Pages
 
-| Screen | default | loading | empty | error | no-results | editing | offline | editing-refused | editing-narrow | invalid | submitting | sent | expired | used | link-invalid | rate-limited | success | Requirements |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Dashboard (`dashboard`) | [✅](pages/dashboard/default.html) | [✅](pages/dashboard/loading.html) | [✅](pages/dashboard/empty.html) | [✅](pages/dashboard/error.html) | [✅](pages/dashboard/no-results.html) | [✅](pages/dashboard/editing.html) | [✅](pages/dashboard/offline.html) | [✅](pages/dashboard/editing-refused.html) | [✅](pages/dashboard/editing-narrow.html) |  |  |  |  |  |  |  |  |  |
-| Directory (`directory`) | [✅](pages/directory/default.html) | [✅](pages/directory/loading.html) | [✅](pages/directory/empty.html) | [✅](pages/directory/error.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| Sign in (`sign-in`) | [✅](pages/sign-in/default.html) | ➖ | ➖ | [✅](pages/sign-in/error.html) |  |  |  |  |  | [✅](pages/sign-in/invalid.html) | [✅](pages/sign-in/submitting.html) | [✅](pages/sign-in/sent.html) | [✅](pages/sign-in/expired.html) | [✅](pages/sign-in/used.html) | [✅](pages/sign-in/link-invalid.html) | [✅](pages/sign-in/rate-limited.html) |  |  |
-| Reset password (`reset-password`) | [✅](pages/reset-password/default.html) | ➖ | ➖ | [✅](pages/reset-password/error.html) |  |  |  |  |  | [✅](pages/reset-password/invalid.html) | [✅](pages/reset-password/submitting.html) |  |  |  |  |  | [✅](pages/reset-password/success.html) |  |
-| Settings (`settings`) | [✅](pages/settings/default.html) | [✅](pages/settings/loading.html) | ➖ | [✅](pages/settings/error.html) |  |  |  |  |  | [✅](pages/settings/invalid.html) |  |  |  |  |  |  | [✅](pages/settings/success.html) |  |
-| Brand guide (`brand`) | [✅](pages/brand/default.html) | [✅](pages/brand/loading.html) | ➖ | [✅](pages/brand/error.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| Page not found (`not-found`) | [✅](pages/not-found/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| Access denied (`forbidden`) | [✅](pages/forbidden/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| Something went wrong (`server-error`) | [✅](pages/server-error/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| You’re offline (`offline`) | [✅](pages/offline/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Screen | default | loading | empty | error | no-results | search-results | editing | offline | editing-refused | editing-narrow | invalid | submitting | sent | expired | used | link-invalid | rate-limited | success | Requirements |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Dashboard (`dashboard`) | [✅](pages/dashboard/default.html) | [✅](pages/dashboard/loading.html) | [✅](pages/dashboard/empty.html) | [✅](pages/dashboard/error.html) | [✅](pages/dashboard/no-results.html) | [✅](pages/dashboard/search-results.html) | [✅](pages/dashboard/editing.html) | [✅](pages/dashboard/offline.html) | [✅](pages/dashboard/editing-refused.html) | [✅](pages/dashboard/editing-narrow.html) |  |  |  |  |  |  |  |  |  |
+| Directory (`directory`) | [✅](pages/directory/default.html) | [✅](pages/directory/loading.html) | [✅](pages/directory/empty.html) | [✅](pages/directory/error.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Sign in (`sign-in`) | [✅](pages/sign-in/default.html) | ➖ | ➖ | [✅](pages/sign-in/error.html) |  |  |  |  |  |  | [✅](pages/sign-in/invalid.html) | [✅](pages/sign-in/submitting.html) | [✅](pages/sign-in/sent.html) | [✅](pages/sign-in/expired.html) | [✅](pages/sign-in/used.html) | [✅](pages/sign-in/link-invalid.html) | [✅](pages/sign-in/rate-limited.html) |  |  |
+| Reset password (`reset-password`) | [✅](pages/reset-password/default.html) | ➖ | ➖ | [✅](pages/reset-password/error.html) |  |  |  |  |  |  | [✅](pages/reset-password/invalid.html) | [✅](pages/reset-password/submitting.html) |  |  |  |  |  | [✅](pages/reset-password/success.html) |  |
+| Settings (`settings`) | [✅](pages/settings/default.html) | [✅](pages/settings/loading.html) | ➖ | [✅](pages/settings/error.html) |  |  |  |  |  |  | [✅](pages/settings/invalid.html) |  |  |  |  |  |  | [✅](pages/settings/success.html) |  |
+| Brand guide (`brand`) | [✅](pages/brand/default.html) | [✅](pages/brand/loading.html) | ➖ | [✅](pages/brand/error.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Page not found (`not-found`) | [✅](pages/not-found/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Access denied (`forbidden`) | [✅](pages/forbidden/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Something went wrong (`server-error`) | [✅](pages/server-error/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| You’re offline (`offline`) | [✅](pages/offline/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 
 ### Dialogs
 

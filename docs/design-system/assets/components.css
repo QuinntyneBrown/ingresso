@@ -454,6 +454,7 @@ legend { font: var(--text-label); padding: 0; margin-bottom: var(--space-2); }
 .tile--editing .tile__surface { padding-left: var(--space-10); cursor: grab; }
 .tile__handle { position: absolute; left: var(--space-3); top: var(--space-4); color: var(--color-fg-subtle); }
 .tile__edit { position: absolute; right: var(--space-2); top: var(--space-2); }
+.tile--highlighted { border-color: var(--color-accent); box-shadow: 0 0 0 2px var(--color-accent), var(--shadow-2); }
 .tile--dragging { box-shadow: var(--shadow-4); border-color: var(--color-accent); transform: rotate(-1deg) scale(1.02); }
 .tile--dragging { position: relative; z-index: var(--z-overlay); translate: var(--drag-offset, 0 0); }
 .tile__resize { position: absolute; right: var(--space-1); bottom: var(--space-1); display: grid; place-items: center; width: var(--target-min); height: var(--target-min); color: var(--color-fg-subtle); cursor: nwse-resize; }

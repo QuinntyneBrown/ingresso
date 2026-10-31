@@ -93,6 +93,13 @@ a.tile__surface:focus-visible {
   color: var(--colorBrandForeground1);
   font-weight: var(--fontWeightMedium);
 }
+.tile--highlighted {
+  border-color: var(--colorBrandStroke1);
+  box-shadow:
+    0 0 0 2px var(--colorBrandStroke1),
+    var(--shadow4);
+}
+
 .tile--editing {
   border-style: dashed;
   border-color: var(--colorNeutralStroke1);

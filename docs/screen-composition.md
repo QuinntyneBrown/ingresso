@@ -27,10 +27,10 @@ behind their backdrop; only the dialog is mapped.
 
 ## Pages
 
-### Dashboard — `/` (`pages/dashboard`: default, loading, empty, error, no-results, editing, editing-refused, editing-narrow, offline)
+### Dashboard — `/` (`pages/dashboard`: default, loading, empty, error, no-results, search-results, editing, editing-refused, editing-narrow, offline)
 
 - Library: `TileGrid` + `TileGridTile` (tiles; collapse below 1024px; `ResizeObserver`-measured columns), `AppTile`
-  (one per cell; large when a tile spans at least 4 by 3), `LayoutBar` (editing; actions are `Button`s), `Skeleton`
+  (one per cell; large when a tile spans at least 4 by 3; `highlighted` for the quick-jump match), `LayoutBar` (editing; actions are `Button`s), `Skeleton`
   (loading), `EmptyState` (empty; no-results with `compact`), `Alert` (error with Try again; offline as
   `banner`), `Button`, `Icon`.
 - Local: page intro; mapping tiles to `TileGridItem` with the L2-051 limits; tile chrome turned off on the grid

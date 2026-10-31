@@ -16,3 +16,4 @@ export default meta;
 export { Default } from './AppTileDefault.stories';
 export { Small } from './AppTileSmall.stories';
 export { Editing } from './AppTileEditing.stories';
+export { Highlighted } from './AppTileHighlighted.stories';

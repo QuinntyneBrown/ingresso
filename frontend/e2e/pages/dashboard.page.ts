@@ -16,6 +16,7 @@ export class DashboardPage {
   readonly clearSearch: Locator;
   readonly loadFailed: Locator;
   readonly busyGrid: Locator;
+  readonly highlighted: Locator;
   readonly tryAgain: Locator;
   readonly layoutBar: Locator;
   readonly resetLayout: Locator;
@@ -28,12 +29,13 @@ export class DashboardPage {
   constructor(private readonly page: Page) {
     this.shell = new AppShell(page);
     this.heading = page.getByRole('heading', { level: 1 });
-    this.summary = page.locator('.intro p');
+    this.summary = page.locator('.intro p.text-muted');
     this.tiles = page.locator('ig-app-tile');
     this.emptyTitle = page.getByRole('heading', { name: 'No apps behind this door yet' });
     this.addFirstApp = page.getByRole('button', { name: 'Add your first app' });
     this.noMatches = page.getByRole('heading', { name: 'No apps match that search' });
     this.clearSearch = page.getByRole('button', { name: 'Clear the search' });
+    this.highlighted = page.locator('ig-app-tile a[aria-current="true"]');
     this.busyGrid = page.locator('[aria-busy="true"]');
     this.loadFailed = page.getByRole('alert').filter({ hasText: "We couldn't load your apps" });
     this.tryAgain = this.loadFailed.getByRole('button', { name: 'Try again' });
@@ -97,11 +99,12 @@ export class DashboardPage {
   }
 
   /** Tile names in grid order. */
+  /** The names of the tiles shown, once at least one has loaded. */
   async tileNames(): Promise<string[]> {
+    await this.tiles.first().waitFor();
     return this.page.locator('ig-app-tile .tile__name').allInnerTexts();
   }
 
-  /** Clicks a tile and returns the page it opens in a new tab. */
   /** The link a tile offers for opening its app. */
   tileLink(name: string): Locator {
     return this.tile(name).getByRole('link');
@@ -115,6 +118,7 @@ export class DashboardPage {
     return popup;
   }
 
+  /** Clicks a tile and returns the page it opens in a new tab. */
   async openApp(name: string): Promise<Page> {
     const popup = this.page.waitForEvent('popup');
     await this.tile(name).getByRole('link').click();

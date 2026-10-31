@@ -16,6 +16,7 @@ export class AppShell {
   readonly skipLink: Locator;
   readonly main: Locator;
   readonly toastRegion: Locator;
+  readonly searchStatus: Locator;
 
   constructor(private readonly page: Page) {
     const header = page.getByRole('banner');
@@ -33,6 +34,7 @@ export class AppShell {
     this.brandGuide = footer.getByRole('link', { name: 'Brand guide' });
     this.skipLink = page.getByRole('link', { name: 'Skip to content' });
     this.main = page.getByRole('main');
+    this.searchStatus = page.getByRole('status').filter({ hasText: /apps? match/ });
     this.toastRegion = page.locator('.toast-region');
   }
 
@@ -48,6 +50,10 @@ export class AppShell {
 
   async pressSlash(): Promise<void> {
     await this.page.keyboard.press('/');
+  }
+
+  async press(key: string): Promise<void> {
+    await this.page.keyboard.press(key);
   }
 
   async typeInSearch(text: string): Promise<void> {
