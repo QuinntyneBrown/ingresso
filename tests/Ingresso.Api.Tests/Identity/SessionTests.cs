@@ -22,6 +22,9 @@ public sealed class SessionTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.False(string.IsNullOrEmpty(me.GetProperty("initials").GetString()));
     }
 
+    // Acceptance Test
+    // Traces to: L2-030
+    // Description: A session the server has removed is treated as anonymous.
     [Fact]
     public async Task A_revoked_session_is_anonymous()
     {
@@ -37,6 +40,9 @@ public sealed class SessionTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/auth/me")).StatusCode);
     }
 
+    // Acceptance Test
+    // Traces to: L2-030
+    // Description: A session idle for 14 days is rejected.
     [Fact]
     public async Task A_session_idle_for_14_days_has_expired()
     {

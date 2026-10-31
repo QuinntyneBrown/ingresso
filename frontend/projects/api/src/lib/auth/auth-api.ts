@@ -17,6 +17,8 @@ export interface CurrentUser {
 export interface AuthApi {
   /** The signed-in user; fails with a 401 `ApiError` when anonymous. */
   me(): Observable<CurrentUser>;
+  /** Emails a single-use sign-in link. Succeeds the same way whether or not the address has an account. */
+  requestSignInLink(email: string): Observable<void>;
 }
 
 export const AUTH_API = new InjectionToken<AuthApi>('AUTH_API');
@@ -28,5 +30,9 @@ export class HttpAuthApi implements AuthApi {
 
   me(): Observable<CurrentUser> {
     return this.http.get<CurrentUser>(`${this.baseUrl}/api/auth/me`);
+  }
+
+  requestSignInLink(email: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/api/auth/sign-in-links`, { email });
   }
 }

@@ -78,4 +78,5 @@ jobs:
           path: |
             frontend/playwright-report
             frontend/test-results
+            frontend/e2e/visual-baselines
           retention-days: 7

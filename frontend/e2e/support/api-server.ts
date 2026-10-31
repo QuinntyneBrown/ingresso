@@ -19,6 +19,10 @@ export function apiEnvironment(databaseName = 'e2e'): NodeJS.ProcessEnv {
     ConnectionStrings__Default: `Data Source=${resolve(dataDir, `${databaseName}.db`)}`,
     Clock__FixedUtcNow: TODAY,
     Auth__TestSignIn__Enabled: 'true',
+    // Sign-in links point at the web app, whose dev server proxies /auth to the API, and the dev mailbox is readable.
+    Site__PublicBaseUrl: `http://localhost:${process.env['PW_WEB_PORT'] ?? '4200'}`,
+    DevMailbox__Expose: 'true',
+    Outbox__PollInterval: '00:00:00.5',
     DOTNET_CLI_TELEMETRY_OPTOUT: '1',
   };
 }

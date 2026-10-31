@@ -9,24 +9,45 @@ namespace Ingresso.Application.Identity;
 /// <summary>The signed-in identity to put in the cookie, and where to send the browser.</summary>
 public sealed record SignedIn(Guid SessionId, Guid UserId, string Email, string Name, UserRole Role, string RedirectTo);
 
-/// <summary>Redeems a sign-in link; null when it is unknown, used or expired (L2-047, L2-084).</summary>
-public sealed record RedeemSignInLinkCommand(string Token) : IRequest<SignedIn?>;
+/// <summary>Why a sign-in link was refused. A tampered or unknown token is <see cref="Invalid"/>, which says nothing more (L2-028).</summary>
+public enum LinkFailure
+{
+    Invalid,
+    Used,
+    Expired,
+}
+
+/// <summary>Either a session to start or the reason the link was refused.</summary>
+public sealed record RedeemResult(SignedIn? SignedIn, LinkFailure? Failure);
+
+/// <summary>Redeems a sign-in link (L2-028).</summary>
+public sealed record RedeemSignInLinkCommand(string Token) : IRequest<RedeemResult>;
 
 /// <summary>
 /// Marks the token used, finds or creates the user, and starts a session, all in one unit of work, so a token can
 /// start at most one session.
 /// </summary>
 public sealed class RedeemSignInLinkCommandHandler(IAppDbContext db, IClock clock, ISecurityTokenService tokens)
-    : IRequestHandler<RedeemSignInLinkCommand, SignedIn?>
+    : IRequestHandler<RedeemSignInLinkCommand, RedeemResult>
 {
-    public async Task<SignedIn?> Handle(RedeemSignInLinkCommand request, CancellationToken cancellationToken)
+    public async Task<RedeemResult> Handle(RedeemSignInLinkCommand request, CancellationToken cancellationToken)
     {
         var now = clock.UtcNow;
         var hash = tokens.Hash(request.Token);
         var token = await db.SecurityTokens.SingleOrDefaultAsync(t => t.TokenHash == hash && t.Purpose == SecurityTokenPurpose.SignIn, cancellationToken);
-        if (token is null || !token.IsUsable(now))
+        if (token is null)
         {
-            return null;
+            return new RedeemResult(null, LinkFailure.Invalid);
+        }
+
+        if (token.UsedAtUtc is not null)
+        {
+            return new RedeemResult(null, LinkFailure.Used);
+        }
+
+        if (!token.IsUsable(now))
+        {
+            return new RedeemResult(null, LinkFailure.Expired);
         }
 
         token.UsedAtUtc = now;
@@ -42,7 +63,7 @@ public sealed class RedeemSignInLinkCommandHandler(IAppDbContext db, IClock cloc
         await db.SaveChangesAsync(cancellationToken);
 
         const string home = "/";
-        return new SignedIn(session.Id, user.Id, user.Email, user.Name ?? user.Email, user.Role, token.ReturnUrl ?? home);
+        return new RedeemResult(new SignedIn(session.Id, user.Id, user.Email, user.Name ?? user.Email, user.Role, token.ReturnUrl ?? home), null);
     }
 }
 

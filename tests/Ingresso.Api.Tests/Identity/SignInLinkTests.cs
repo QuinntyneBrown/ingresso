@@ -18,6 +18,9 @@ public sealed class SignInLinkTests(ApiFactory factory) : IClassFixture<ApiFacto
     private async Task<HttpResponseMessage> Redeem(HttpClient client, string token) =>
         await client.GetAsync($"/auth/redeem?token={Uri.EscapeDataString(token)}");
 
+    // Acceptance Test
+    // Traces to: L2-027
+    // Description: A requested link answers 202 and arrives by email.
     [Fact]
     public async Task Requesting_a_link_answers_202_and_emails_a_link_that_works_for_15_minutes()
     {
@@ -39,6 +42,9 @@ public sealed class SignInLinkTests(ApiFactory factory) : IClassFixture<ApiFacto
         Assert.DoesNotContain(token, stored.TokenHash);
     }
 
+    // Acceptance Test
+    // Traces to: L2-027
+    // Description: Known and unknown addresses get the same answer.
     [Fact]
     public async Task Known_and_unknown_addresses_get_the_same_answer()
     {
@@ -49,6 +55,9 @@ public sealed class SignInLinkTests(ApiFactory factory) : IClassFixture<ApiFacto
         Assert.Equal(await known.Content.ReadAsStringAsync(), await unknown.Content.ReadAsStringAsync());
     }
 
+    // Acceptance Test
+    // Traces to: L2-027
+    // Description: A malformed email is refused with 400.
     [Fact]
     public async Task Malformed_email_and_external_return_urls_are_refused()
     {
@@ -61,6 +70,9 @@ public sealed class SignInLinkTests(ApiFactory factory) : IClassFixture<ApiFacto
         Assert.Equal(HttpStatusCode.BadRequest, external.StatusCode);
     }
 
+    // Acceptance Test
+    // Traces to: L2-028
+    // Description: A valid link creates a session and lands on the dashboard.
     [Fact]
     public async Task Redeeming_a_new_address_creates_a_member_starts_a_session_and_opens_home()
     {
@@ -88,8 +100,11 @@ public sealed class SignInLinkTests(ApiFactory factory) : IClassFixture<ApiFacto
         Assert.Equal("/settings", response.Headers.Location?.OriginalString);
     }
 
+    // Acceptance Test
+    // Traces to: L2-028
+    // Description: A link that was already redeemed is rejected with a used message and no session.
     [Fact]
-    public async Task A_used_link_is_refused_and_starts_no_session()
+    public async Task A_used_link_is_refused_with_a_used_message_and_starts_no_session()
     {
         var email = NewEmail();
         await factory.RequestLink(email);
@@ -99,10 +114,29 @@ public sealed class SignInLinkTests(ApiFactory factory) : IClassFixture<ApiFacto
 
         var response = await Redeem(second, token);
 
-        Assert.Equal("/sign-in?link=expired", response.Headers.Location?.OriginalString);
+        Assert.Equal("/sign-in?link=used", response.Headers.Location?.OriginalString);
         Assert.Equal(HttpStatusCode.Unauthorized, (await second.GetAsync("/api/auth/me")).StatusCode);
     }
 
+    // Acceptance Test
+    // Traces to: L2-028
+    // Description: A tampered or unknown token is refused without saying why, and starts no session.
+    [Theory]
+    [InlineData("not-a-real-token")]
+    [InlineData("")]
+    public async Task A_tampered_or_unknown_link_is_refused_without_a_reason(string token)
+    {
+        var client = factory.CreateHttpsClient();
+
+        var response = await Redeem(client, token);
+
+        Assert.Equal("/sign-in?link=invalid", response.Headers.Location?.OriginalString);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/auth/me")).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-028
+    // Description: A link older than 15 minutes is rejected as expired.
     [Fact]
     public async Task A_link_past_15_minutes_is_refused()
     {
@@ -122,6 +156,9 @@ public sealed class SignInLinkTests(ApiFactory factory) : IClassFixture<ApiFacto
         Assert.Equal("/sign-in?link=expired", response.Headers.Location?.OriginalString);
     }
 
+    // Acceptance Test
+    // Traces to: L2-030
+    // Description: Without a session the API answers 401.
     [Fact]
     public async Task Me_is_401_when_anonymous()
     {

@@ -9,21 +9,21 @@ behind their backdrop; only the dialog is mapped.
 
 ## Shell
 
-| Part | Library components | Local UI |
-|------|--------------------|----------|
-| Skip link | `SkipLink` | — |
-| Header | `SiteHeader`, `Logo`, `Search` (`/` shortcut), `Button` (Edit layout / Done, Add app), `Tooltip` (`placement="below"`, edit unavailable below 1024px), `Avatar`, `MenuTrigger` + `Menu` + `MenuItem` (account menu: Settings, Brand guide, Sign out) | — |
-| Footer | `SiteFooter` | Footer note copy |
-| Toasts | `ToastService`, `ToastRegion`, `Toast` | — |
-| Site banner | `Alert` with `banner` | — |
+| Part        | Library components                                                                                                                                                                                                                                   | Local UI         |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| Skip link   | `SkipLink`                                                                                                                                                                                                                                           | —                |
+| Header      | `SiteHeader`, `Logo`, `Search` (`/` shortcut), `Button` (Edit layout / Done, Add app), `Tooltip` (`placement="below"`, edit unavailable below 1024px), `Avatar`, `MenuTrigger` + `Menu` + `MenuItem` (account menu: Settings, Brand guide, Sign out) | —                |
+| Footer      | `SiteFooter`                                                                                                                                                                                                                                         | Footer note copy |
+| Toasts      | `ToastService`, `ToastRegion`, `Toast`                                                                                                                                                                                                               | —                |
+| Site banner | `Alert` with `banner`                                                                                                                                                                                                                                | —                |
 
 ## Shared local components
 
-| Item | Used by | Notes |
-|------|---------|-------|
-| Page intro (greeting `h1` and summary line) | dashboard, directory, settings, brand | Layout with `Stack`; text only |
-| Auth layout (centred `Card` with `Logo`) | sign-in, reset-password | Wraps `Card`; build once |
-| App form (`AppForm`) | add-app, edit-app | Composed of `FormField`, `Input`, `FieldSet`, `Choice`, `Check`, `AppIcon` preview, `ErrorSummary` |
+| Item                                        | Used by                               | Notes                                                                                              |
+| ------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Page intro (greeting `h1` and summary line) | dashboard, directory, settings, brand | Layout with `Stack`; text only                                                                     |
+| Auth layout (centred `Card` with `Logo`)    | sign-in, reset-password               | Wraps `Card`; build once                                                                           |
+| App form (`AppForm`)                        | add-app, edit-app                     | Composed of `FormField`, `Input`, `FieldSet`, `Choice`, `Check`, `AppIcon` preview, `ErrorSummary` |
 
 ## Pages
 
@@ -42,11 +42,12 @@ behind their backdrop; only the dialog is mapped.
   `Link` (`variant="back"`), `Skeleton`, `EmptyState`, `Alert`.
 - Local: page intro; directory sections (`dir-section` heading per category).
 
-### Sign in — `/sign-in` (`pages/sign-in`: default, invalid, submitting, error)
+### Sign in — `/sign-in` (`pages/sign-in`: default, invalid, submitting, error, sent, expired, used, link-invalid, rate-limited)
 
-- Library: `Card`, `Logo`, `FormField`, `Input`, `ErrorSummary` (invalid), `Button` (`busy` while submitting),
-  `Alert` (error).
-- Local: auth layout.
+- Library: `Card`, `Logo`, `FormField`, `Input`, `ErrorSummary` (invalid), `Button` (`busy` while submitting;
+  "Use a different email" in sent), `Alert` (`success` for sent; `warning` for expired, used and rate-limited;
+  `danger` for link-invalid and error), `SkipLink`.
+- Local: auth layout (`shared/auth-layout`). The screen sits outside the shell: no header, footer or session load.
 
 ### Reset password — `/reset-password` (`pages/reset-password`: default, invalid, submitting, success, error)
 
@@ -74,20 +75,20 @@ behind their backdrop; only the dialog is mapped.
 
 All dialogs open through Angular CDK `Dialog` with `modalDialogConfig` and render inside `DialogShell`.
 
-| Dialog (mock folder: states) | Library components | Local UI |
-|------------------------------|--------------------|----------|
-| Add app (`dialogs/add-app`: default, busy, invalid, failed) | `DialogShell`, `Button` (`busy`), `Alert` (failed) | App form |
-| Edit app (`dialogs/edit-app`: default, busy, invalid, failed) | `DialogShell`, `Button`, `Alert` (failed, delete confirmation) | App form |
-| Delete app (`dialogs/delete-app`: default, busy, failed) | `DialogShell`, `AppIcon`, `Button` (`appearance="danger"`), `Alert` | Tile preview row |
-| Reset layout (`dialogs/reset-layout`: default, busy) | `DialogShell`, `Button`, `Alert` (failed) | — |
-| Sign out (`dialogs/sign-out`: default, busy) | `DialogShell`, `Button` | — |
+| Dialog (mock folder: states)                                  | Library components                                                  | Local UI         |
+| ------------------------------------------------------------- | ------------------------------------------------------------------- | ---------------- |
+| Add app (`dialogs/add-app`: default, busy, invalid, failed)   | `DialogShell`, `Button` (`busy`), `Alert` (failed)                  | App form         |
+| Edit app (`dialogs/edit-app`: default, busy, invalid, failed) | `DialogShell`, `Button`, `Alert` (failed, delete confirmation)      | App form         |
+| Delete app (`dialogs/delete-app`: default, busy, failed)      | `DialogShell`, `AppIcon`, `Button` (`appearance="danger"`), `Alert` | Tile preview row |
+| Reset layout (`dialogs/reset-layout`: default, busy)          | `DialogShell`, `Button`, `Alert` (failed)                           | —                |
+| Sign out (`dialogs/sign-out`: default, busy)                  | `DialogShell`, `Button`                                             | —                |
 
 ## Notifications
 
-| Notification (mock folder: states) | Library components | Local UI |
-|------------------------------------|--------------------|----------|
-| App toast (`notifications/app-toast`: info, success, warning, danger, with-action, stacked) | `ToastService`, `ToastRegion`, `Toast` | — |
-| Status banner (`notifications/status-banner`: warning, success, persistent) | `Alert` with `banner`, `dismissible` | — |
+| Notification (mock folder: states)                                                          | Library components                     | Local UI |
+| ------------------------------------------------------------------------------------------- | -------------------------------------- | -------- |
+| App toast (`notifications/app-toast`: info, success, warning, danger, with-action, stacked) | `ToastService`, `ToastRegion`, `Toast` | —        |
+| Status banner (`notifications/status-banner`: warning, success, persistent)                 | `Alert` with `banner`, `dismissible`   | —        |
 
 ## Summary of local UI to build
 

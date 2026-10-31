@@ -57,7 +57,12 @@
         "default",
         "invalid",
         "submitting",
-        "error"
+        "error",
+        "sent",
+        "expired",
+        "used",
+        "link-invalid",
+        "rate-limited"
       ],
       "route": "/sign-in",
       "not_applicable": {

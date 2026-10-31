@@ -158,6 +158,9 @@ public sealed class TilesApiTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    // Acceptance Test
+    // Traces to: L2-032
+    // Description: A user sees and changes only their own tiles; another user gets 404.
     [Fact]
     public async Task Users_cannot_see_or_change_each_others_tiles()
     {
