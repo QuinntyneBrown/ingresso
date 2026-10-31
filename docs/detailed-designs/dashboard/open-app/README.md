@@ -14,7 +14,7 @@ The slice runs from the ingresso web app to the ingresso database.
 
 - **`ig-app-tile`** — renders the tile as an anchor with `target="_blank"` and `rel="noopener noreferrer"`. It emits `opened` on activation and suppresses navigation in edit mode.
 - **`DashboardPage`** — forwards `opened` to `TilesStore.markOpened` and passes `openedLabel(tile.lastOpenedAt)` to the tile.
-- **`openedLabel`** — formats a relative label such as `Opened 5 minutes ago`, or `Never opened` when the value is empty.
+- **`openedLabel`** — formats a relative label such as `Opened 5 minutes ago`, or `Never opened` when the value is empty. A time ahead of the browser's clock (the server's clock can run a little ahead) reads `Opened just now`, never the future. `openedTitle` gives the exact time (`Saturday, October 31, 2026 at 9:50 PM`), which `ig-app-tile` sets as the title of the footer text.
 - **`TilesStore.markOpened`** — calls the API and updates the tile's `lastOpenedAt`. It ignores failures.
 - **`TilesController.MarkOpened`** — `POST /api/tiles/{id}/opened`.
 - **`MarkTileOpenedCommandHandler`** — loads the owner's tile, sets `LastOpenedAt` from `IClock.UtcNow`, and saves. It throws `NotFoundException` for any other tile.
@@ -67,3 +67,9 @@ The browser opens the app first. The record request runs alongside navigation, a
 - Recording is fire-and-forget: a failed `POST /api/tiles/{id}/opened` shows no error and the app still opens; another user's tile id returns 404 and changes nothing (`L2-013`).
 - The record request has no body or query and only ingresso's own origin is contacted (`L2-038`).
 - Acceptance tests: `open-app.spec.ts` and `TilesApiTests`.
+
+## Verified in journey 10
+
+- Every tile's link has an accessible name of the app and when it was last opened (`Mail, opened 5 minutes ago`, `Maps, never opened`), small tiles included, although they show no footer text (`L2-046` 2).
+- Tests pin the browser clock with `page.clock.setFixedTime`, so relative times and the exact-time title are deterministic.
+- The seeder sets no last-opened time, so seeded tiles read `Never opened` until opened.

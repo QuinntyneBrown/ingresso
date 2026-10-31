@@ -105,6 +105,16 @@ export class DashboardPage {
     return this.page.locator('ig-app-tile .tile__name').allInnerTexts();
   }
 
+  /** The line on a tile saying when the app was last opened. */
+  openedText(name: string): Locator {
+    return this.tile(name).locator('.tile__opened');
+  }
+
+  /** The link whose accessible name holds both the app's name and its last-opened text. */
+  linkNamed(name: string, openedText: string): Locator {
+    return this.page.getByRole('link', { name: new RegExp(`${name}.*${openedText}`, 'i') });
+  }
+
   /** The link a tile offers for opening its app. */
   tileLink(name: string): Locator {
     return this.tile(name).getByRole('link');
