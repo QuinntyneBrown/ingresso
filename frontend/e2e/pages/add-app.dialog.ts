@@ -15,18 +15,21 @@ export class AddAppDialog {
   readonly address: Locator;
   readonly description: Locator;
   readonly initials: Locator;
+  readonly category: Locator;
   readonly submit: Locator;
   readonly cancel: Locator;
   readonly nameError: Locator;
   readonly addressError: Locator;
   readonly duplicateWarning: Locator;
   readonly addAnyway: Locator;
+  readonly browseDirectory: Locator;
 
   constructor(page: Page) {
     this.dialog = page.getByRole('dialog', { name: 'Add an app' });
     this.name = this.dialog.getByLabel('Name', { exact: true });
     this.address = this.dialog.getByLabel('Address', { exact: true });
     this.description = this.dialog.getByLabel(/^Description/);
+    this.category = this.dialog.getByLabel(/^Category/);
     this.initials = this.dialog.getByLabel('Initials', { exact: true });
     this.submit = this.dialog.getByRole('button', { name: 'Add app' });
     this.cancel = this.dialog.getByRole('button', { name: 'Cancel' });
@@ -36,6 +39,7 @@ export class AddAppDialog {
       .getByRole('alert')
       .filter({ hasText: 'You already added this address' });
     this.addAnyway = this.dialog.getByRole('button', { name: 'Add anyway' });
+    this.browseDirectory = this.dialog.getByRole('button', { name: 'Browse directory' });
   }
 
   async fill(details: AppDetails): Promise<void> {

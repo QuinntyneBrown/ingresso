@@ -36,11 +36,13 @@ behind their backdrop; only the dialog is mapped.
 - Local: page intro; mapping tiles to `TileGridItem` with the L2-051 limits; tile chrome turned off on the grid
   (`--ig-tile-grid-tile-*` knobs) because `AppTile` draws the card.
 
-### Directory — `/directory` (`pages/directory`: default, loading, empty, error)
+### Directory — `/directory` (`pages/directory`: default, loading, empty (no matches), search-results, error)
 
 - Library: `List` + `ListItem` (`variant="catalog"`), `AppIcon`, `Button` (Add), `Badge` (Added), `Search`,
   `Link` (`variant="back"`), `Skeleton`, `EmptyState`, `Alert`.
-- Local: page intro; directory sections (`dir-section` heading per category).
+- Local: page intro; directory sections (`dir-section`, an `h3` per category). `Search` is given an empty `shortcut` so
+  it does not compete with the header's `/`. `EmptyState` is the no-matches state. The Add app dialog's
+  "Browse directory" is a `Button` (`ghost`) that closes the dialog and routes here.
 
 ### Sign in — `/sign-in` (`pages/sign-in`: default, invalid, submitting, error, sent, expired, used, link-invalid, rate-limited)
 

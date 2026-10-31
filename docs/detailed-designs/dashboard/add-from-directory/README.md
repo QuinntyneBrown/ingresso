@@ -20,9 +20,13 @@ The slice runs from the ingresso web app to the ingresso database.
 - **`AppDialogs`** — opens `AddAppDialog` from the dashboard empty state, the header and the directory.
 - **Duplicate check** — compares the normalized address with existing tiles before submit and offers continue or cancel (`L2-026`).
 
-The current source differs from the requirements in these points. Each is open work for the slice.
+Decisions made in journey 09:
 
-- `L2-026` requires a duplicate-address warning. `<TO SUPPLY>`: no duplicate check exists in `AddAppDialog` or `AppForm`.
+- **Added, not hidden.** Apps already on the dashboard stay in the list with an `Added` badge in place of the Add button (`L2-024` 3). An app counts as added when a tile has its name or its address; addresses are compared ignoring the scheme, a leading `www.` and a trailing slash.
+- **Grouped by category.** Categories appear in the order they first occur in `CATALOG`; the search matches name, description and category and drops empty groups. No match shows `EmptyState` (the `empty` mock). `loading` and `error` mocks stay as designed states: the catalogue is static, so the page never shows them.
+- **Browse directory** sits at the top of the Add app dialog when it is opened without a pre-filled app. It closes the dialog and navigates to `/directory`.
+- **Create at the first free space.** A directory app is saved through the same `create-tile` path, so it takes the first free 3 × 2 space (`L2-009`).
+- The duplicate-address warning (`L2-026`) exists in `AddAppDialog`.
 
 ## Requirements
 
@@ -62,7 +66,7 @@ The directory renders from static data in the web app. Saving a tile calls `Ingr
 
 ### Behaviour — add an app from the directory
 
-The directory marks apps already on the dashboard. Choosing Add opens the form pre-filled, and saving creates the tile at the end of the order.
+The directory marks apps already on the dashboard. Choosing Add opens the form pre-filled, and saving creates the tile at the first free 3 × 2 space.
 
 ![Sequence diagram: add an app from the directory](diagrams/sequence-add-from-directory.png)
 

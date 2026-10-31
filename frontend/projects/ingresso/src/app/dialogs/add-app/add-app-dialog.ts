@@ -1,5 +1,6 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, ElementRef, inject, Injector, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { ApiError, Tile, TileInput } from 'api';
 import { Alert, Button, DialogShell, ToastService } from 'components';
 import { revealAlert } from '../../shared/reveal-alert';
@@ -33,6 +34,11 @@ export interface AddAppDialogData {
             {{ duplicate()!.name }} is already on your dashboard. Add it again, or cancel.
           </ig-alert>
         }
+        @if (!data?.prefill) {
+          <button ig-button appearance="ghost" type="button" class="browse" (click)="browse()">
+            Browse directory
+          </button>
+        }
         <ig-app-form
           [value]="data?.prefill ?? null"
           [errors]="fieldErrors()"
@@ -51,6 +57,9 @@ export interface AddAppDialogData {
       display: grid;
       gap: var(--spacingVerticalL);
     }
+    .browse {
+      justify-self: start;
+    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -58,6 +67,7 @@ export class AddAppDialog {
   protected readonly ref = inject<DialogRef<Tile>>(DialogRef);
   protected readonly data = inject<AddAppDialogData | null>(DIALOG_DATA, { optional: true });
   private readonly store = inject(TilesStore);
+  private readonly router = inject(Router);
   private readonly toasts = inject(ToastService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
@@ -70,6 +80,12 @@ export class AddAppDialog {
   protected readonly duplicate = signal<Tile | null>(null);
   private warnedAbout: string | null = null;
   protected readonly fieldErrors = signal<Record<string, string>>({});
+
+  /** Closes the dialog and goes to the directory, where common apps can be added in one step. */
+  protected browse(): void {
+    this.ref.close();
+    void this.router.navigateByUrl('/directory');
+  }
 
   protected add(input: TileInput): void {
     const same = this.store.tiles().find((t) => sameAddress(t.url, input.url));

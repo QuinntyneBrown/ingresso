@@ -161,4 +161,14 @@ export class TileGrid {
     await this.page.keyboard.press(key);
     return elapsed;
   }
+
+  /** The first cell, in reading order, where a tile of this span fits without touching another. */
+  async firstFreeCell(cols = 3, rows = 2, columns = 12): Promise<{ x: number; y: number }> {
+    const cells = await this.layout();
+    const free = (x: number, y: number) =>
+      cells.every((c) => x >= c.x + c.cols || c.x >= x + cols || y >= c.y + c.rows || c.y >= y + rows);
+    for (let y = 0; ; y++) {
+      for (let x = 0; x + cols <= columns; x++) if (free(x, y)) return { x, y };
+    }
+  }
 }
