@@ -52,3 +52,10 @@ section > button {
   font: var(--ig-text-caption);
   color: var(--colorNeutralForeground3);
 }
+
+.dir-section h3 {
+  margin: 0;
+  font: var(--ig-text-body);
+  font-weight: var(--fontWeightSemibold);
+  color: var(--colorNeutralForeground2);
+}

@@ -66,6 +66,7 @@ test.describe('Dashboard', () => {
   test('a search with no match says so and can be cleared', async ({ page }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.open();
+    await expect(dashboard.tiles.first()).toBeVisible();
     const total = await dashboard.tiles.count();
 
     await dashboard.shell.typeInSearch('zzzz-no-such-app');

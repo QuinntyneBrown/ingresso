@@ -46,6 +46,7 @@
         "default",
         "loading",
         "empty",
+        "search-results",
         "error"
       ],
       "route": "/directory"

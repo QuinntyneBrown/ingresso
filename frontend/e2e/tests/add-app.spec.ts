@@ -35,6 +35,7 @@ test.describe('Add an app', () => {
     const dashboard = new DashboardPage(page);
     const dialog = new AddAppDialog(page);
     await dashboard.open();
+    await expect(dashboard.tiles.first()).toBeVisible();
     const before = await dashboard.tiles.count();
 
     await dashboard.shell.addApp.click();
