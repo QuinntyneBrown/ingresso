@@ -32,4 +32,50 @@ public sealed class VerifyEmailTests(ApiFactory factory) : IClassFixture<ApiFact
         var verified = await factory.WithDbAsync(db => db.VerifiedEmails.AnyAsync(v => v.NormalizedEmail == email));
         Assert.True(verified);
     }
+
+    /// <summary>An account that exists but whose address has never been verified.</summary>
+    private async Task<HttpClient> SignedInUnverified()
+    {
+        var email = NewEmail();
+        await factory.WithDbAsync(async db =>
+        {
+            db.Users.Add(new User { Email = email, Role = UserRole.Member, CreatedAtUtc = ApiFactory.Today });
+            return await db.SaveChangesAsync();
+        });
+        var client = factory.CreateHttpsClient();
+        await client.SignInAsAsync(email);
+        return client;
+    }
+
+    // Acceptance Test
+    // Traces to: L2-029
+    // Description: An unverified account is refused by every tile endpoint with 403.
+    [Fact]
+    public async Task An_unverified_account_gets_403_from_the_tile_endpoints()
+    {
+        var client = await SignedInUnverified();
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await client.GetAsync("/api/tiles")).StatusCode);
+        var body = new { name = "Mail", url = "https://mail.example.com", color = "#CF3B20" };
+        Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync("/api/tiles", body)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsync("/api/tiles/reset-layout", null)).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-029
+    // Description: The signed-in user's details say whether the address is verified, and are still available when it is not.
+    [Fact]
+    public async Task Me_says_whether_the_email_is_verified()
+    {
+        var unverified = await SignedInUnverified();
+        var verified = factory.CreateHttpsClient();
+        await verified.SignInAsAsync(HttpClientExtensions.DevUser);
+
+        var before = await unverified.GetFromJsonAsync<JsonElement>("/api/auth/me");
+        var seeded = await verified.GetFromJsonAsync<JsonElement>("/api/auth/me");
+
+        Assert.False(before.GetProperty("emailVerified").GetBoolean());
+        Assert.True(seeded.GetProperty("emailVerified").GetBoolean());
+        Assert.Equal(HttpStatusCode.OK, (await verified.GetAsync("/api/tiles")).StatusCode);
+    }
 }

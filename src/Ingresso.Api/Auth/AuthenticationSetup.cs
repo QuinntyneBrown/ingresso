@@ -50,8 +50,10 @@ public static class AuthenticationSetup
         services.AddScoped<XsrfTokenService>();
         services.AddScoped<SessionSignIn>();
 
+        services.AddScoped<IAuthorizationHandler, VerifiedEmailHandler>();
         services.AddAuthorizationBuilder()
-            .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+            .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())
+            .AddPolicy(AuthPolicies.VerifiedEmail, policy => policy.RequireAuthenticatedUser().AddRequirements(new VerifiedEmailRequirement()));
         return services;
     }
 }
