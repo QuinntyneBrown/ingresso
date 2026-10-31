@@ -5,7 +5,8 @@ import { resolve } from 'node:path';
 const repoRoot = resolve(__dirname, '../../..');
 const dataDir = resolve(__dirname, '../.data');
 
-export const API_URL = 'http://localhost:5100';
+export const API_PORT = process.env['PW_API_PORT'] ?? '5100';
+export const API_URL = `http://localhost:${API_PORT}`;
 export const TODAY = '2026-11-02T14:00:00Z';
 
 /** Environment shared by the CLI and the API: seeded SQLite, fixed clock, test sign-in seam. */

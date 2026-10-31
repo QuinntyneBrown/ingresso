@@ -7,8 +7,8 @@ Playwright in Chromium only, with the Page Object Model.
 - `visual-baselines/` holds the screenshot baselines. Update them only for intentional design changes:
   `npm run e2e:update`.
 - `support/global-setup.ts` builds the solution, resets `e2e/.data/e2e.db` with the CLI and starts the API
-  on it (port 5100) with the clock fixed at Monday, November 2, 2026 and the test sign-in seam on.
-  Playwright starts `ng serve` (port 4200), which proxies `/api` and `/health` to the API.
+  on it (port 5100, or `PW_API_PORT`) with the clock fixed at Monday, November 2, 2026 and the test sign-in seam on.
+  Playwright starts `ng serve` (port 4200, or `PW_WEB_PORT`), which proxies `/api` and `/health` to the API.
 - `support/stub-api.ts` is a browser-side fake of `/api/auth/me` and `/api/tiles`. Tests use it to reach states the
   seed data does not hold (no apps, a slow or failed load). `E2E_FAKE_API=1` installs it for every test, which runs
   the suite without the .NET API.
