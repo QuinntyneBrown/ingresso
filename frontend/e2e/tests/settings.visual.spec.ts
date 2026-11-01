@@ -15,6 +15,7 @@ test.describe('Settings, visually', () => {
       await new DashboardPage(page).open();
       await settings.showMockProfile();
       await settings.showMockConnectedApps();
+      await settings.showMockDevices();
       await settings.open();
       await expect(settings.heading).toBeVisible();
       await settings.profileShown();

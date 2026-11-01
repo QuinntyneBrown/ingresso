@@ -6,6 +6,7 @@ import { SessionStore } from '../../state/session-store';
 import { ThemePreference, ThemeStore } from '../../state/theme-store';
 import { AppAction, AppsCard } from './apps-card';
 import { ConnectedAppAction, ConnectedAppsCard } from './connected-apps-card';
+import { DevicesCard } from './devices-card';
 import { ProfileCard, ProfileEdit } from './profile-card';
 
 const CHOICES: { value: ThemePreference; label: string }[] = [
@@ -20,7 +21,18 @@ const CHOICES: { value: ThemePreference; label: string }[] = [
  */
 @Component({
   selector: 'ig-settings-page',
-  imports: [AppsCard, Card, Check, Choice, ConnectedAppsCard, FieldSet, Link, ProfileCard, RouterLink],
+  imports: [
+    AppsCard,
+    Card,
+    Check,
+    Choice,
+    ConnectedAppsCard,
+    DevicesCard,
+    FieldSet,
+    Link,
+    ProfileCard,
+    RouterLink,
+  ],
   template: `
     <div class="page">
       <a ig-link variant="back" routerLink="/">Back to your apps</a>
@@ -29,8 +41,8 @@ const CHOICES: { value: ThemePreference; label: string }[] = [
         <p class="text-muted">
           {{
             administrator()
-              ? 'Your profile, how ingresso looks, your connected apps, and the apps that sign in with it.'
-              : 'Your profile, how ingresso looks, and your connected apps.'
+              ? 'Your profile, how ingresso looks, your connected apps and devices, and the apps that sign in with it.'
+              : 'Your profile, how ingresso looks, your connected apps and your devices.'
           }}
         </p>
       </section>
@@ -53,6 +65,7 @@ const CHOICES: { value: ThemePreference; label: string }[] = [
           </ig-field-set>
         </ig-card>
         <ig-connected-apps-card (revoke)="revokeAccess($event)" />
+        <ig-devices-card />
         @if (administrator()) {
           <ig-apps-card
             (register)="register($event)"

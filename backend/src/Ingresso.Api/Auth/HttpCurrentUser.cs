@@ -12,5 +12,7 @@ public sealed class HttpCurrentUser(IHttpContextAccessor accessor) : ICurrentUse
 
     public Guid? UserId => Guid.TryParse(Principal?.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
 
+    public Guid? SessionId => Guid.TryParse(Principal?.FindFirstValue(SessionSignIn.SessionIdClaim), out var id) ? id : null;
+
     public UserRole? Role => Enum.TryParse<UserRole>(Principal?.FindFirstValue(ClaimTypes.Role), out var role) ? role : null;
 }

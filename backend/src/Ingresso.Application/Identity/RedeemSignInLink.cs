@@ -21,7 +21,7 @@ public enum LinkFailure
 public sealed record RedeemResult(SignedIn? SignedIn, LinkFailure? Failure);
 
 /// <summary>Redeems a sign-in link (L2-028).</summary>
-public sealed record RedeemSignInLinkCommand(string Token) : IRequest<RedeemResult>;
+public sealed record RedeemSignInLinkCommand(string Token, string? UserAgent = null) : IRequest<RedeemResult>;
 
 /// <summary>
 /// Marks the token used, finds or creates the user, verifies their address and starts a session, all in one unit of
@@ -64,7 +64,7 @@ public sealed class RedeemSignInLinkCommandHandler(IAppDbContext db, IClock cloc
             db.VerifiedEmails.Add(new VerifiedEmail { NormalizedEmail = token.Email, VerifiedAtUtc = now });
         }
 
-        var session = Session.Start(user.Id, now);
+        var session = Session.Start(user.Id, now, DeviceDescription.From(request.UserAgent));
         db.Sessions.Add(session);
         await db.SaveChangesAsync(cancellationToken);
 
@@ -78,7 +78,7 @@ public sealed class RedeemSignInLinkCommandHandler(IAppDbContext db, IClock cloc
 /// The test seam's sign-in. <paramref name="Administrator"/> signs in as an administrator, creating the account with
 /// a verified email if it does not exist, so tests never change the role of a shared seeded account (L2-103).
 /// </summary>
-public sealed record StartSessionCommand(string Email, bool CreateUnverified = false, bool Administrator = false) : IRequest<SignedIn?>;
+public sealed record StartSessionCommand(string Email, bool CreateUnverified = false, bool Administrator = false, string? UserAgent = null) : IRequest<SignedIn?>;
 
 public sealed class StartSessionCommandHandler(IAppDbContext db, IClock clock) : IRequestHandler<StartSessionCommand, SignedIn?>
 {
@@ -113,7 +113,7 @@ public sealed class StartSessionCommandHandler(IAppDbContext db, IClock clock) :
             return null;
         }
 
-        var session = Session.Start(user.Id, clock.UtcNow);
+        var session = Session.Start(user.Id, clock.UtcNow, DeviceDescription.From(request.UserAgent));
         db.Sessions.Add(session);
         await db.SaveChangesAsync(cancellationToken);
         return new SignedIn(session.Id, user.Id, user.Email, user.Name ?? user.Email, user.Role, "/");

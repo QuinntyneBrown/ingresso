@@ -12,8 +12,12 @@ public class Session
     public DateTimeOffset LastSeenAtUtc { get; set; }
     public DateTimeOffset? RevokedAtUtc { get; set; }
 
+    /// <summary>"Chrome on macOS": the coarse description of the device, never the user agent (ADR 0020); empty for older sessions.</summary>
+    public string Device { get; set; } = "";
+
     /// <summary>Active until revoked or unused for 14 days (L2-048).</summary>
     public bool IsActive(DateTimeOffset now) => RevokedAtUtc is null && now - LastSeenAtUtc <= IdleLimit;
 
-    public static Session Start(Guid userId, DateTimeOffset now) => new() { UserId = userId, CreatedAtUtc = now, LastSeenAtUtc = now };
+    public static Session Start(Guid userId, DateTimeOffset now, string device = "") =>
+        new() { UserId = userId, CreatedAtUtc = now, LastSeenAtUtc = now, Device = device };
 }
