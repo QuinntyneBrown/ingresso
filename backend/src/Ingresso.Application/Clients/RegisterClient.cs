@@ -7,7 +7,8 @@ namespace Ingresso.Application.Clients;
 
 /// <summary>Registers an app as a public OpenID Connect client that must use PKCE (L2-087).</summary>
 public sealed record RegisterClientCommand(
-    string? Name, IReadOnlyList<string> RedirectUris, IReadOnlyList<string> PostLogoutRedirectUris, IReadOnlyList<string>? Scopes = null)
+    string? Name, IReadOnlyList<string> RedirectUris, IReadOnlyList<string> PostLogoutRedirectUris, IReadOnlyList<string>? Scopes = null,
+    string? FrontChannelLogoutUri = null)
     : IRequest<ClientDto>;
 
 public sealed class RegisterClientCommandValidator : AbstractValidator<RegisterClientCommand>
@@ -22,6 +23,7 @@ public sealed class RegisterClientCommandValidator : AbstractValidator<RegisterC
         RuleFor(c => c.RedirectUris).NotEmpty().WithMessage("Add at least one --redirect-uri.");
         RuleForEach(c => c.RedirectUris).Custom(CheckAddress);
         RuleForEach(c => c.PostLogoutRedirectUris).Custom(CheckAddress);
+        RuleFor(c => c.FrontChannelLogoutUri!).Custom(CheckAddress).When(c => c.FrontChannelLogoutUri is not null);
     }
 
     private static void CheckAddress(string address, ValidationContext<RegisterClientCommand> context)
@@ -52,9 +54,11 @@ public sealed class RegisterClientCommandHandler(IClientRegistry clients, IResou
             throw new NotFoundException($"No API has scope '{unknown}'.");
         }
 
-        var client = new NewClient(name, Distinct(request.RedirectUris), Distinct(request.PostLogoutRedirectUris), Scopes: scopes);
+        var frontChannel = request.FrontChannelLogoutUri?.Trim();
+        var client = new NewClient(
+            name, Distinct(request.RedirectUris), Distinct(request.PostLogoutRedirectUris), Scopes: scopes, FrontChannelLogoutUri: frontChannel);
         var clientId = await clients.RegisterAsync(client, cancellationToken);
-        return new ClientDto(clientId, client.Name, client.RedirectUris, client.PostLogoutRedirectUris, scopes);
+        return new ClientDto(clientId, client.Name, client.RedirectUris, client.PostLogoutRedirectUris, scopes, frontChannel);
     }
 
     private static List<string> Distinct(IEnumerable<string> addresses) => addresses.Select(a => a.Trim()).Distinct(StringComparer.Ordinal).ToList();

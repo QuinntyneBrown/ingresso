@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
+using Ingresso.Api.Auth;
 using Ingresso.Application.Identity;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -46,8 +47,16 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
             return Redirect("/verify-email");
         }
 
+        // Record the app against this session so signing out can notify it, and tell the app its session (L2-099).
+        var sessionId = session.Principal.FindFirstValue(SessionSignIn.SessionIdClaim);
+        if (Guid.TryParse(sessionId, out var sid))
+        {
+            await sender.Send(new RecordAppSignInCommand(sid, request.ClientId!), cancellationToken);
+        }
+
         var identity = new ClaimsIdentity(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, Claims.Name, Claims.Role);
         identity.SetClaim(Claims.Subject, person.UserId.ToString());
+        identity.SetClaim("sid", sessionId);
         identity.SetClaim(Claims.Email, person.Email);
         identity.SetScopes(request.GetScopes());
         // The access token's audience is each API whose scopes were granted (L2-097).
@@ -58,7 +67,9 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
         }
 
         identity.SetResources(resources.Distinct(StringComparer.Ordinal));
-        identity.SetDestinations(_ => [Destinations.IdentityToken, Destinations.AccessToken]);
+        identity.SetDestinations(claim => claim.Type == "sid"
+            ? [Destinations.IdentityToken]
+            : [Destinations.IdentityToken, Destinations.AccessToken]);
         return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 }
