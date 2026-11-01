@@ -1,0 +1,25 @@
+@startuml
+title UML sequence behaviour — End another device's session
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Person" as person
+participant "Settings" as web
+participant "SessionsController" as ctl
+database "Sessions" as db
+participant "Other browser" as other
+participant "Sample app" as app
+person -> web : Open Settings
+web -> ctl : GET /api/sessions
+ctl --> web : this device, Safari on iPhone
+person -> web : End session, then End session
+web -> ctl : DELETE /api/sessions/{id} (X-XSRF-TOKEN)
+ctl -> db : RevokedAtUtc = now
+ctl --> web : 204
+web --> person : "Session ended" toast
+other -> ctl : any request with its cookie
+ctl --> other : 401, back at sign-in
+app -> ctl : refresh_token grant (sid of the ended session)
+ctl --> app : invalid_grant
+@enduml

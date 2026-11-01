@@ -24,7 +24,7 @@ public sealed class TestSignInController(ISender sender, Auth.SessionSignIn sess
     [HttpPost("sign-in")]
     public async Task<IActionResult> SignIn(TestSignInRequest request, CancellationToken cancellationToken)
     {
-        var signedIn = await sender.Send(new StartSessionCommand(request.Email, request.CreateUnverified, request.Administrator), cancellationToken);
+        var signedIn = await sender.Send(new StartSessionCommand(request.Email, request.CreateUnverified, request.Administrator, Request.Headers.UserAgent.ToString()), cancellationToken);
         if (signedIn is null)
         {
             return NotFound();
@@ -38,7 +38,7 @@ public sealed class TestSignInController(ISender sender, Auth.SessionSignIn sess
     [HttpGet("sign-in")]
     public async Task<IActionResult> OpenSignedIn([FromQuery] string email = "dev@ingresso.dev", CancellationToken cancellationToken = default)
     {
-        var signedIn = await sender.Send(new StartSessionCommand(email), cancellationToken);
+        var signedIn = await sender.Send(new StartSessionCommand(email, UserAgent: Request.Headers.UserAgent.ToString()), cancellationToken);
         if (signedIn is null)
         {
             return NotFound();

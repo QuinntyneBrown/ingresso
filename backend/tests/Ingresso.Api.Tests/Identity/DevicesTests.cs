@@ -1,0 +1,222 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using Ingresso.Api.Tests.IdentityProvider;
+using Ingresso.Api.Tests.Infrastructure;
+
+namespace Ingresso.Api.Tests.Identity;
+
+/// <summary>L2-132 to L2-135: people see the devices they're signed in on and end the others.</summary>
+public sealed class DevicesTests(ApiFactory factory) : IClassFixture<ApiFactory>
+{
+    private const string MacChrome =
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+    private const string IPhoneSafari =
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1";
+    private const string WindowsFirefox = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0";
+    private const string WindowsEdge =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0";
+    private const string AndroidChrome =
+        "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36";
+
+    /// <summary>A browser on a device, signed in as the person.</summary>
+    private async Task<HttpClient> DeviceAsync(string email, string? userAgent)
+    {
+        var browser = factory.CreateHttpsClient();
+        if (userAgent is not null)
+        {
+            browser.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+        }
+
+        await browser.SignInAsAsync(email, administrator: true);
+        return browser;
+    }
+
+    private static string NewEmail() => $"person-{Guid.NewGuid():N}@example.com";
+
+    private static async Task<List<JsonElement>> ListAsync(HttpClient browser) =>
+        (await browser.GetFromJsonAsync<JsonElement>("/api/sessions")).EnumerateArray().ToList();
+
+    // Acceptance Test
+    // Traces to: L2-132
+    // Description: Each of the person's devices is listed as "<browser> on <system>", with this device marked.
+    [Fact]
+    public async Task Your_devices_are_listed_with_this_one_marked()
+    {
+        var email = NewEmail();
+        await DeviceAsync(email, IPhoneSafari);
+        var mac = await DeviceAsync(email, MacChrome);
+
+        var devices = await ListAsync(mac);
+
+        Assert.Equal(2, devices.Count);
+        var current = Assert.Single(devices, d => d.GetProperty("current").GetBoolean());
+        Assert.Equal("Chrome on macOS", current.GetProperty("device").GetString());
+        var other = Assert.Single(devices, d => !d.GetProperty("current").GetBoolean());
+        Assert.Equal("Safari on iPhone", other.GetProperty("device").GetString());
+        Assert.True(other.TryGetProperty("signedInAt", out _));
+        Assert.True(other.TryGetProperty("lastActiveAt", out _));
+    }
+
+    // Acceptance Test
+    // Traces to: L2-132, L2-038
+    // Description: Common browsers and systems are named coarsely, and a missing user agent reads "Unknown device".
+    [Theory]
+    [InlineData(WindowsFirefox, "Firefox on Windows")]
+    [InlineData(WindowsEdge, "Edge on Windows")]
+    [InlineData(AndroidChrome, "Chrome on Android")]
+    [InlineData(null, "Unknown device")]
+    public async Task Devices_are_described_coarsely(string? userAgent, string expected)
+    {
+        var browser = await DeviceAsync(NewEmail(), userAgent);
+
+        var device = Assert.Single(await ListAsync(browser));
+
+        Assert.Equal(expected, device.GetProperty("device").GetString());
+        Assert.Equal(["id", "device", "signedInAt", "lastActiveAt", "current"], device.EnumerateObject().Select(p => p.Name));
+    }
+
+    // Acceptance Test
+    // Traces to: L2-132, L2-032
+    // Description: Other people's sessions are never listed.
+    [Fact]
+    public async Task Only_your_own_devices_are_listed()
+    {
+        await DeviceAsync(NewEmail(), IPhoneSafari);
+        var mine = await DeviceAsync(NewEmail(), MacChrome);
+
+        Assert.Single(await ListAsync(mine));
+    }
+
+    // Acceptance Test
+    // Traces to: L2-132
+    // Description: Without a session, the list is refused.
+    [Fact]
+    public async Task The_list_needs_a_session()
+    {
+        Assert.Equal(HttpStatusCode.Unauthorized, (await factory.CreateHttpsClient().GetAsync("/api/sessions")).StatusCode);
+    }
+
+    private static async Task<Guid> OtherDeviceIdAsync(HttpClient browser) =>
+        (await ListAsync(browser)).Single(d => !d.GetProperty("current").GetBoolean()).GetProperty("id").GetGuid();
+
+    // Acceptance Test
+    // Traces to: L2-133, L2-031
+    // Description: Ending another device's session removes it, and that device's next request is refused.
+    [Fact]
+    public async Task Ending_another_devices_session_signs_it_out()
+    {
+        var email = NewEmail();
+        var phone = await DeviceAsync(email, IPhoneSafari);
+        var mac = await DeviceAsync(email, MacChrome);
+
+        var ended = await mac.DeleteAsync($"/api/sessions/{await OtherDeviceIdAsync(mac)}");
+
+        Assert.Equal(HttpStatusCode.NoContent, ended.StatusCode);
+        Assert.Equal("Chrome on macOS", Assert.Single(await ListAsync(mac)).GetProperty("device").GetString());
+        Assert.Equal(HttpStatusCode.Unauthorized, (await phone.GetAsync("/api/sessions")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await mac.GetAsync("/api/sessions")).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-133
+    // Description: This device's session, someone else's, or an unknown one can't be ended here.
+    [Fact]
+    public async Task Only_your_other_sessions_can_be_ended()
+    {
+        var mac = await DeviceAsync(NewEmail(), MacChrome);
+        var someoneElse = await DeviceAsync(NewEmail(), IPhoneSafari);
+        var thisDevice = Assert.Single(await ListAsync(mac)).GetProperty("id").GetGuid();
+        var theirs = Assert.Single(await ListAsync(someoneElse)).GetProperty("id").GetGuid();
+
+        Assert.Equal(HttpStatusCode.NotFound, (await mac.DeleteAsync($"/api/sessions/{thisDevice}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await mac.DeleteAsync($"/api/sessions/{theirs}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await mac.DeleteAsync($"/api/sessions/{Guid.NewGuid()}")).StatusCode);
+        Assert.Single(await ListAsync(someoneElse));
+    }
+
+    // Acceptance Test
+    // Traces to: L2-133, L2-034
+    // Description: Ending a session without the anti-forgery token is refused and nothing changes.
+    [Fact]
+    public async Task Ending_a_session_needs_the_anti_forgery_token()
+    {
+        var email = NewEmail();
+        await DeviceAsync(email, IPhoneSafari);
+        var mac = await DeviceAsync(email, MacChrome);
+        var phone = await OtherDeviceIdAsync(mac);
+        mac.DefaultRequestHeaders.Remove("X-XSRF-TOKEN");
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await mac.DeleteAsync($"/api/sessions/{phone}")).StatusCode);
+        Assert.Equal(2, (await ListAsync(mac)).Count);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-135
+    // Description: An app signed in under a session another device ended can no longer renew its tokens.
+    [Fact]
+    public async Task Ending_a_session_stops_its_apps_refresh_tokens()
+    {
+        var app = await RelyingParty.RegisterWithOfflineAccessAsync(factory);
+        var email = NewEmail();
+        var phone = await DeviceAsync(email, IPhoneSafari);
+        var refreshToken = (await app.SignInOfflineAsync(phone)).GetProperty("refresh_token").GetString()!;
+        var mac = await DeviceAsync(email, MacChrome);
+
+        await mac.DeleteAsync($"/api/sessions/{await OtherDeviceIdAsync(mac)}");
+
+        var refreshed = await app.RefreshAsync(refreshToken);
+        Assert.Equal(HttpStatusCode.BadRequest, refreshed.StatusCode);
+        Assert.Equal("invalid_grant", (await RelyingParty.JsonAsync(refreshed)).GetProperty("error").GetString());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-134
+    // Description: Signing out of all other devices ends every other session and keeps this one.
+    [Fact]
+    public async Task Signing_out_of_other_devices_keeps_only_this_one()
+    {
+        var email = NewEmail();
+        var phone = await DeviceAsync(email, IPhoneSafari);
+        var pc = await DeviceAsync(email, WindowsFirefox);
+        var mac = await DeviceAsync(email, MacChrome);
+
+        var ended = await mac.DeleteAsync("/api/sessions/others");
+
+        Assert.Equal(HttpStatusCode.NoContent, ended.StatusCode);
+        Assert.True(Assert.Single(await ListAsync(mac)).GetProperty("current").GetBoolean());
+        Assert.Equal(HttpStatusCode.Unauthorized, (await phone.GetAsync("/api/sessions")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await pc.GetAsync("/api/sessions")).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-134
+    // Description: Signing out of other devices leaves other people's sessions alone.
+    [Fact]
+    public async Task Signing_out_of_other_devices_leaves_other_people_signed_in()
+    {
+        var someoneElse = await DeviceAsync(NewEmail(), IPhoneSafari);
+        var mac = await DeviceAsync(NewEmail(), MacChrome);
+
+        await mac.DeleteAsync("/api/sessions/others");
+
+        Assert.Equal(HttpStatusCode.OK, (await someoneElse.GetAsync("/api/sessions")).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-135, L2-134
+    // Description: An app signed in on this device keeps renewing after the person signs out of other devices.
+    [Fact]
+    public async Task Signing_out_of_other_devices_keeps_this_devices_apps()
+    {
+        var app = await RelyingParty.RegisterWithOfflineAccessAsync(factory);
+        var email = NewEmail();
+        await DeviceAsync(email, IPhoneSafari);
+        var mac = await DeviceAsync(email, MacChrome);
+        var refreshToken = (await app.SignInOfflineAsync(mac)).GetProperty("refresh_token").GetString()!;
+
+        await mac.DeleteAsync("/api/sessions/others");
+
+        Assert.Equal(HttpStatusCode.OK, (await app.RefreshAsync(refreshToken)).StatusCode);
+    }
+}

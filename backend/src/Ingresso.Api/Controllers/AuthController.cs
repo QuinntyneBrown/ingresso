@@ -30,7 +30,7 @@ public sealed class AuthController(ISender sender, SessionSignIn sessions) : Con
     {
         var result = string.IsNullOrWhiteSpace(token)
             ? new RedeemResult(null, LinkFailure.Invalid)
-            : await sender.Send(new RedeemSignInLinkCommand(token), cancellationToken);
+            : await sender.Send(new RedeemSignInLinkCommand(token, Request.Headers.UserAgent.ToString()), cancellationToken);
         if (result.SignedIn is not { } signedIn)
         {
             return Redirect($"/sign-in?link={result.Failure.ToString()!.ToLowerInvariant()}");

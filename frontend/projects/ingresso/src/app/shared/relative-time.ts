@@ -29,11 +29,29 @@ export function agoLabel(at: string, now = Date.now()): string {
   return 'just now';
 }
 
+/** "12 Oct 2026", with fixed month names. */
+export function shortDate(at: string): string {
+  const date = new Date(at);
+  return `${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+}
+
 /** "Approved 12 Oct 2026 · Last used 2 hours ago", or "· Not used yet" (L2-128, ADR 0019). */
 export function connectedLabel(approvedAt: string, lastUsedAt: string | null, now = Date.now()): string {
-  const date = new Date(approvedAt);
-  const approved = `${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
-  return `Approved ${approved} · ${lastUsedAt ? `Last used ${agoLabel(lastUsedAt, now)}` : 'Not used yet'}`;
+  return `Approved ${shortDate(approvedAt)} · ${lastUsedAt ? `Last used ${agoLabel(lastUsedAt, now)}` : 'Not used yet'}`;
+}
+
+/**
+ * "Active now · Signed in 28 Oct 2026", or "Last active 3 hours ago · …". Sessions note activity at most every 5
+ * minutes, so anything newer, and this device, is "Active now" (L2-132).
+ */
+export function deviceLabel(
+  signedInAt: string,
+  lastActiveAt: string,
+  current: boolean,
+  now = Date.now(),
+): string {
+  const active = current || now - new Date(lastActiveAt).getTime() < 5 * 60_000;
+  return `${active ? 'Active now' : `Last active ${agoLabel(lastActiveAt, now)}`} · Signed in ${shortDate(signedInAt)}`;
 }
 
 /** The exact time of the last open, such as "Saturday, October 31, 2026 at 9:50 PM"; empty when never opened. */

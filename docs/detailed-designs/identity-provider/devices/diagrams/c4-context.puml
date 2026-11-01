@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Devices
+Person(person, "Person", "Signed in on several devices")
+System(ingresso, "ingresso", "Front door and identity provider")
+System_Ext(app, "Published app", "Signed in under one of the sessions")
+Rel(person, ingresso, "Sees devices; ends other sessions")
+Rel(app, ingresso, "Renews tokens; refused after its session ends")
+@enduml

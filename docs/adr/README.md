@@ -20,3 +20,4 @@ them point at that stack's history and are revised as ingresso writes its own.
 | [0017](0017-profile-is-edited-in-a-dialog.md) | The profile is shown in Settings and edited in a dialog |
 | [0018](0018-consent-page-resumes-the-authorize-request.md) | The consent page is a web app page that resumes the authorize request |
 | [0019](0019-last-used-is-the-latest-token-issued.md) | An app's "last used" is the latest token ingresso issued it |
+| [0020](0020-coarse-device-description.md) | Sessions keep a coarse device description, not the user agent |

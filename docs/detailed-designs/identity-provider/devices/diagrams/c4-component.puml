@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Devices
+Container_Boundary(api, "Ingresso.Api") {
+  Component(ctl, "SessionsController", "Controller", "GET, DELETE api/sessions")
+  Component(auth, "AuthController", "Controller", "Redeems the sign-in link with the user agent")
+}
+Container_Boundary(appl, "Ingresso.Application") {
+  Component(desc, "DeviceDescription", "Static", "User agent to <browser> on <system>")
+  Component(list, "GetDevicesQueryHandler", "MediatR handler", "The person's active sessions")
+  Component(end, "EndSessionCommandHandler", "MediatR handler", "One other session, or all others")
+  Component(redeem, "RedeemSignInLinkCommandHandler", "MediatR handler", "Starts a session with its device")
+}
+Component(db, "IAppDbContext", "Interface", "Sessions")
+Rel(ctl, list, "Sends")
+Rel(ctl, end, "Sends")
+Rel(auth, redeem, "Sends")
+Rel(redeem, desc, "Uses")
+Rel(list, db, "Reads")
+Rel(end, db, "Revokes")
+@enduml

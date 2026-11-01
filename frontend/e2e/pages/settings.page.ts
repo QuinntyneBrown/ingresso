@@ -21,6 +21,15 @@ export class SettingsPage {
   readonly connectedLoading: Locator;
   readonly connectedFailed: Locator;
   readonly connectedTryAgain: Locator;
+  /** Devices: where the person is signed in (journey 25). */
+  readonly devices: Locator;
+  readonly deviceRows: Locator;
+  readonly thisDevice: Locator;
+  readonly onlyThisDevice: Locator;
+  readonly signOutOtherDevices: Locator;
+  readonly devicesLoading: Locator;
+  readonly devicesFailed: Locator;
+  readonly devicesTryAgain: Locator;
   readonly apps: Locator;
   readonly appRows: Locator;
   readonly registerApp: Locator;
@@ -46,6 +55,14 @@ export class SettingsPage {
     this.connectedLoading = this.connectedApps.locator('[aria-busy="true"]');
     this.connectedFailed = this.connectedApps.getByRole('alert');
     this.connectedTryAgain = this.connectedApps.getByRole('button', { name: 'Try again' });
+    this.devices = page.getByRole('region', { name: 'Devices', exact: true });
+    this.deviceRows = this.devices.getByRole('list', { name: 'Signed-in devices' }).getByRole('listitem');
+    this.thisDevice = this.deviceRows.filter({ hasText: 'This device' });
+    this.onlyThisDevice = this.devices.getByText('You’re not signed in anywhere else.');
+    this.signOutOtherDevices = this.devices.getByRole('button', { name: 'Sign out of all other devices' });
+    this.devicesLoading = this.devices.locator('[aria-busy="true"]');
+    this.devicesFailed = this.devices.getByRole('alert');
+    this.devicesTryAgain = this.devices.getByRole('button', { name: 'Try again' });
     this.apps = page.getByRole('region', { name: 'Apps', exact: true });
     this.appRows = this.apps.getByRole('list', { name: 'Registered apps' }).getByRole('listitem');
     this.registerApp = this.apps.getByRole('button', { name: 'Register an app' }).first();
@@ -86,6 +103,65 @@ export class SettingsPage {
   /** The Revoke button on a connected app's row. */
   revokeAccessFor(name: string): Locator {
     return this.connectedApps.getByRole('button', { name: `Revoke ${name}’s access` });
+  }
+
+  /** A device's row, by its description, such as "Safari on iPhone". */
+  device(name: string): Locator {
+    return this.deviceRows.filter({ has: this.page.getByText(name, { exact: true }) });
+  }
+
+  /** The End session button on a device's row. */
+  endSessionOn(name: string): Locator {
+    return this.devices.getByRole('button', { name: `End the session on ${name}` });
+  }
+
+  /** Fails the next devices load with a server error. */
+  async failDevicesOnce(): Promise<void> {
+    let pending = true;
+    await this.page.route('**/api/sessions', (route) => {
+      if (!pending || route.request().method() !== 'GET') return route.fallback();
+      pending = false;
+      return route.fulfill({ status: 500, json: {} });
+    });
+  }
+
+  /** Keeps the devices load waiting, to show the loading state. */
+  async holdDevices(): Promise<void> {
+    await this.page.route('**/api/sessions', (route) =>
+      route.request().method() === 'GET' ? undefined : route.fallback(),
+    );
+  }
+
+  /** Answers the devices with the mocks' three (or only this one), timed against the suite's fixed clock. */
+  async showMockDevices(devices: 'mocks' | 'only' = 'mocks'): Promise<void> {
+    const hoursAgo = (hours: number) => new Date(TODAY.getTime() - hours * 3600_000).toISOString();
+    const all = [
+      {
+        id: 'a1',
+        device: 'Chrome on macOS',
+        signedInAt: '2026-10-28T09:00:00Z',
+        lastActiveAt: hoursAgo(0),
+        current: true,
+      },
+      {
+        id: 'b2',
+        device: 'Safari on iPhone',
+        signedInAt: '2026-10-30T09:00:00Z',
+        lastActiveAt: hoursAgo(3),
+        current: false,
+      },
+      {
+        id: 'c3',
+        device: 'Firefox on Windows',
+        signedInAt: '2026-10-02T09:00:00Z',
+        lastActiveAt: hoursAgo(6 * 24),
+        current: false,
+      },
+    ];
+    const json = devices === 'only' ? all.slice(0, 1) : all;
+    await this.page.route('**/api/sessions', (route) =>
+      route.request().method() === 'GET' ? route.fulfill({ json }) : route.fallback(),
+    );
   }
 
   /** Fails the next connected-apps load with a server error. */

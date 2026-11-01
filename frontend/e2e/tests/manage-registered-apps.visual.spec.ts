@@ -20,6 +20,7 @@ test.describe('Manage registered apps, visually', () => {
     await signInAsAdministrator(page);
     await settings.showMockProfile();
     await settings.showMockConnectedApps();
+    await settings.showMockDevices();
     await settings.showMockApps();
     await new RegisterAppDialog(page).showMockApis();
     await settings.open();

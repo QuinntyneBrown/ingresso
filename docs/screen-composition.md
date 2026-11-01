@@ -81,6 +81,15 @@ behind their backdrop; only the dialog is mapped.
   named “Revoke <app>’s access”) that opens the revoke-access dialog. `EmptyState` (no action) when there are
   none, `Skeleton` while loading, a danger `Alert` with a Try again `Button` on error, and a success toast after
   revoking (“Access revoked”, “<app> has to ask again next time.”). Local: the card's header row.
+- Devices (journey 25, `default`, `devices-only`, `devices-loading`, `devices-error`; everyone): a `Card` whose
+  `[slot=actions]` holds a secondary `Button` (Sign out of all other devices, only when there are others), and a
+  `List` (`surface`, labelled “Signed-in devices”) of `ListItem`s (`wrap`; `title` = “<browser> on <system>”, `meta` =
+  “Active now” or “Last active <relative time>” · “Signed in <date>”). This device's row has a `Badge`
+  (`kind="info"`, “This device”) in `[slot=action]`; every other row a small secondary `Button` (End session, named
+  “End the session on <device>”) that opens the end-session dialog. `Skeleton` while loading, a danger `Alert`
+  with a Try again `Button` on error, a muted line (“You’re not signed in anywhere else.”) when only this device is
+  signed in, and a success toast after ending sessions (“Session ended”, “<device> is signed out.”; “Signed out of
+  other devices”, “Only this device is signed in now.”). Local: the card's lead line.
 - Apps (journey 19, `apps`, `apps-empty`, `apps-loading`, `apps-error`; administrators only): a `Card` with a
   primary `Button` (Register an app), `List` (`surface`) of `ListItem` (`title` = app name, `meta` = type and
   client ID), `EmptyState` with a primary `Button` when there are none, `Skeleton` while loading, and a danger
@@ -136,6 +145,7 @@ All dialogs open through Angular CDK `Dialog` with `modalDialogConfig` and rende
 | Register an app (`dialogs/register-app`: default, invalid, busy, error, edit, edit-busy) | `DialogShell`, `ErrorSummary`, `FormField`, `Input` (text, and `textarea` for the address lists, one per line), `FieldSet` + `Choice` + `Check` (APIs and staying signed in as checkboxes, type as radios), `Alert` (error), `Button` (`busy`). Edit mode (journey 21) fills the values, shows the type as text, and saves with Save changes. A Consent `FieldSet` (with `hint`) and `Check` (journey 23) mark the app first-party | — |
 | Edit your profile (`dialogs/edit-profile`: default, invalid, busy, error) | `DialogShell`, `ErrorSummary`, `FormField`, `Input` (display name, optional), `Alert` (error), `Button` (Save changes, `busy`) | Email shown as text |
 | Revoke access (`dialogs/revoke-access`: default, busy, error) | `DialogShell`, `Alert` (error), `Button` (Revoke access, `appearance="danger"`, `busy`) | — |
+| End session (`dialogs/end-session`: default, all, busy, error) | `DialogShell`, `Alert` (error), `Button` (End session or Sign out other devices, `appearance="danger"`, `busy`) | — |
 | Rotate secret (`dialogs/rotate-secret`: default, busy, error) | `DialogShell`, `Alert` (error), `Button` (`appearance="danger"`, `busy`) | — |
 | Delete app — registered app (`dialogs/delete-client`: default, busy, error) | `DialogShell`, `FormField`, `Input` (type the name to confirm), `Alert` (error), `Button` (`appearance="danger"`, `busy`, disabled until the name matches) | — |
 | Client secret (`dialogs/client-secret`: default, copied, rotated) | `DialogShell`, `Alert` (`warning`), `FormField`, `Input` (`readonly`, monospace), `Button` (Copy / Copied, Done) | Copy row (`Input` and `Button` side by side); polite status region for “copied” |

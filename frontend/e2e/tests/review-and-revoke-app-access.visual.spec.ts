@@ -15,6 +15,7 @@ test.describe('Review and revoke app access, visually', () => {
     await signInAs(page);
     await settings.showMockProfile();
     await settings.showMockConnectedApps(apps);
+    await settings.showMockDevices();
     await settings.open();
     await settings.profileShown();
     return settings;

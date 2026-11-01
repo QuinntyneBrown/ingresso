@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import { Browser, BrowserContext, Page } from '@playwright/test';
 
 /** The seeded person the suite signs in as (Maya Okafor, SeedData.UserEmail). */
 export const MAYA = 'dev@ingresso.dev';
@@ -46,4 +46,25 @@ export async function signInAsNewPerson(page: Page): Promise<string> {
   const email = `person-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
   await signInAsAdministrator(page, email);
   return email;
+}
+
+/** Safari on an iPhone, for a person's second device. */
+export const IPHONE_SAFARI =
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1';
+
+/**
+ * Signs the person in on another device: a separate browser context with its own cookies and user agent, so it
+ * gets its own session (L2-132). Close the context when done.
+ */
+export async function signInOnAnotherDevice(
+  browser: Browser,
+  baseURL: string,
+  email: string,
+  userAgent = IPHONE_SAFARI,
+): Promise<{ context: BrowserContext; page: Page }> {
+  const context = await browser.newContext({ baseURL, userAgent });
+  const page = await context.newPage();
+  const response = await page.request.post('/api/test/sign-in', { data: { email } });
+  if (!response.ok()) throw new Error(`Test sign-in failed for ${email}: ${response.status()}`);
+  return { context, page };
 }

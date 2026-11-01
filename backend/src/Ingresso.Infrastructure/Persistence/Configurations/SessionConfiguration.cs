@@ -11,5 +11,6 @@ public sealed class SessionConfiguration : IEntityTypeConfiguration<Session>
         builder.HasKey(s => s.Id);
         builder.HasOne(s => s.User).WithMany().HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(s => s.UserId);
+        builder.Property(s => s.Device).HasMaxLength(100).HasDefaultValue("");
     }
 }
