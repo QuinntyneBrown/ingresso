@@ -1,0 +1,30 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Manage clients in Settings
+Container_Boundary(api, "Ingresso.Api") {
+  Component(clients, "ClientsController", "Controller", "GET/POST api/clients")
+  Component(resources, "ResourcesController", "Controller", "GET api/resources")
+  Component(policy, "AdministratorHandler", "Authorization handler", "Reads the account's role from the database")
+}
+Container_Boundary(cli, "Ingresso.Cli") {
+  Component(users, "UserCommands", "CLI", "users grant-admin --email")
+}
+Container_Boundary(appl, "Ingresso.Application") {
+  Component(grant, "GrantAdministratorCommandHandler", "MediatR handler", "Sets Role = Admin")
+  Component(reg, "RegisterClientCommandHandler", "MediatR handler", "Validates, generates a secret for confidential apps")
+  Component(list, "GetClientsQueryHandler", "MediatR handler", "Lists apps")
+  Component(res, "GetResourcesQueryHandler", "MediatR handler", "Lists APIs and scopes")
+}
+Container_Boundary(infra, "Ingresso.Infrastructure") {
+  Component(registry, "OpenIddictClientRegistry", "IClientRegistry", "Public or confidential application; OpenIddict hashes the secret")
+}
+Rel(clients, policy, "Authorized by")
+Rel(resources, policy, "Authorized by")
+Rel(clients, reg, "Sends")
+Rel(clients, list, "Sends")
+Rel(resources, res, "Sends")
+Rel(users, grant, "Sends")
+Rel(reg, registry, "Registers")
+Rel(list, registry, "Lists")
+@enduml

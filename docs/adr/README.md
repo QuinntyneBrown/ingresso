@@ -16,3 +16,4 @@ them point at that stack's history and are revised as ingresso writes its own.
 | [0013](0013-theme-choice-is-kept-in-the-browser.md) | The theme choice is kept in this browser |
 | [0014](0014-openiddict-is-the-openid-connect-server.md) | OpenIddict is the OpenID Connect server, with its stores in AppDbContext |
 | [0015](0015-front-channel-logout.md) | Apps are signed out by front-channel logout, from the signed-out page |
+| [0016](0016-administrators-are-a-role-on-the-account.md) | Administrators are a role on the account, granted from the CLI and checked against the database |

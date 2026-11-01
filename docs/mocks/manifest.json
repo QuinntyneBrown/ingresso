@@ -119,7 +119,11 @@
         "loading",
         "error",
         "invalid",
-        "success"
+        "success",
+        "apps",
+        "apps-empty",
+        "apps-loading",
+        "apps-error"
       ],
       "route": "/settings",
       "not_applicable": {
@@ -292,6 +296,35 @@
       "opens_from": "dashboard",
       "not_applicable": {
         "invalid": "The dialog has no inputs."
+      }
+    },
+    {
+      "id": "register-app",
+      "kind": "dialog",
+      "title": "Register an app",
+      "states": [
+        "default",
+        "invalid",
+        "busy",
+        "error"
+      ],
+      "opens_from": "settings",
+      "requirements": []
+    },
+    {
+      "id": "client-secret",
+      "kind": "dialog",
+      "title": "Client secret",
+      "states": [
+        "default",
+        "copied"
+      ],
+      "opens_from": "register-app",
+      "requirements": [],
+      "not_applicable": {
+        "busy": "Nothing is saved from this dialog; it only shows the new secret.",
+        "invalid": "It has no input.",
+        "error": "It opens only after the app was registered."
       }
     },
     {

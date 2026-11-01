@@ -1,0 +1,28 @@
+@startuml
+title Register a confidential app
+actor Administrator
+participant "RegisterAppDialog" as dlg
+participant "ClientsController" as api
+participant "AdministratorHandler" as pol
+participant "RegisterClientCommandHandler" as h
+participant "OpenIddictClientRegistry" as reg
+participant "ClientSecretDialog" as sec
+Administrator -> dlg : fill in, type confidential, Register app
+dlg -> api : POST /api/clients
+api -> pol : authorize
+pol -> pol : read role from database
+alt not an administrator
+  api --> dlg : 403
+else administrator
+  api -> h : RegisterClientCommand(Confidential = true)
+  h -> h : validate (same rules as the CLI)
+  h -> h : secret = 32 random bytes, base64url
+  h -> reg : RegisterAsync(NewClient with secret)
+  reg -> reg : OpenIddict stores a hash only
+  h --> api : RegisteredClientDto(client, secret)
+  api --> dlg : 201 { client, clientSecret }
+  dlg -> sec : open with client ID and secret
+  Administrator -> sec : Copy, Done
+  note right of sec : the secret is never shown again
+end
+@enduml

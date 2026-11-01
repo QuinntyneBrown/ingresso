@@ -1,0 +1,54 @@
+@startuml
+title Class structure — Manage clients in Settings
+hide empty members
+enum UserRole {
+  Member
+  Admin
+}
+class User {
+  Id : Guid
+  Email : string
+  Role : UserRole
+}
+User --> UserRole
+class GrantAdministratorCommand <<record>> {
+  Email : string
+}
+class RegisterClientCommand <<record>> {
+  Name : string?
+  RedirectUris : string[]
+  PostLogoutRedirectUris : string[]
+  Scopes : string[]?
+  FrontChannelLogoutUri : string?
+  Confidential : bool
+}
+class RegisteredClientDto <<record>> {
+  Client : ClientDto
+  ClientSecret : string?
+}
+class ClientDto <<record>> {
+  ClientId : string
+  Name : string
+  RedirectUris : string[]
+  PostLogoutRedirectUris : string[]
+  Scopes : string[]
+  FrontChannelLogoutUri : string?
+  Confidential : bool
+}
+class NewClient <<record>> {
+  ClientSecret : string?
+}
+interface IClientRegistry {
+  ListAsync()
+  RegisterAsync(NewClient)
+}
+class AdministratorHandler
+class ClientsController
+RegisterClientCommand ..> RegisteredClientDto : returns
+RegisteredClientDto *-- ClientDto
+RegisterClientCommand ..> NewClient : builds
+IClientRegistry ..> NewClient
+ClientsController ..> RegisterClientCommand
+AdministratorHandler ..> User : reads Role
+GrantAdministratorCommand ..> User : sets Role
+@enduml

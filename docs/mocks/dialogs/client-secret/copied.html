@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Client secret · copied — ingresso mocks</title>
+<meta name="mock:kind" content="dialog">
+<meta name="mock:screen" content="client-secret">
+<meta name="mock:state" content="copied">
+<meta name="description" content="Client secret, copied state.">
+<link rel="icon" href="../../assets/favicon.svg">
+<link rel="stylesheet" href="../../../design-system/tokens/tokens.css">
+<link rel="stylesheet" href="../../../design-system/assets/components.css">
+<link rel="stylesheet" href="../../assets/mock.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div inert aria-hidden="true"><header class="app-header"><div class="app-header__inner">
+  <a class="brand-logo" href="../../pages/dashboard/default.html" aria-label="ingresso home"><img class="brand-logo__light" src="../../assets/ingresso-logo.svg" alt="ingresso" height="32"><img class="brand-logo__dark" src="../../assets/ingresso-logo-dark.svg" alt="" height="32"></a>
+  <form class="search app-header__search" role="search">
+    <label class="visually-hidden" for="q">Jump to an app</label>
+    <svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input class="input" id="q" type="search" placeholder="Jump to an app">
+    <kbd class="kbd-hint" aria-hidden="true">/</kbd>
+  </form>
+  <div class="app-header__actions">
+    <button class="btn" type="button" aria-pressed="false"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="btn__label">Edit layout</span></button>
+    <a class="btn btn--primary" href="../../pages/directory/default.html"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="btn__label">Add app</span></a>
+    <button class="avatar avatar--ink" type="button" aria-label="Account menu for Maya Reyes" style="border:0;cursor:pointer;">MR</button>
+  </div>
+</div></header><main id="main" class="container container--narrow"><a class="back" href="../../pages/dashboard/default.html"><svg class="icon icon--sm" aria-hidden="true" viewBox="0 0 24 24"><path d="M19 12H5m6-6-6 6 6 6"/></svg>Back to your apps</a><section class="intro"><h1>Settings</h1><p class="text-muted">How ingresso looks, and the apps that sign in with it.</p></section><div class="stack">
+  <section class="card" aria-labelledby="appearance"><fieldset><legend id="appearance" class="card__title">Appearance</legend>
+    <label class="choice"><input type="radio" name="theme" checked><span class="choice__text">Match my system</span></label>
+    <label class="choice"><input type="radio" name="theme"><span class="choice__text">Light</span></label>
+    <label class="choice"><input type="radio" name="theme"><span class="choice__text">Dark</span></label></fieldset></section>
+  <section class="card stack" aria-labelledby="apps"><div class="card__header" style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);flex-wrap:wrap"><div><h2 id="apps" class="card__title">Apps</h2><p class="text-muted">Apps that sign people in with ingresso. Only administrators see this.</p></div><a class="btn btn--primary" href="#"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="btn__label">Register an app</span></a></div><ul class="list card card--flush" aria-label="Registered apps"><li class="list__item"><div class="list__body"><div class="list__title">Budget</div><div class="list__meta">Confidential · client ID 7c1e9a40d2b84f3a</div></div></li><li class="list__item"><div class="list__body"><div class="list__title">Notes</div><div class="list__meta">Public · client ID 3f9c2b17e6a54d08</div></div></li><li class="list__item"><div class="list__body"><div class="list__title">Sample app</div><div class="list__meta">Public · client ID ingresso-sample-app</div></div></li></ul></section></div></main>
+</div>
+<div class="backdrop"></div>
+<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title" aria-describedby="dlg-desc" data-dismiss-on-escape>
+  <div class="dialog__panel">
+    <div class="dialog__header">
+      <div class="dialog__icon dialog__icon--info" aria-hidden="true"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3"/></svg></div>
+      <div style="flex:1;"><h2 class="dialog__title" id="dlg-title">Budget is registered</h2><p id="dlg-desc" class="text-muted" style="margin-top:var(--space-1);">Copy its client ID and secret into the app.</p></div>
+      <button class="btn btn--ghost btn--icon" type="button" aria-label="Close"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="dialog__body stack"><div class="alert alert--warning"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 2 20h20zM12 10v4M12 17.5v.5"/></svg><div class="alert__body"><div class="alert__title">You won’t see this secret again</div><div>Store it in the app’s settings now. If it’s lost, the app will need a new one.</div></div></div><div class="field"><label class="field__label" for="client-id">Client ID</label><div class="cluster" style="flex-wrap:nowrap"><input class="input" id="client-id" type="text" value="7c1e9a40d2b84f3a" readonly style="flex:1;font-family:var(--font-mono)"><button class="btn" type="button" aria-label="Copy client id">Copy</button></div></div><div class="field"><label class="field__label" for="client-secret">Client secret</label><div class="cluster" style="flex-wrap:nowrap"><input class="input" id="client-secret" type="text" value="Jd8xQ2mV7rT1kZp4Wn6Yb0Lc3Hs9Gf5Ea_Ru-Ko2Ni" readonly style="flex:1;font-family:var(--font-mono)"><button class="btn" type="button" aria-label="Copy client secret">Copied</button></div></div><p class="visually-hidden" role="status">Client secret copied</p></div>
+    <div class="dialog__footer"><button class="btn btn--primary" type="button">Done</button></div>
+  </div>
+</div>
+<nav class="mock-bar" aria-label="Mock navigation">
+  <a class="mock-bar__home" href="../../index.html" aria-label="All mocks">⌂</a>
+  <span class="mock-bar__screen">Client secret</span>
+  <ul class="mock-bar__states"><li><a href="default.html">default</a></li><li><a href="copied.html" aria-current="page">copied</a></li></ul>
+  <button type="button" data-theme-toggle aria-pressed="false">☾ Dark</button>
+  <button type="button" data-chrome-toggle aria-label="Hide mock chrome">×</button>
+</nav>
+<script src="../../assets/mock.js"></script>
+</body>
+</html>
