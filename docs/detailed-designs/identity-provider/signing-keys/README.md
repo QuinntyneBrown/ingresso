@@ -103,10 +103,11 @@ It builds on `L2-091` (discovery and JWKS), `L2-097` (access tokens) and `L2-038
 
 ## Open questions
 
-- **The first token with a new key.** An app that validates tokens with ASP.NET Core's JwtBearer refuses the first
-  token signed with a new key ("The signature key was not found") and fetches the JWKS again; the next call
-  succeeds. The sample app tries once more on that answer. Publishing the next key ahead of the rotation, so apps
-  already hold it, is deferred.
+- **The first token with a new key.** An app that validates tokens with ASP.NET Core's JwtBearer or OpenID Connect
+  handler refuses the first token signed with a new key ("The signature key was not found") and fetches the JWKS
+  again; the next one succeeds. The sample app calls its API once more on that answer, and starts a sign-in over
+  once when its ID token is refused that way. Publishing the next key ahead of the rotation, so apps already hold
+  it, is deferred.
 
 - **Encryption keys** for codes and refresh tokens stay on the configured certificate; moving them to the
   database is deferred.

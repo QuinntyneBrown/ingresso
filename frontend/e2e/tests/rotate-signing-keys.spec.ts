@@ -27,4 +27,19 @@ test.describe('Rotate signing keys', () => {
       `Your API says: hello, ${MAYA}. Scope: openid profile email sample-api.read offline_access`,
     );
   });
+
+  // Acceptance Test
+  // Traces to: L2-137
+  // Description: Right after a rotation, a person signs in to an app with an ID token signed by the new key.
+  test('an app signs a person in right after a key rotation', async ({ page }) => {
+    const app = new SampleAppPage(page);
+    await signInAs(page);
+    await rotateSigningKeys();
+
+    await app.open();
+    await app.signInWithIngresso.click();
+    await app.waitUntilSignedIn();
+
+    await expect(app.signedInAs).toHaveText(`Signed in as ${MAYA}`);
+  });
 });

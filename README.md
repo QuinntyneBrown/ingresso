@@ -181,6 +181,8 @@ A running API signs with the new key within a minute. The previous key stays pub
 until every token it signed has expired (14 days by default). To rotate on a schedule, set
 `IdentityProvider:SigningKeys:RotationInterval`, for example `90.00:00:00`. It is off by default.
 `IdentityProvider:SigningCertificate` now holds only the certificate that encrypts codes and refresh tokens.
+Apps built on ASP.NET Core refuse the first token signed with a new key while they fetch the JWKS again, so retry
+once, as the sample app does.
 
 ### Run the app
 

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 // A minimal app that signs people in with ingresso over OpenID Connect (journey 16), calls its own API with the
 // access token ingresso issues (journey 17), and renews that token with a refresh token when it expires (journey 20). Playwright and the demos use it as the relying party; it is also the
@@ -55,6 +56,19 @@ builder.Services.AddAuthentication(options =>
         {
             context.Response.Redirect("/?denied=1");
             context.HandleResponse();
+            return Task.CompletedTask;
+        };
+        // Right after ingresso rotates its signing key (journey 26), the handler doesn't know the new key yet: it
+        // refuses that ID token and fetches the JWKS again. Start the sign-in over once; ingresso's session makes it
+        // quiet.
+        options.Events.OnRemoteFailure = context =>
+        {
+            if (context.Failure is SecurityTokenSignatureKeyNotFoundException && context.Properties?.Items.ContainsKey("retried") != true)
+            {
+                context.Response.Redirect("/signin?again=true");
+                context.HandleResponse();
+            }
+
             return Task.CompletedTask;
         };
     })
@@ -118,7 +132,16 @@ app.MapGet("/api/me", (HttpContext context) => Results.Ok(new
     }))
     .RequireAuthorization(policy => policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme).RequireAuthenticatedUser());
 
-app.MapGet("/signin", () => Results.Challenge(new AuthenticationProperties { RedirectUri = "/" }));
+app.MapGet("/signin", (bool? again) =>
+{
+    var properties = new AuthenticationProperties { RedirectUri = "/" };
+    if (again == true)
+    {
+        properties.Items["retried"] = "1";
+    }
+
+    return Results.Challenge(properties);
+});
 
 // Signs out here and through ingresso's end-session endpoint, which signs out every app of the session (journey 18).
 app.MapGet("/signout", () => Results.SignOut(
