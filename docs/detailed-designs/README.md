@@ -50,3 +50,4 @@ Each folder holds one vertical feature slice. Its `README.md` traces to the L2 r
 | [Call an app's API with a token](identity-provider/protect-an-api/README.md) | `L2-095`, `L2-096`, `L2-097`, `L2-098` |
 | [Sign out everywhere](identity-provider/sign-out-everywhere/README.md) | `L2-099`, `L2-100`, `L2-101`, `L2-102` |
 | [Manage clients in Settings](identity-provider/manage-clients-in-settings/README.md) | `L2-103`, `L2-104`, `L2-105`, `L2-106` |
+| [Stay signed in to an app](identity-provider/refresh-tokens/README.md) | `L2-107`, `L2-108`, `L2-109`, `L2-110`, `L2-111` |

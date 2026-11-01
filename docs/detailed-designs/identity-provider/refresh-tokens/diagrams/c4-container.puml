@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Stay signed in to an app
+System_Ext(app, "Sample app", "ASP.NET Core relying party")
+System_Boundary(ingresso, "ingresso") {
+  Container(api, "Ingresso.Api", "ASP.NET Core, OpenIddict", "Token and revocation endpoints, pruning")
+  ContainerDb(db, "Database", "SQL Server / SQLite", "Sessions, OpenIddict tokens and authorizations")
+}
+Rel(app, api, "POST /connect/token, /connect/revoke", "HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+@enduml

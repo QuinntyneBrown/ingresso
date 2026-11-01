@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Stay signed in to an app
+System_Ext(app, "Sample app")
+Container_Boundary(api, "Ingresso.Api") {
+  Component(oidc, "OpenIddict server", "OpenIddict", "Validates grants, rolls and revokes refresh tokens")
+  Component(authz, "AuthorizationController.Exchange", "MVC", "Session and absolute-lifetime checks")
+  Component(touch, "TouchSessionCommand", "MediatR", "Is the session active? Marks it in use")
+  Component(prune, "TokenPruningService", "Hosted service", "Prunes expired tokens daily")
+}
+ContainerDb(db, "Database")
+Rel(app, oidc, "refresh_token grant, revoke")
+Rel(oidc, authz, "Pass-through")
+Rel(authz, touch, "sid")
+Rel(touch, db, "Sessions")
+Rel(oidc, db, "Tokens, authorizations")
+Rel(prune, db, "PruneAsync")
+@enduml

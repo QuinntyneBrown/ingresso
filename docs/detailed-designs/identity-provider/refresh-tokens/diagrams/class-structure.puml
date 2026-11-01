@@ -1,0 +1,27 @@
+@startuml
+title Class structure — Stay signed in to an app
+skinparam classAttributeIconSize 0
+class AuthorizationController {
+  +Authorize()
+  +Exchange()
+}
+class TouchSessionCommand {
+  +SessionId : Guid
+}
+class TokenPruningService {
+  #ExecuteAsync()
+}
+class NewClient {
+  +OfflineAccess : bool
+}
+class ClientDto {
+  +OfflineAccess : bool
+}
+class OpenIddictClientRegistry {
+  +RegisterAsync(NewClient)
+}
+AuthorizationController --> TouchSessionCommand : sends
+OpenIddictClientRegistry --> NewClient : reads
+OpenIddictClientRegistry --> ClientDto : returns
+TokenPruningService --> "IOpenIddictTokenManager" : PruneAsync
+@enduml
