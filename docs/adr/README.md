@@ -13,3 +13,4 @@ them point at that stack's history and are revised as ingresso writes its own.
 | [0010](0010-free-placement-dashboard-grid.md) | Free-placement dashboard grid ported from qbc-grid, with responsive collapse |
 | [0011](0011-phone-header-and-sign-in-redirect.md) | The phone header keeps its actions; a 401 redirects to /sign-in |
 | [0012](0012-tiles-do-not-show-a-category.md) | Tiles show name, host, description and colour; category stays out of the tile |
+| [0013](0013-theme-choice-is-kept-in-the-browser.md) | The theme choice is kept in this browser |

@@ -20,7 +20,7 @@ The slice is cross-cutting. It lives in the component library and the app shell.
 - **`DialogShell`** — CDK dialog chrome. At XS it fills the screen and keeps actions in view.
 - **`ig-skip-link`** — first focusable element on each page.
 - **`ToastService` / `ToastRegion`** — announce toasts through a live region (ADR 0007).
-- **Theme selection** — follows `prefers-color-scheme`, and stores an explicit choice in `localStorage`. `<TO SUPPLY>`: the theme switch control.
+- **Theme selection** — follows `prefers-color-scheme`, and stores an explicit choice in `localStorage`. `ThemeStore` applies it at start-up (ADR 0013), and Settings (`/settings`, reached from the account menu) offers Match my system, Light and Dark, applying the choice at once. The Profile and notification sections of the settings mock are deferred.
 - **Reduced motion** — tokens set motion durations to zero under `prefers-reduced-motion`.
 
 ## Requirements

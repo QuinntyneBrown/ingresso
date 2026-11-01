@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, inject, viewChild } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import {
   Avatar,
   Button,
@@ -91,6 +91,7 @@ import { injectWideViewport } from '../shared/wide-viewport';
           </button>
           <ng-template #account>
             <ig-menu>
+              <button ig-menu-item type="button" (triggered)="openSettings()">Settings</button>
               <button ig-menu-item type="button" (triggered)="signOut()">Sign out</button>
             </ig-menu>
           </ng-template>
@@ -144,6 +145,7 @@ import { injectWideViewport } from '../shared/wide-viewport';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppShell {
+  private readonly router = inject(Router);
   protected readonly store = inject(TilesStore);
   protected readonly dialogs = inject(AppDialogs);
   protected readonly session = inject(SessionStore);
@@ -159,6 +161,10 @@ export class AppShell {
   constructor() {
     this.session.load();
     this.store.load();
+  }
+
+  protected openSettings(): void {
+    void this.router.navigateByUrl('/settings');
   }
 
   /** Asks before ending the session; focus returns to the account button afterwards. */

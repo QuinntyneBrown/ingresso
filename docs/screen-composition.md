@@ -12,7 +12,7 @@ behind their backdrop; only the dialog is mapped.
 | Part        | Library components                                                                                                                                                                                                                                   | Local UI         |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
 | Skip link   | `SkipLink`                                                                                                                                                                                                                                           | —                |
-| Header      | `SiteHeader`, `Logo`, `Search` (`/` shortcut), `Button` (Edit layout / Done, Add app), `Tooltip` (`placement="below"`, edit unavailable below 1024px), `Avatar`, `MenuTrigger` + `Menu` + `MenuItem` (account menu: Sign out so far; Settings and Brand guide join in their journeys; the trigger is a ghost icon `Button` holding the `Avatar`) | —                |
+| Header      | `SiteHeader`, `Logo`, `Search` (`/` shortcut), `Button` (Edit layout / Done, Add app), `Tooltip` (`placement="below"`, edit unavailable below 1024px), `Avatar`, `MenuTrigger` + `Menu` + `MenuItem` (account menu: Settings and Sign out so far; Brand guide joins in its journey; the trigger is a ghost icon `Button` holding the `Avatar`) | —                |
 | Footer      | `SiteFooter`                                                                                                                                                                                                                                         | Footer note copy |
 | Toasts      | `ToastService`, `ToastRegion`, `Toast`                                                                                                                                                                                                               | —                |
 | Site banner | `Alert` with `banner`                                                                                                                                                                                                                                | —                |
@@ -67,6 +67,7 @@ behind their backdrop; only the dialog is mapped.
 - Library: `Card` (one per section, `title`), `FormField`, `Input`, `Choice` + `Check` (theme), `Switch`,
   `ErrorSummary`, `Button`, `Link` (`variant="back"`), `Skeleton`, `Alert`.
 - Local: page intro; form actions row (`Cluster`).
+- Built so far (ADR 0013): `Link` (`variant="back"`) and the Appearance `Card` with `FieldSet`, `Choice` and `Check`, applied at once with no Save; the remaining sections are deferred.
 
 ### Brand guide — `/brand` (`pages/brand`: default, loading, error)
 

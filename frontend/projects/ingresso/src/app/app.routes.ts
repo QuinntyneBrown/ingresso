@@ -29,6 +29,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/directory/directory-page').then((m) => m.DirectoryPage),
       },
       {
+        path: 'settings',
+        title: 'Settings · ingresso',
+        loadComponent: () => import('./pages/settings/settings-page').then((m) => m.SettingsPage),
+      },
+      {
         path: 'forbidden',
         title: 'No access · ingresso',
         loadComponent: () => import('./pages/status/forbidden-page').then((m) => m.ForbiddenPage),
