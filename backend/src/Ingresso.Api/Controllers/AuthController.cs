@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Ingresso.Api.Auth;
+using Ingresso.Application.Clients;
 using Ingresso.Application.Identity;
 
 namespace Ingresso.Api.Controllers;
@@ -38,6 +39,12 @@ public sealed class AuthController(ISender sender, SessionSignIn sessions) : Con
         await sessions.SignInAsync(HttpContext, signedIn);
         return Redirect(signedIn.RedirectTo);
     }
+
+    /// <summary>A registered app's name for the sign-in page, so a crafted link cannot put its own text there (L2-093); 404 when unknown.</summary>
+    [HttpGet("api/auth/apps/{clientId}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<AppNameDto>> AppName(string clientId, CancellationToken cancellationToken) =>
+        await sender.Send(new GetClientNameQuery(clientId), cancellationToken) is { } name ? new AppNameDto(name) : NotFound();
 
     /// <summary>Emails the signed-in, unverified account a new verification link; always 202, rate limited per account (L2-029).</summary>
     [HttpPost("api/auth/verification-emails")]
@@ -78,3 +85,5 @@ public sealed class AuthController(ISender sender, SessionSignIn sessions) : Con
         return Redirect(verified ? "/?email-verified=1" : "/?email-verified=0");
     }
 }
+
+public sealed record AppNameDto(string Name);

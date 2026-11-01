@@ -19,6 +19,11 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
         return clients.OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
+    public async Task<string?> FindNameAsync(string clientId, CancellationToken cancellationToken) =>
+        await applications.FindByClientIdAsync(clientId, cancellationToken) is { } app
+            ? await applications.GetDisplayNameAsync(app, cancellationToken)
+            : null;
+
     public async Task<string> RegisterAsync(NewClient client, CancellationToken cancellationToken)
     {
         var descriptor = new OpenIddictApplicationDescriptor

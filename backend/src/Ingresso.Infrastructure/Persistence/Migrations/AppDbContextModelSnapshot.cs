@@ -161,8 +161,8 @@ namespace Ingresso.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("ReturnUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("TokenHash")
                         .IsRequired()

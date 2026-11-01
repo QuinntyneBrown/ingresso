@@ -7,6 +7,9 @@ public interface IClientRegistry
 {
     Task<IReadOnlyList<ClientDto>> ListAsync(CancellationToken cancellationToken);
 
+    /// <summary>The registered app's name, or null when no client has this ID.</summary>
+    Task<string?> FindNameAsync(string clientId, CancellationToken cancellationToken);
+
     /// <summary>Registers a public client that must use PKCE and returns its generated client ID.</summary>
     Task<string> RegisterAsync(NewClient client, CancellationToken cancellationToken);
 
