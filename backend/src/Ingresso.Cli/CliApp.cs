@@ -3,14 +3,19 @@ using Ingresso.Infrastructure.Persistence;
 
 namespace Ingresso.Cli;
 
-/// <summary>Runs one database command: migrate, seed or reset.</summary>
+/// <summary>Runs one command: migrate, seed, reset, or clients (the apps that sign in with ingresso).</summary>
 public static class CliApp
 {
-    public const string Usage = "Usage: ingresso <migrate|seed|reset --confirm>";
+    public const string Usage = "Usage: ingresso <migrate|seed|reset --confirm|clients ...>";
 
     public static async Task<int> RunAsync(string[] args, IServiceProvider services, TextWriter output, CancellationToken cancellationToken = default)
     {
         var command = args.Length > 0 ? args[0].ToLowerInvariant() : "";
+        if (command == "clients")
+        {
+            return await RunSafelyAsync(command, () => ClientCommands.RunAsync(args[1..], services, output, cancellationToken), output);
+        }
+
         var confirmed = args.Length == 2 && args[1] == "--confirm";
         if (args.Length == 0 || (args.Length != 1 && !(command == "reset" && confirmed)))
         {
@@ -24,9 +29,14 @@ public static class CliApp
             return 1;
         }
 
+        return await RunSafelyAsync(command, () => ExecuteAsync(command, args[0], services, output, cancellationToken), output);
+    }
+
+    private static async Task<int> RunSafelyAsync(string command, Func<Task<int>> run, TextWriter output)
+    {
         try
         {
-            return await ExecuteAsync(command, args[0], services, output, cancellationToken);
+            return await run();
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
