@@ -7,12 +7,12 @@ Container_Boundary(api, "Ingresso.Api") {
   Component(auth, "AuthController", "Controller", "Redeems the sign-in link with the user agent")
 }
 Container_Boundary(appl, "Ingresso.Application") {
-  Component(desc, "DeviceDescription", "Static", "User agent → \"<browser> on <system>\"")
+  Component(desc, "DeviceDescription", "Static", "User agent to <browser> on <system>")
   Component(list, "GetDevicesQueryHandler", "MediatR handler", "The person's active sessions")
   Component(end, "EndSessionCommandHandler", "MediatR handler", "One other session, or all others")
   Component(redeem, "RedeemSignInLinkCommandHandler", "MediatR handler", "Starts a session with its device")
 }
-ContainerDb(db, "IAppDbContext", "Sessions")
+Component(db, "IAppDbContext", "Interface", "Sessions")
 Rel(ctl, list, "Sends")
 Rel(ctl, end, "Sends")
 Rel(auth, redeem, "Sends")
