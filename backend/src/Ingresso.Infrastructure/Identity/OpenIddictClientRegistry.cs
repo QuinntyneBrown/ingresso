@@ -33,6 +33,7 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
                 Permissions.Endpoints.Token,
                 Permissions.GrantTypes.AuthorizationCode,
                 Permissions.ResponseTypes.Code,
+                Permissions.Scopes.Email,
             },
             Requirements = { Requirements.Features.ProofKeyForCodeExchange },
         };

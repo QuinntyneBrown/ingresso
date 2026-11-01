@@ -1,6 +1,9 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore;
+using OpenIddict.Server;
+using OpenIddict.Server.AspNetCore;
 using Ingresso.Application.Common;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -48,9 +51,23 @@ public static class IdentityProviderSetup
                 throw new InvalidOperationException("IdentityProvider:SigningCertificate:Path is required outside Development.");
             }
 
-            var aspNetCore = options.UseAspNetCore()
-                .EnableAuthorizationEndpointPassthrough()
-                .EnableErrorPassthrough();
+            // An error that cannot go back to the app (unknown client or redirect address) never redirects to the
+            // address it gave: the browser goes to the authorize error page instead (L2-094).
+            options.AddEventHandler<OpenIddictServerEvents.ApplyAuthorizationResponseContext>(handler => handler
+                .UseInlineHandler(context =>
+                {
+                    if (context.Error is not null && string.IsNullOrEmpty(context.RedirectUri))
+                    {
+                        context.Transaction.GetHttpRequest()!.HttpContext.Response.Redirect("/authorize-error");
+                        context.HandleRequest();
+                    }
+
+                    return default;
+                })
+                .SetOrder(int.MinValue + 100_000)
+                .SetType(OpenIddictServerHandlerType.Custom));
+
+            var aspNetCore = options.UseAspNetCore().EnableAuthorizationEndpointPassthrough();
             if (devOrTest)
             {
                 // Development, Playwright and demos run on http://localhost.

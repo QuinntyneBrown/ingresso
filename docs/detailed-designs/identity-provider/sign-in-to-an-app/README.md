@@ -23,13 +23,13 @@ OpenIddict is the OpenID Connect server ([ADR 0014](../../../adr/0014-openiddict
   - Endpoints: `connect/authorize` and `connect/token`. Discovery is at `/.well-known/openid-configuration` and
     the keys at `/.well-known/jwks`.
   - The authorization-code flow only, with PKCE required and `S256` only.
-  - Pass-through for the authorization endpoint and for errors that cannot be returned to an app.
+  - Pass-through for the authorization endpoint. An event handler on the authorization response sends errors
+    that cannot be returned to an app to `/authorize-error`.
   - Keys: `IdentityProvider:SigningCertificate:Path` (and `:Password`) loads a PFX for signing and encryption.
     Without one, Development and Testing use ephemeral keys, and any other environment fails at startup.
   - Transport security is relaxed only in Development and Testing, which run on `http://localhost`.
 - **`AuthorizationController`** (`GET`/`POST /connect/authorize`, anonymous) — runs after OpenIddict has
   validated the request:
-  - An error OpenIddict could not send back to the app → `302 /authorize-error`.
   - No cookie session → `302 /sign-in?returnUrl=<the authorization request>`.
   - A session whose email is not verified → `302 /verify-email`.
   - Otherwise it signs in to OpenIddict with `sub` (user id) and `email`, both sent to the ID token, plus the
@@ -59,7 +59,8 @@ OpenIddict is the OpenID Connect server ([ADR 0014](../../../adr/0014-openiddict
 ## Behaviour as built
 
 - Codes are single use and expire after 5 minutes (OpenIddict's default).
-- A request without a code challenge, or with `plain`, is rejected and no code is issued.
+- A request without a code challenge, or with `plain`, is rejected before the redirect address is checked, so no
+  code is issued and the person sees `/authorize-error`.
 - An unknown `client_id` or a redirect address that does not exactly match a registered one never redirects.
   The person sees `/authorize-error`.
 - The person's session and its 14-day rules (ADR 0009) are what keep them signed in. This journey issues no
