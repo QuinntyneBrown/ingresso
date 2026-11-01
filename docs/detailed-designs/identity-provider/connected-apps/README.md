@@ -35,12 +35,16 @@ authorizations and tokens for that person, so the app has to ask again next time
   page (L2-131).
 - **Web app**:
   - `CONNECTED_APPS_API` (`projects/api/src/lib/connected-apps`): `list()` and `revoke(clientId)`.
-  - `ConnectedAppsCard` (`pages/settings/connected-apps-card.ts`): `Card`, `List`, `ListItem`, `Button` (Revoke),
-    `EmptyState`, `Skeleton` and `Alert`. The scope sentence reuses the consent page's joining of titles
-    (`shared/scope-phrase.ts`); dates use `relative-time`.
+  - `ConnectedAppsCard` (`pages/settings/connected-apps-card.ts`): `Card`, `List`, `ListItem` (`wrap`, with the
+    dates in `detail`), `Button` (Revoke), `EmptyState`, `Skeleton` and `Alert`. The scope sentence and the dialog's
+    "won't be able to" sentence share the consent page's joining of titles (`shared/scope-phrase.ts`); dates use
+    `relative-time` (fixed month names, so every browser reads "3 Sep 2026").
   - `RevokeAccessDialog` (`dialogs/revoke-access`): `DialogShell`, `Alert` and a danger `Button`. It closes with
     `true` after revoking.
-  - `SettingsPage` shows the card for everyone, after Appearance, and the "Access revoked" toast.
+  - `SettingsPage` shows the card for everyone, after Appearance, and the "Access revoked" toast ("<app> has to ask
+    again next time.").
+- **Dates** — an approval's creation date is OpenIddict's clock to the whole second, as its tokens are dated, so
+  "approved" and "last used" compare.
 
 ## Requirements
 
