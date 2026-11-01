@@ -4,7 +4,12 @@ import { Observable } from 'rxjs';
 import { AppRegistered, RegisteredApp, Tile, TileInput } from 'api';
 import { modalDialogConfig } from 'components';
 import { AddAppDialog, ADD_APP_TITLE_ID } from '../dialogs/add-app/add-app-dialog';
-import { ClientSecretDialog, CLIENT_SECRET_TITLE_ID } from '../dialogs/client-secret/client-secret-dialog';
+import {
+  ClientSecretData,
+  ClientSecretDialog,
+  CLIENT_SECRET_TITLE_ID,
+} from '../dialogs/client-secret/client-secret-dialog';
+import { RotateSecretDialog, ROTATE_SECRET_TITLE_ID } from '../dialogs/rotate-secret/rotate-secret-dialog';
 import { EditAppDialog, EDIT_APP_TITLE_ID } from '../dialogs/edit-app/edit-app-dialog';
 import {
   RegisterAppData,
@@ -72,14 +77,22 @@ export class AppDialogs {
   }
 
   /** A new confidential app's client ID and secret, shown once (L2-106); completes when it closes. */
-  openClientSecret(registered: AppRegistered, trigger?: HTMLElement): Observable<unknown> {
+  openClientSecret(registered: AppRegistered, trigger?: HTMLElement, rotated = false): Observable<unknown> {
     return this.dialog.open(
       ClientSecretDialog,
       modalDialogConfig({
         ariaLabelledBy: CLIENT_SECRET_TITLE_ID,
         restoreFocus: trigger ?? true,
-        data: registered,
+        data: { ...registered, rotated } satisfies ClientSecretData,
       }),
+    ).closed;
+  }
+
+  /** Asks, then rotates a confidential app's secret (L2-113); emits the new secret when it was rotated. */
+  openRotateSecret(app: RegisteredApp, trigger?: HTMLElement): Observable<AppRegistered | undefined> {
+    return this.dialog.open<AppRegistered>(
+      RotateSecretDialog,
+      modalDialogConfig({ ariaLabelledBy: ROTATE_SECRET_TITLE_ID, restoreFocus: trigger ?? true, data: app }),
     ).closed;
   }
 }

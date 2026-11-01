@@ -19,6 +19,9 @@ public interface IClientRegistry
     /// </summary>
     Task<ClientDto?> UpdateAsync(string clientId, NewClient changes, CancellationToken cancellationToken);
 
+    /// <summary>Replaces a confidential app's secret, which the store hashes; returns the app, or null when no client has this ID (L2-113).</summary>
+    Task<ClientDto?> ReplaceSecretAsync(string clientId, string secret, CancellationToken cancellationToken);
+
     /// <summary>Removes the client and returns what it was, or null when no client has this ID.</summary>
     Task<ClientDto?> RemoveAsync(string clientId, CancellationToken cancellationToken);
 }

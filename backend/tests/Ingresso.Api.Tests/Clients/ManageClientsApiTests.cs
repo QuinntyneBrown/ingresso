@@ -21,11 +21,29 @@ public sealed class ManageClientsApiTests(ApiFactory factory) : IClassFixture<Ap
     /// <summary>Registers an app through the API and returns its client ID and name.</summary>
     private static async Task<(string ClientId, string Name)> RegisterAsync(HttpClient admin, bool confidential = false)
     {
+        var (clientId, name, _) = await RegisterWithSecretAsync(admin, confidential);
+        return (clientId, name);
+    }
+
+    /// <summary>Registers an app through the API and returns its client ID, name and secret (null for a public app).</summary>
+    private static async Task<(string ClientId, string Name, string? Secret)> RegisterWithSecretAsync(HttpClient admin, bool confidential)
+    {
         var name = $"Notes {Guid.NewGuid():N}"[..14];
         var response = await admin.PostAsJsonAsync("/api/clients", new { name, redirectUris = new[] { Redirect }, confidential });
         response.EnsureSuccessStatusCode();
-        var client = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("client");
-        return (client.GetProperty("clientId").GetString()!, name);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var secret = body.GetProperty("clientSecret").ValueKind == JsonValueKind.Null ? null : body.GetProperty("clientSecret").GetString();
+        return (body.GetProperty("client").GetProperty("clientId").GetString()!, name, secret);
+    }
+
+    /// <summary>Signs the seeded person in to the app and exchanges the code with this secret; returns the token response.</summary>
+    private async Task<HttpResponseMessage> SignInWithSecretAsync(string clientId, string? secret)
+    {
+        var app = RelyingParty.For(factory, clientId);
+        var browser = factory.CreateHttpsClient();
+        await browser.SignInAsAsync(HttpClientExtensions.DevUser);
+        var authorized = await browser.GetAsync(app.AuthorizePath());
+        return await app.ExchangeAsync(RelyingParty.CallbackParameters(authorized)["code"], clientSecret: secret);
     }
 
     private static object Changes(string name, string[]? redirectUris = null, bool offlineAccess = false) => new
@@ -133,6 +151,7 @@ public sealed class ManageClientsApiTests(ApiFactory factory) : IClassFixture<Ap
     // Description: A member gets 403 and an anonymous caller 401 from every change endpoint.
     [Theory]
     [InlineData("PUT", "/api/clients/some-app")]
+    [InlineData("POST", "/api/clients/some-app/secret")]
     public async Task Only_administrators_change_apps(string method, string path)
     {
         var member = factory.CreateHttpsClient();
@@ -141,5 +160,65 @@ public sealed class ManageClientsApiTests(ApiFactory factory) : IClassFixture<Ap
 
         Assert.Equal(HttpStatusCode.Forbidden, (await member.SendAsync(Request())).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await factory.CreateHttpsClient().SendAsync(Request())).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-113, L2-116
+    // Description: Rotating a confidential app's secret returns a new one; the old secret is refused and the new one gets tokens.
+    [Fact]
+    public async Task Rotating_a_secret_replaces_it()
+    {
+        var admin = await Administrator();
+        var (clientId, _, oldSecret) = await RegisterWithSecretAsync(admin, confidential: true);
+
+        var response = await admin.PostAsync($"/api/clients/{clientId}/secret", null);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var newSecret = body.GetProperty("clientSecret").GetString()!;
+        Assert.Equal(clientId, body.GetProperty("client").GetProperty("clientId").GetString());
+        Assert.NotEqual(oldSecret, newSecret);
+        Assert.True(newSecret.Length >= 43);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await SignInWithSecretAsync(clientId, oldSecret)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await SignInWithSecretAsync(clientId, newSecret)).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-113
+    // Description: A public app has no secret to rotate: 400.
+    [Fact]
+    public async Task A_public_app_has_no_secret_to_rotate()
+    {
+        var admin = await Administrator();
+        var (clientId, _) = await RegisterAsync(admin);
+
+        var response = await admin.PostAsync($"/api/clients/{clientId}/secret", null);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-116
+    // Description: Rotating the secret of an app ingresso doesn't know answers 404.
+    [Fact]
+    public async Task Rotating_an_unknown_apps_secret_answers_404()
+    {
+        var admin = await Administrator();
+
+        Assert.Equal(HttpStatusCode.NotFound, (await admin.PostAsync("/api/clients/no-such-app/secret", null)).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-112
+    // Description: Editing a confidential app keeps its secret working.
+    [Fact]
+    public async Task Editing_a_confidential_app_keeps_its_secret()
+    {
+        var admin = await Administrator();
+        var (clientId, name, secret) = await RegisterWithSecretAsync(admin, confidential: true);
+
+        (await admin.PutAsJsonAsync($"/api/clients/{clientId}", Changes(name))).EnsureSuccessStatusCode();
+
+        Assert.Equal(HttpStatusCode.OK, (await SignInWithSecretAsync(clientId, secret)).StatusCode);
     }
 }

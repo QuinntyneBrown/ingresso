@@ -65,6 +65,18 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
         return await ToDtoAsync(app, cancellationToken);
     }
 
+    public async Task<ClientDto?> ReplaceSecretAsync(string clientId, string secret, CancellationToken cancellationToken)
+    {
+        if (await applications.FindByClientIdAsync(clientId, cancellationToken) is not { } app)
+        {
+            return null;
+        }
+
+        // This overload hashes the new secret before it replaces the stored one (L2-113).
+        await applications.UpdateAsync(app, secret, cancellationToken);
+        return await ToDtoAsync(app, cancellationToken);
+    }
+
     /// <summary>Sets the name, addresses and permissions an app is registered or edited with (L2-087, L2-107, L2-112).</summary>
     private static void Apply(OpenIddictApplicationDescriptor descriptor, NewClient client)
     {

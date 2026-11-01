@@ -82,8 +82,7 @@ public sealed class RegisterClientCommandHandler(IClientRegistry clients, IResou
         }
 
         var frontChannel = request.FrontChannelLogoutUri?.Trim();
-        // 256 random bits, base64url: shown once in the response, stored only as a hash (L2-106).
-        var secret = request.Confidential ? Base64Url(RandomNumberGenerator.GetBytes(32)) : null;
+        var secret = request.Confidential ? NewSecret() : null;
         var client = new NewClient(
             name, Distinct(request.RedirectUris!), Distinct(request.PostLogoutRedirectUris ?? []), Scopes: scopes, FrontChannelLogoutUri: frontChannel,
             ClientSecret: secret, OfflineAccess: request.OfflineAccess);
@@ -94,7 +93,9 @@ public sealed class RegisterClientCommandHandler(IClientRegistry clients, IResou
             secret);
     }
 
-    private static string Base64Url(byte[] bytes) => Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+    /// <summary>256 random bits, base64url: shown once in a response, stored only as a hash (L2-106, L2-113).</summary>
+    internal static string NewSecret() =>
+        Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
     internal static List<string> Distinct(IEnumerable<string> addresses) => addresses.Select(a => a.Trim()).Distinct(StringComparer.Ordinal).ToList();
 }

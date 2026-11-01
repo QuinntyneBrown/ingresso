@@ -71,6 +71,15 @@ export interface AppAction {
                         >
                           <ig-icon name="edit" size="sm" />Edit
                         </button>
+                        @if (app.confidential) {
+                          <button
+                            ig-menu-item
+                            type="button"
+                            (triggered)="rotateSecret.emit({ app, trigger: menuButton(actions) })"
+                          >
+                            <ig-icon name="refresh" size="sm" />Rotate secret
+                          </button>
+                        }
                       </ig-menu>
                     </ng-template>
                   </span>
@@ -119,6 +128,8 @@ export class AppsCard implements OnInit {
   readonly register = output<Event>();
   /** Edit was chosen in an app's actions; the page opens the edit dialog. */
   readonly edit = output<AppAction>();
+  /** Rotate secret was chosen for a confidential app; the page asks and shows the new secret. */
+  readonly rotateSecret = output<AppAction>();
 
   protected readonly load = signal<Load>('loading');
   protected readonly apps = signal<RegisteredApp[]>([]);

@@ -36,6 +36,11 @@ public sealed class ClientsController(ISender sender) : ControllerBase
                 clientId, changes.Name, changes.RedirectUris, changes.PostLogoutRedirectUris, changes.Scopes, changes.FrontChannelLogoutUri,
                 changes.OfflineAccess),
             cancellationToken);
+
+    /// <summary>Gives a confidential app a new secret, returned this once; 400 for a public app (L2-113).</summary>
+    [HttpPost("{clientId}/secret")]
+    public async Task<RegisteredClientDto> RotateSecret(string clientId, CancellationToken cancellationToken) =>
+        await sender.Send(new RotateClientSecretCommand(clientId), cancellationToken);
 }
 
 /// <summary>What the edit dialog sends: the registration fields an app may change (L2-112).</summary>

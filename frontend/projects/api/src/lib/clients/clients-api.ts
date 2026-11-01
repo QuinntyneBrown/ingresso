@@ -55,6 +55,8 @@ export interface ClientsApi {
   resources(): Observable<ApiResource[]>;
   /** Changes an app with the registration rules; fails as `register` does, or with not-found (L2-112). */
   update(clientId: string, changes: AppChanges): Observable<RegisteredApp>;
+  /** Gives a confidential app a new secret, returned this once (L2-113). */
+  rotateSecret(clientId: string): Observable<AppRegistered>;
 }
 
 export const CLIENTS_API = new InjectionToken<ClientsApi>('CLIENTS_API');
@@ -80,6 +82,13 @@ export class HttpClientsApi implements ClientsApi {
     return this.http.put<RegisteredApp>(
       `${this.baseUrl}/api/clients/${encodeURIComponent(clientId)}`,
       changes,
+    );
+  }
+
+  rotateSecret(clientId: string): Observable<AppRegistered> {
+    return this.http.post<AppRegistered>(
+      `${this.baseUrl}/api/clients/${encodeURIComponent(clientId)}/secret`,
+      null,
     );
   }
 }

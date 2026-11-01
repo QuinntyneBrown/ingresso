@@ -48,7 +48,11 @@ const CHOICES: { value: ThemePreference; label: string }[] = [
           </ig-field-set>
         </ig-card>
         @if (administrator()) {
-          <ig-apps-card (register)="register($event)" (edit)="edit($event)" />
+          <ig-apps-card
+            (register)="register($event)"
+            (edit)="edit($event)"
+            (rotateSecret)="rotateSecret($event)"
+          />
         }
       </div>
     </div>
@@ -89,6 +93,20 @@ export class SettingsPage {
       if (!saved) return;
       this.toasts.show({ kind: 'success', title: 'App saved', text: `${saved.client.name} was saved.` });
       this.appsCard()?.reload();
+    });
+  }
+
+  /** Rotate a confidential app's secret: the new one is shown once, then a toast confirms it (L2-113). */
+  protected rotateSecret({ app, trigger }: AppAction): void {
+    this.dialogs.openRotateSecret(app, trigger).subscribe((rotated) => {
+      if (!rotated) return;
+      this.dialogs.openClientSecret(rotated, trigger, true).subscribe(() =>
+        this.toasts.show({
+          kind: 'success',
+          title: 'Secret rotated',
+          text: `${app.name}’s old secret no longer works.`,
+        }),
+      );
     });
   }
 }
