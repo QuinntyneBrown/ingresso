@@ -15,4 +15,12 @@ public sealed class ConnectedAppsController(ISender sender) : ControllerBase
     [HttpGet]
     public async Task<IReadOnlyList<ConnectedAppDto>> List(CancellationToken cancellationToken) =>
         await sender.Send(new GetConnectedAppsQuery(), cancellationToken);
+
+    /// <summary>Revokes the app's access for the person: 204, or 404 when it isn't connected to them.</summary>
+    [HttpDelete("{clientId}")]
+    public async Task<IActionResult> Revoke(string clientId, CancellationToken cancellationToken)
+    {
+        await sender.Send(new RevokeConnectedAppCommand(clientId), cancellationToken);
+        return NoContent();
+    }
 }

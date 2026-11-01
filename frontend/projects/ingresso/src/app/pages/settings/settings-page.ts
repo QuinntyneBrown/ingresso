@@ -5,7 +5,7 @@ import { AppDialogs } from '../../state/app-dialogs';
 import { SessionStore } from '../../state/session-store';
 import { ThemePreference, ThemeStore } from '../../state/theme-store';
 import { AppAction, AppsCard } from './apps-card';
-import { ConnectedAppsCard } from './connected-apps-card';
+import { ConnectedAppAction, ConnectedAppsCard } from './connected-apps-card';
 import { ProfileCard, ProfileEdit } from './profile-card';
 
 const CHOICES: { value: ThemePreference; label: string }[] = [
@@ -52,7 +52,7 @@ const CHOICES: { value: ThemePreference; label: string }[] = [
             }
           </ig-field-set>
         </ig-card>
-        <ig-connected-apps-card />
+        <ig-connected-apps-card (revoke)="revokeAccess($event)" />
         @if (administrator()) {
           <ig-apps-card
             (register)="register($event)"
@@ -75,6 +75,7 @@ export class SettingsPage {
   private readonly toasts = inject(ToastService);
   private readonly appsCard = viewChild(AppsCard);
   private readonly profileCard = viewChild(ProfileCard);
+  private readonly connectedAppsCard = viewChild(ConnectedAppsCard);
 
   /** Edit the profile; the saved name is announced and shown in the card and the header (L2-117). */
   protected editProfile({ profile, trigger }: ProfileEdit): void {
@@ -144,6 +145,19 @@ export class SettingsPage {
         text: `${app.name} can no longer sign anyone in.`,
       });
       this.appsCard()?.reload();
+    });
+  }
+
+  /** Revoke a connected app's access once confirmed; a toast confirms it and the list reloads (L2-129). */
+  protected revokeAccess({ app, trigger }: ConnectedAppAction): void {
+    this.dialogs.openRevokeAccess(app, trigger).subscribe((revoked) => {
+      if (!revoked) return;
+      this.toasts.show({
+        kind: 'success',
+        title: 'Access revoked',
+        text: `${app.name} has to ask again next time.`,
+      });
+      this.connectedAppsCard()?.reload();
     });
   }
 }

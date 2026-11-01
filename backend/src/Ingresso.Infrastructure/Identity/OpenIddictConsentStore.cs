@@ -144,6 +144,26 @@ public sealed class OpenIddictConsentStore(
         return connected;
     }
 
+    public async Task<bool> RevokeAsync(Guid userId, string clientId, CancellationToken cancellationToken)
+    {
+        if (await applications.FindByClientIdAsync(clientId, cancellationToken) is not { } app
+            || await applications.GetIdAsync(app, cancellationToken) is not { } appId)
+        {
+            return false;
+        }
+
+        var connected = false;
+        await foreach (var authorization in authorizations.FindAsync(userId.ToString(), appId, status: null, type: null, scopes: null, cancellationToken))
+        {
+            connected |= await authorizations.HasStatusAsync(authorization, Statuses.Valid, cancellationToken)
+                && await authorizations.HasTypeAsync(authorization, AuthorizationTypes.Permanent, cancellationToken);
+            await authorizations.TryRevokeAsync(authorization, cancellationToken);
+            await tokens.RevokeByAuthorizationIdAsync((await authorizations.GetIdAsync(authorization, cancellationToken))!, cancellationToken);
+        }
+
+        return connected;
+    }
+
     private static DateTimeOffset WholeSeconds(DateTimeOffset value) => value.AddTicks(-(value.Ticks % TimeSpan.TicksPerSecond));
 
     private static DateTimeOffset Min(DateTimeOffset a, DateTimeOffset b) => a < b ? a : b;

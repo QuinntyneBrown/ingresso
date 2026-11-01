@@ -29,6 +29,11 @@ public interface IConsentStore
     /// <summary>The apps the person has a valid approval for.</summary>
     Task<IReadOnlyList<ConnectedApp>> ListConnectedAsync(Guid userId, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Revokes every authorization the person has for the app, and their tokens; false when there was no valid one.
+    /// </summary>
+    Task<bool> RevokeAsync(Guid userId, string clientId, CancellationToken cancellationToken);
+
     /// <summary>The name of the API each scope belongs to, for the scopes that are API scopes.</summary>
     Task<IReadOnlyDictionary<string, string>> ApiNamesAsync(IReadOnlyCollection<string> scopes, CancellationToken cancellationToken);
 }

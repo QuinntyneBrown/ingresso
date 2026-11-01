@@ -1,4 +1,5 @@
 using MediatR;
+using Ingresso.Application.Common.Exceptions;
 using Ingresso.Application.Common.Interfaces;
 
 namespace Ingresso.Application.Consent;
@@ -10,9 +11,21 @@ public sealed record ConnectedAppDto(
 /// <summary>The signed-in person's connected apps, sorted by name; never anyone else's (L2-128, L2-032).</summary>
 public sealed record GetConnectedAppsQuery : IRequest<IReadOnlyList<ConnectedAppDto>>;
 
+/// <summary>Revokes the person's approval of an app and ends its tokens for them; 404 when not connected (L2-129, L2-130).</summary>
+public sealed record RevokeConnectedAppCommand(string ClientId) : IRequest;
+
 public sealed class ConnectedAppsHandlers(IConsentStore store, ICurrentUser currentUser) :
-    IRequestHandler<GetConnectedAppsQuery, IReadOnlyList<ConnectedAppDto>>
+    IRequestHandler<GetConnectedAppsQuery, IReadOnlyList<ConnectedAppDto>>,
+    IRequestHandler<RevokeConnectedAppCommand>
 {
+    public async Task Handle(RevokeConnectedAppCommand request, CancellationToken cancellationToken)
+    {
+        if (!await store.RevokeAsync(currentUser.UserId!.Value, request.ClientId, cancellationToken))
+        {
+            throw new NotFoundException($"No connected app '{request.ClientId}'.");
+        }
+    }
+
     public async Task<IReadOnlyList<ConnectedAppDto>> Handle(GetConnectedAppsQuery request, CancellationToken cancellationToken)
     {
         var apps = await store.ListConnectedAsync(currentUser.UserId!.Value, cancellationToken);

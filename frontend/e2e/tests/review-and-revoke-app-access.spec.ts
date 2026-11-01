@@ -1,4 +1,6 @@
 import { expect, test } from '../fixtures';
+import { AppShell } from '../pages/app-shell';
+import { RevokeAccessDialog } from '../pages/revoke-access.dialog';
 import { SettingsPage } from '../pages/settings.page';
 import { approveThroughApi, SAMPLE_APP_CLIENT_ID } from '../support/apps';
 import { signInAsNewPerson } from '../support/session';
@@ -50,5 +52,65 @@ test.describe('Review and revoke app access', () => {
     await settings.connectedTryAgain.click();
 
     await expect(settings.noConnectedApps).toBeVisible();
+  });
+
+  // Acceptance Test
+  // Traces to: L2-129
+  // Description: Revoke asks first, naming the app and what it will lose; Cancel changes nothing.
+  test('revoke asks first and Cancel keeps the app', async ({ page }) => {
+    const settings = new SettingsPage(page);
+    const revoke = new RevokeAccessDialog(page);
+    await signInAsNewPerson(page);
+    await approveThroughApi(page, SAMPLE_APP_CLIENT_ID, ALL_SCOPES);
+    await settings.open();
+
+    await settings.revokeAccessFor('Sample app').click();
+    await expect(revoke.dialog).toHaveAccessibleName('Revoke Sample app’s access?');
+    await expect(revoke.dialog).toContainText(
+      'It won’t be able to see your display name or email address, use Sample API for you, or stay signed in.',
+    );
+    await revoke.cancel.click();
+
+    await expect(revoke.dialog).toBeHidden();
+    await expect(settings.connectedApp('Sample app')).toBeVisible();
+  });
+
+  // Acceptance Test
+  // Traces to: L2-129
+  // Description: Revoke access removes the app from the list and a toast confirms it.
+  test('revoking removes the app and says so', async ({ page }) => {
+    const settings = new SettingsPage(page);
+    const revoke = new RevokeAccessDialog(page);
+    const shell = new AppShell(page);
+    await signInAsNewPerson(page);
+    await approveThroughApi(page, SAMPLE_APP_CLIENT_ID, ALL_SCOPES);
+    await settings.open();
+
+    await settings.revokeAccessFor('Sample app').click();
+    await revoke.revoke.click();
+
+    await expect(shell.toast('Access revoked')).toContainText('Sample app has to ask again next time.');
+    await expect(revoke.dialog).toBeHidden();
+    await expect(settings.noConnectedApps).toBeVisible();
+  });
+
+  // Acceptance Test
+  // Traces to: L2-129
+  // Description: When revoking fails, the dialog says so and stays open, and the app stays connected.
+  test('a failed revoke says so', async ({ page }) => {
+    const settings = new SettingsPage(page);
+    const revoke = new RevokeAccessDialog(page);
+    await signInAsNewPerson(page);
+    await approveThroughApi(page, SAMPLE_APP_CLIENT_ID, ALL_SCOPES);
+    await settings.open();
+    await revoke.failNextRevoke();
+
+    await settings.revokeAccessFor('Sample app').click();
+    await revoke.revoke.click();
+
+    await expect(revoke.failed).toBeVisible();
+    await expect(revoke.dialog).toBeVisible();
+    await revoke.cancel.click();
+    await expect(settings.connectedApp('Sample app')).toBeVisible();
   });
 });

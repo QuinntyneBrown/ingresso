@@ -18,6 +18,8 @@ export interface ConnectedApp {
 /** The signed-in person's connected apps (L2-128 to L2-130). */
 export interface ConnectedAppsApi {
   list(): Observable<ConnectedApp[]>;
+  /** Revokes the app's access for the person and ends its tokens (L2-129, L2-130). */
+  revoke(clientId: string): Observable<void>;
 }
 
 export const CONNECTED_APPS_API = new InjectionToken<ConnectedAppsApi>('CONNECTED_APPS_API');
@@ -29,5 +31,9 @@ export class HttpConnectedAppsApi implements ConnectedAppsApi {
 
   list(): Observable<ConnectedApp[]> {
     return this.http.get<ConnectedApp[]>(`${this.baseUrl}/api/connected-apps`);
+  }
+
+  revoke(clientId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/api/connected-apps/${encodeURIComponent(clientId)}`);
   }
 }

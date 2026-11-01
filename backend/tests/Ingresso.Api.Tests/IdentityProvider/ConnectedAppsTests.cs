@@ -75,4 +75,92 @@ public sealed class ConnectedAppsTests(ApiFactory factory) : IClassFixture<ApiFa
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    private async Task<HttpResponseMessage> UserinfoAsync(string accessToken)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "/connect/userinfo");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        return await factory.CreateHttpsClient().SendAsync(request);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-129
+    // Description: Revoking removes the app from the list.
+    [Fact]
+    public async Task Revoking_removes_the_app()
+    {
+        var app = await RelyingParty.RegisterAskingConsentAsync(factory, offlineAccess: true);
+        var browser = await PersonAsync();
+        await ConnectAsync(browser, app);
+
+        var revoked = await browser.DeleteAsync($"/api/connected-apps/{app.ClientId}");
+
+        Assert.Equal(HttpStatusCode.NoContent, revoked.StatusCode);
+        Assert.Empty(await ListAsync(browser));
+    }
+
+    // Acceptance Test
+    // Traces to: L2-130
+    // Description: After revoking, the app's refresh token is refused and its access token no longer reads userinfo.
+    [Fact]
+    public async Task Revoking_ends_the_apps_tokens()
+    {
+        var app = await RelyingParty.RegisterAskingConsentAsync(factory, offlineAccess: true);
+        var browser = await PersonAsync();
+        var tokens = await ConnectAsync(browser, app);
+
+        await browser.DeleteAsync($"/api/connected-apps/{app.ClientId}");
+
+        var refreshed = await app.RefreshAsync(tokens.GetProperty("refresh_token").GetString()!);
+        Assert.Equal(HttpStatusCode.BadRequest, refreshed.StatusCode);
+        Assert.Equal("invalid_grant", (await RelyingParty.JsonAsync(refreshed)).GetProperty("error").GetString());
+        Assert.Equal(HttpStatusCode.Unauthorized, (await UserinfoAsync(tokens.GetProperty("access_token").GetString()!)).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-130
+    // Description: One person revoking an app leaves another person's tokens for it working.
+    [Fact]
+    public async Task Revoking_leaves_other_people_signed_in()
+    {
+        var app = await RelyingParty.RegisterAskingConsentAsync(factory, offlineAccess: true);
+        var mine = await PersonAsync();
+        await ConnectAsync(mine, app);
+        var theirs = await ConnectAsync(await PersonAsync(), app);
+
+        await mine.DeleteAsync($"/api/connected-apps/{app.ClientId}");
+
+        Assert.Equal(HttpStatusCode.OK, (await app.RefreshAsync(theirs.GetProperty("refresh_token").GetString()!)).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-129
+    // Description: Revoking an app the person never approved is not found.
+    [Fact]
+    public async Task Revoking_an_app_you_never_approved_is_not_found()
+    {
+        var app = await RelyingParty.RegisterAskingConsentAsync(factory);
+        var browser = await PersonAsync();
+
+        var revoked = await browser.DeleteAsync($"/api/connected-apps/{app.ClientId}");
+
+        Assert.Equal(HttpStatusCode.NotFound, revoked.StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-129, L2-034
+    // Description: Revoking without the anti-forgery token is refused and the app stays connected.
+    [Fact]
+    public async Task Revoking_needs_the_anti_forgery_token()
+    {
+        var app = await RelyingParty.RegisterAskingConsentAsync(factory, offlineAccess: true);
+        var browser = await PersonAsync();
+        await ConnectAsync(browser, app);
+        browser.DefaultRequestHeaders.Remove("X-XSRF-TOKEN");
+
+        var revoked = await browser.DeleteAsync($"/api/connected-apps/{app.ClientId}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, revoked.StatusCode);
+        Assert.Single(await ListAsync(browser));
+    }
 }
