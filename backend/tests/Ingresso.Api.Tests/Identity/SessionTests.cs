@@ -71,8 +71,8 @@ public sealed class SessionTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     // Acceptance Test
-    // Traces to: L2-031
-    // Description: Signing out deletes the server session, clears the cookie and leaves the client anonymous.
+    // Traces to: L2-031, L2-101
+    // Description: Signing out deletes the server session, clears the cookie and leaves the client anonymous; with no app to notify there is no signed-out ticket.
     [Fact]
     public async Task Sign_out_revokes_the_session_and_clears_the_cookie()
     {
@@ -83,7 +83,8 @@ public sealed class SessionTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         var response = await client.PostAsync("/api/auth/sign-out", null);
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(System.Text.Json.JsonValueKind.Null, (await Ingresso.Api.Tests.IdentityProvider.RelyingParty.JsonAsync(response)).GetProperty("signedOut").ValueKind);
         Assert.Contains(response.Headers.GetValues("Set-Cookie"), c => c.StartsWith(Ingresso.Api.Auth.AuthPolicies.SessionCookie + "=;", StringComparison.Ordinal));
         Assert.Equal(active - 1, await factory.WithDbAsync(db => db.Sessions.CountAsync(s => s.RevokedAtUtc == null)));
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/auth/me")).StatusCode);

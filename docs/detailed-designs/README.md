@@ -48,3 +48,4 @@ Each folder holds one vertical feature slice. Its `README.md` traces to the L2 r
 | [Register an app for sign-in](identity-provider/register-a-client/README.md) | `L2-087`, `L2-088`, `L2-089`, `L2-090` |
 | [Sign in to an app with ingresso](identity-provider/sign-in-to-an-app/README.md) | `L2-091`, `L2-092`, `L2-093`, `L2-094` |
 | [Call an app's API with a token](identity-provider/protect-an-api/README.md) | `L2-095`, `L2-096`, `L2-097`, `L2-098` |
+| [Sign out everywhere](identity-provider/sign-out-everywhere/README.md) | `L2-099`, `L2-100`, `L2-101`, `L2-102` |

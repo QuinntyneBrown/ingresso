@@ -138,6 +138,17 @@ dotnet run --project backend/src/Ingresso.Cli -- resources list
 dotnet run --project backend/src/Ingresso.Cli -- resources remove --audience notes-api
 ```
 
+Signing out of ingresso signs out of every app that signed in with it on that device, and an app's own sign-out
+(the end-session endpoint) signs out of ingresso. For ingresso to sign an app out, register the app's front-channel
+sign-out address; ingresso loads it in a hidden frame with `iss` and `sid`:
+
+```bash
+dotnet run --project backend/src/Ingresso.Cli -- clients add --name "Notes" \
+  --redirect-uri https://notes.example.com/signin-oidc \
+  --post-logout-redirect-uri https://notes.example.com/signout-callback-oidc \
+  --front-channel-logout-uri https://notes.example.com/frontchannel-logout
+```
+
 ### Run the app
 
 ```bash

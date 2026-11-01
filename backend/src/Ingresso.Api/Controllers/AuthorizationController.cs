@@ -5,8 +5,10 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
+using Ingresso.Api.Auth;
 using Ingresso.Application.Identity;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -46,8 +48,16 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
             return Redirect("/verify-email");
         }
 
+        // Record the app against this session so signing out can notify it, and tell the app its session (L2-099).
+        var sessionId = session.Principal.FindFirstValue(SessionSignIn.SessionIdClaim);
+        if (Guid.TryParse(sessionId, out var sid))
+        {
+            await sender.Send(new RecordAppSignInCommand(sid, request.ClientId!), cancellationToken);
+        }
+
         var identity = new ClaimsIdentity(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, Claims.Name, Claims.Role);
         identity.SetClaim(Claims.Subject, person.UserId.ToString());
+        identity.SetClaim("sid", sessionId);
         identity.SetClaim(Claims.Email, person.Email);
         identity.SetScopes(request.GetScopes());
         // The access token's audience is each API whose scopes were granted (L2-097).
@@ -58,7 +68,39 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
         }
 
         identity.SetResources(resources.Distinct(StringComparer.Ordinal));
-        identity.SetDestinations(_ => [Destinations.IdentityToken, Destinations.AccessToken]);
+        identity.SetDestinations(claim => claim.Type == "sid"
+            ? [Destinations.IdentityToken]
+            : [Destinations.IdentityToken, Destinations.AccessToken]);
         return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
+    /// <summary>
+    /// An app's sign-out (RP-initiated logout), after OpenIddict has checked the ID token hint and that the return address
+    /// is registered for the app: ends the session and goes to the signed-out page, which notifies the session's apps
+    /// and continues to the return address with the app's state (L2-100). Without a hint nothing happens (L2-102).
+    /// </summary>
+    [HttpGet("connect/endsession")]
+    [HttpPost("connect/endsession")]
+    public async Task<IActionResult> EndSession(CancellationToken cancellationToken)
+    {
+        var request = HttpContext.GetOpenIddictServerRequest()
+            ?? throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
+        if (string.IsNullOrEmpty(request.IdTokenHint))
+        {
+            return Redirect(IdentityProviderSetup.SignOutErrorPath);
+        }
+
+        var returnUrl = request.PostLogoutRedirectUri is not { } address ? null
+            : request.State is { } state ? QueryHelpers.AddQueryString(address, "state", state)
+            : address;
+        var session = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        if (!session.Succeeded || !Guid.TryParse(session.Principal.FindFirstValue(SessionSignIn.SessionIdClaim), out var sessionId))
+        {
+            return Redirect(returnUrl ?? "/sign-in");
+        }
+
+        var ticket = await sender.Send(new SignOutCommand(sessionId, returnUrl), cancellationToken);
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return Redirect("/signed-out?ticket=" + Uri.EscapeDataString(ticket!));
     }
 }

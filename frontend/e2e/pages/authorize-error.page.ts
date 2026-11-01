@@ -25,8 +25,8 @@ export class AuthorizeErrorPage {
     await this.page.waitForURL(/\/authorize-error$/);
   }
 
-  /** Opens the page directly, as the API sends people there. */
-  async open(): Promise<void> {
-    await this.page.goto('/authorize-error');
+  /** Opens the page directly, as the API sends people there; `sign-out` for a refused end-session request. */
+  async open(flow?: 'sign-out'): Promise<void> {
+    await this.page.goto(flow ? `/authorize-error?flow=${flow}` : '/authorize-error');
   }
 }

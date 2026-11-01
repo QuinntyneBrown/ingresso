@@ -1,3 +1,4 @@
+using System.Text.Json;
 using OpenIddict.Abstractions;
 using Ingresso.Application.Clients;
 using Ingresso.Application.Common.Interfaces;
@@ -8,6 +9,9 @@ namespace Ingresso.Infrastructure.Identity;
 /// <summary>Stores clients through OpenIddict's application manager (ADR 0014).</summary>
 public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager applications) : IClientRegistry
 {
+    /// <summary>OpenIddict has no field for it, so the front-channel sign-out address is an application property (L2-099).</summary>
+    public const string FrontChannelLogoutUriProperty = "frontchannel_logout_uri";
+
     public async Task<IReadOnlyList<ClientDto>> ListAsync(CancellationToken cancellationToken)
     {
         var clients = new List<ClientDto>();
@@ -57,6 +61,11 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
             descriptor.Permissions.Add(Permissions.Prefixes.Scope + scope);
         }
 
+        if (client.FrontChannelLogoutUri is { } frontChannel)
+        {
+            descriptor.Properties[FrontChannelLogoutUriProperty] = JsonSerializer.SerializeToElement(frontChannel);
+        }
+
         if (client.PostLogoutRedirectUris.Count > 0)
         {
             descriptor.Permissions.Add(Permissions.Endpoints.EndSession);
@@ -86,5 +95,8 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
         (await applications.GetPermissionsAsync(app, cancellationToken))
             .Where(p => p.StartsWith(Permissions.Prefixes.Scope, StringComparison.Ordinal) && p != Permissions.Scopes.Email)
             .Select(p => p[Permissions.Prefixes.Scope.Length..])
-            .ToList());
+            .ToList(),
+        (await applications.GetPropertiesAsync(app, cancellationToken)).TryGetValue(FrontChannelLogoutUriProperty, out var frontChannel)
+            ? frontChannel.GetString()
+            : null);
 }

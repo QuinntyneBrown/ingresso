@@ -12,6 +12,9 @@ namespace Ingresso.Api.Auth;
 /// <summary>The OpenID Connect server (ADR 0014): authorization code with PKCE (S256) for registered apps (L2-091 to L2-094).</summary>
 public static class IdentityProviderSetup
 {
+    /// <summary>Where an end-session request ingresso cannot trust sends the browser (L2-102).</summary>
+    public const string SignOutErrorPath = "/authorize-error?flow=sign-out";
+
     private static readonly Lazy<RsaSecurityKey> DevelopmentSigningKey = new(() => new RsaSecurityKey(RSA.Create(2048)));
     private static readonly Lazy<RsaSecurityKey> DevelopmentEncryptionKey = new(() => new RsaSecurityKey(RSA.Create(2048)));
 
@@ -24,6 +27,7 @@ public static class IdentityProviderSetup
         services.AddOpenIddict().AddServer(options =>
         {
             options.SetIssuer(new Uri(issuer.TrimEnd('/') + "/"));
+            options.SetEndSessionEndpointUris("connect/endsession");
             options.SetAuthorizationEndpointUris("connect/authorize")
                 .SetTokenEndpointUris("connect/token")
                 .SetJsonWebKeySetEndpointUris(".well-known/jwks");
@@ -73,7 +77,23 @@ public static class IdentityProviderSetup
                 .SetOrder(int.MinValue + 100_000)
                 .SetType(OpenIddictServerHandlerType.Custom));
 
-            var aspNetCore = options.UseAspNetCore().EnableAuthorizationEndpointPassthrough();
+            // A sign-out request OpenIddict rejects (a return address not registered for the app, a bad ID token hint)
+            // never redirects and signs no one out (L2-102).
+            options.AddEventHandler<OpenIddictServerEvents.ApplyEndSessionResponseContext>(handler => handler
+                .UseInlineHandler(context =>
+                {
+                    if (context.Error is not null)
+                    {
+                        context.Transaction.GetHttpRequest()!.HttpContext.Response.Redirect(SignOutErrorPath);
+                        context.HandleRequest();
+                    }
+
+                    return default;
+                })
+                .SetOrder(int.MinValue + 100_000)
+                .SetType(OpenIddictServerHandlerType.Custom));
+
+            var aspNetCore = options.UseAspNetCore().EnableAuthorizationEndpointPassthrough().EnableEndSessionEndpointPassthrough();
             if (devOrTest)
             {
                 // Development, Playwright and demos run on http://localhost.

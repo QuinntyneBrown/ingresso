@@ -6,7 +6,10 @@ import { SessionStore } from '../../state/session-store';
 
 export const SIGN_OUT_TITLE_ID = 'ig-sign-out-title';
 
-/** "Sign out of ingresso?": confirms, ends the session on the server and lands on sign-in (L2-031). */
+/**
+ * "Sign out of ingresso?": confirms, ends the session on the server and lands on sign-in (L2-031), or on the
+ * signed-out page when apps signed in with the session must be signed out too (L2-101).
+ */
 @Component({
   selector: 'ig-sign-out-dialog',
   imports: [Alert, Button, DialogShell],
@@ -18,7 +21,10 @@ export const SIGN_OUT_TITLE_ID = 'ig-sign-out-title';
             >You are still signed in. Try again in a moment.</ig-alert
           >
         }
-        <p>Your tiles stay saved. You'll sign in again with an emailed link next time.</p>
+        <p>
+          Your tiles stay saved. Apps you signed in to with ingresso are signed out too. You'll sign in again
+          with an emailed link next time.
+        </p>
         @if (session.user(); as user) {
           <p class="who">Signed in as {{ user.name }} · {{ user.email }}</p>
         }
@@ -61,9 +67,11 @@ export class SignOutDialog {
     this.busy.set(true);
     this.failed.set(false);
     this.session.signOut().subscribe({
-      next: () => {
+      next: (ticket) => {
         this.ref.close();
-        void this.router.navigateByUrl('/sign-in');
+        void (ticket
+          ? this.router.navigate(['/signed-out'], { queryParams: { ticket } })
+          : this.router.navigateByUrl('/sign-in'));
       },
       error: () => {
         this.busy.set(false);

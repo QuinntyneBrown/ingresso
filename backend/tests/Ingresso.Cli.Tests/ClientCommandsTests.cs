@@ -263,6 +263,34 @@ public sealed partial class ClientCommandsTests : IDisposable
     }
 
     // Acceptance Test
+    // Traces to: L2-099
+    // Description: clients add --front-channel-logout-uri stores the app's front-channel sign-out address, and clients list shows it.
+    [Fact]
+    public async Task Add_stores_the_front_channel_sign_out_address()
+    {
+        const string frontChannel = "https://localhost:5201/frontchannel-logout";
+
+        var (code, _) = await Run("clients", "add", "--name", "Sample app", "--redirect-uri", Redirect, "--front-channel-logout-uri", frontChannel);
+
+        Assert.Equal(0, code);
+        Assert.Contains($"  Front-channel sign-out: {frontChannel}", (await Run("clients", "list")).Output);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-099, L2-088
+    // Description: An unsafe front-channel sign-out address is refused, named in the output, and nothing is registered.
+    [Fact]
+    public async Task Add_refuses_an_unsafe_front_channel_sign_out_address()
+    {
+        var (code, output) = await Run(
+            "clients", "add", "--name", "Sample app", "--redirect-uri", Redirect, "--front-channel-logout-uri", "http://example.com/logout");
+
+        Assert.Equal(1, code);
+        Assert.Contains("'http://example.com/logout'", output);
+        Assert.Equal(0, await ApplicationCount());
+    }
+
+    // Acceptance Test
     // Traces to: L2-090
     // Description: Running seed again leaves registered apps unchanged.
     [Fact]

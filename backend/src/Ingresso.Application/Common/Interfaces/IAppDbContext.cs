@@ -11,6 +11,7 @@ public interface IAppDbContext
     DbSet<SecurityToken> SecurityTokens { get; }
     DbSet<VerifiedEmail> VerifiedEmails { get; }
     DbSet<Session> Sessions { get; }
+    DbSet<SessionApp> SessionApps { get; }
     DbSet<Notification> Notifications { get; }
     DbSet<AuditEntry> AuditEntries { get; }
 

@@ -20,8 +20,8 @@ The slice runs from the ingresso web app to the ingresso database.
 - **`TouchSessionCommandHandler`** — loads the session, checks `Session.IsActive(now)`, and updates `LastSeenAtUtc`.
 - **`Session`** — entity with `IdleLimit` of 14 days and `RevokedAtUtc`.
 - **`SessionStore`** — web-app state for the current user, loaded from `GET /api/auth/me`.
-- **Sign-out endpoint** — `POST /api/auth/sign-out` (authorized, CSRF-checked) sends `SignOutCommand`, which sets `Session.RevokedAtUtc`, then clears the cookie and returns 204. Replaying the old cookie is anonymous, so it gets 401.
-- **Account menu and `SignOutDialog`** — the header avatar opens an account menu whose Sign out item opens a confirmation dialog (busy, and a failed state that keeps the person signed in). On success `SessionStore.signOut` forgets the user and the router goes to `/sign-in`.
+- **Sign-out endpoint** — `POST /api/auth/sign-out` (authorized, CSRF-checked) sends `SignOutCommand`, which sets `Session.RevokedAtUtc` and returns a signed-out ticket naming the apps signed in under the session (journey 18, [sign out everywhere](../../identity-provider/sign-out-everywhere/README.md)), then clears the cookie and returns 200 `{ signedOut }` (null when no app needs telling). Replaying the old cookie is anonymous, so it gets 401.
+- **Account menu and `SignOutDialog`** — the header avatar opens an account menu whose Sign out item opens a confirmation dialog (busy, and a failed state that keeps the person signed in). On success `SessionStore.signOut` forgets the user and the router goes to `/signed-out?ticket=…` when apps must be signed out too, or to `/sign-in`.
 
 The current source differs from the requirements in these points. Each is open work for the slice.
 

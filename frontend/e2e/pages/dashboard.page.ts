@@ -53,6 +53,11 @@ export class DashboardPage {
     await this.page.goto('/');
   }
 
+  /** Opens the dashboard in a context that already has a session. */
+  async openSignedIn(): Promise<void> {
+    await this.page.goto('/');
+  }
+
   /** Contrast ratio of each tile icon's initial against its colour, lowest first. */
   async iconContrasts(): Promise<number[]> {
     return this.page.locator('ig-app-icon .app-icon').evaluateAll((icons) => {

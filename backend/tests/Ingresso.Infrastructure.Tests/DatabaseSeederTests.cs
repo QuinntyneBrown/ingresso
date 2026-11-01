@@ -29,6 +29,7 @@ public sealed class DatabaseSeederTests : IDisposable
         Assert.Equal(["http://localhost:5201/signin-oidc"], sample.RedirectUris);
         Assert.Equal(["http://localhost:5201/signout-callback-oidc"], sample.PostLogoutRedirectUris);
         Assert.Equal([SampleAppOptions.Scope], sample.Scopes);
+        Assert.Equal("http://localhost:5201/frontchannel-logout", sample.FrontChannelLogoutUri);
         var api = Assert.Single(await configured.RunAsync(sp => sp.GetRequiredService<IResourceRegistry>().ListAsync(CancellationToken.None)));
         Assert.Equal(("Sample API", SampleAppOptions.Audience), (api.Name, api.Audience));
         Assert.Equal([SampleAppOptions.Scope], api.Scopes);

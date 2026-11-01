@@ -1,0 +1,27 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Sign out everywhere
+Container_Boundary(api, "Ingresso.Api") {
+  Component(authz, "AuthorizationController", "Controller", "Records session apps, adds sid; EndSession")
+  Component(auth, "AuthController", "Controller", "POST sign-out, GET signed-out")
+}
+Container_Boundary(appl, "Ingresso.Application") {
+  Component(rec, "RecordAppSignInCommandHandler", "MediatR handler", "Adds a SessionApp once")
+  Component(out, "SignOutCommandHandler", "MediatR handler", "Revokes the session, issues a ticket")
+  Component(apps, "GetSignedOutAppsQueryHandler", "MediatR handler", "Reads the ticket, builds logout addresses")
+  Component(port, "ISignOutTickets", "Interface", "Protect and read tickets")
+}
+Container_Boundary(infra, "Ingresso.Infrastructure") {
+  Component(tickets, "DataProtectionSignOutTickets", "ISignOutTickets", "Time-limited protector, 10 minutes")
+  Component(clients, "OpenIddictClientRegistry", "IClientRegistry", "Front-channel address in properties")
+}
+Rel(authz, rec, "Sends")
+Rel(authz, out, "Sends (end session)")
+Rel(auth, out, "Sends (sign out)")
+Rel(auth, apps, "Sends")
+Rel(out, port, "Uses")
+Rel(apps, port, "Uses")
+Rel(apps, clients, "Names and addresses")
+Rel(tickets, port, "Implements")
+@enduml

@@ -201,13 +201,30 @@
       "kind": "page",
       "title": "Can’t sign in to this app",
       "states": [
-        "default"
+        "default",
+        "sign-out"
       ],
       "route": "/authorize-error",
       "not_applicable": {
         "loading": "A status page is static.",
         "empty": "A status page has no collection.",
         "error": "This page is itself the error."
+      }
+    },
+    {
+      "id": "signed-out",
+      "kind": "page",
+      "title": "Signed out",
+      "states": [
+        "signing-out",
+        "done"
+      ],
+      "route": "/signed-out",
+      "not_applicable": {
+        "default": "The page opens straight into signing-out; done is where it rests.",
+        "loading": "signing-out is the screen's wait state.",
+        "empty": "done with no apps shows the heading and Sign in again without the list.",
+        "error": "An unreadable or expired sign-out link shows done without the list; the session has already ended."
       }
     },
     {

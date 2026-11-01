@@ -13,6 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<SecurityToken> SecurityTokens => Set<SecurityToken>();
     public DbSet<VerifiedEmail> VerifiedEmails => Set<VerifiedEmail>();
     public DbSet<Session> Sessions => Set<Session>();
+    public DbSet<SessionApp> SessionApps => Set<SessionApp>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 

@@ -12,7 +12,7 @@ public static class ClientCommands
 {
     public const string Usage =
         "Usage: ingresso clients <add --name <name> --redirect-uri <address> [--redirect-uri <address>] [--post-logout-redirect-uri <address>]"
-        + " [--scope <scope>] | list | remove --client-id <id>>";
+        + " [--front-channel-logout-uri <address>] [--scope <scope>] | list | remove --client-id <id>>";
 
     public static async Task<int> RunAsync(string[] args, IServiceProvider services, TextWriter output, CancellationToken cancellationToken)
     {
@@ -29,10 +29,12 @@ public static class ClientCommands
         {
             switch (args[0].ToLowerInvariant())
             {
-                case "add" when Single(options, "--name", out var name) && Only(options, "--name", "--redirect-uri", "--post-logout-redirect-uri", "--scope"):
+                case "add" when Single(options, "--name", out var name) && Only(options, "--name", "--redirect-uri", "--post-logout-redirect-uri", "--front-channel-logout-uri", "--scope")
+                                && All(options, "--front-channel-logout-uri").Count <= 1:
                     var client = await sender.Send(
                         new RegisterClientCommand(
-                            name, All(options, "--redirect-uri"), All(options, "--post-logout-redirect-uri"), All(options, "--scope")),
+                            name, All(options, "--redirect-uri"), All(options, "--post-logout-redirect-uri"), All(options, "--scope"),
+                            All(options, "--front-channel-logout-uri").SingleOrDefault()),
                         cancellationToken);
                     await output.WriteLineAsync($"Registered {client.Name}.");
                     await output.WriteLineAsync($"Client ID: {client.ClientId}");
@@ -85,6 +87,11 @@ public static class ClientCommands
             foreach (var address in client.PostLogoutRedirectUris)
             {
                 await output.WriteLineAsync($"  Sign-out return: {address}");
+            }
+
+            if (client.FrontChannelLogoutUri is { } frontChannel)
+            {
+                await output.WriteLineAsync($"  Front-channel sign-out: {frontChannel}");
             }
 
             foreach (var scope in client.Scopes)

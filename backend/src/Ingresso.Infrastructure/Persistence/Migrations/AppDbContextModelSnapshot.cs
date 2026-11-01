@@ -207,6 +207,23 @@ namespace Ingresso.Infrastructure.Persistence.Migrations
                     b.ToTable("Sessions");
                 });
 
+            modelBuilder.Entity("Ingresso.Domain.Entities.SessionApp", b =>
+                {
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ClientId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("SignedInAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("SessionId", "ClientId");
+
+                    b.ToTable("SessionApps");
+                });
+
             modelBuilder.Entity("Ingresso.Domain.Entities.Tile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -532,6 +549,17 @@ namespace Ingresso.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Ingresso.Domain.Entities.SessionApp", b =>
+                {
+                    b.HasOne("Ingresso.Domain.Entities.Session", "Session")
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
                 });
 
             modelBuilder.Entity("Ingresso.Domain.Entities.Tile", b =>

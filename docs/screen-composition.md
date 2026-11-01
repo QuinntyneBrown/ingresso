@@ -22,7 +22,7 @@ behind their backdrop; only the dialog is mapped.
 | Item                                        | Used by                               | Notes                                                                                              |
 | ------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | Page intro (greeting `h1` and summary line) | dashboard, directory, settings, brand | Layout with `Stack`; text only                                                                     |
-| Auth layout (centred `Card` with `Logo`)    | sign-in, reset-password               | Wraps `Card`; build once                                                                           |
+| Auth layout (centred `Card` with `Logo`)    | sign-in, reset-password, signed-out   | Wraps `Card`; build once                                                                           |
 | App form (`AppForm`)                        | add-app, edit-app                     | Composed of `FormField`, `Input`, `FieldSet`, `Choice`, `Check`, `AppIcon` preview, `ErrorSummary` |
 
 ## Pages
@@ -82,10 +82,20 @@ behind their backdrop; only the dialog is mapped.
 - Library: `StatusPage`, `Button`, `Cluster`.
 - Local: none.
 
-### Can’t sign in to this app — `/authorize-error` (`pages/authorize-error`: default)
+### Can’t sign in to this app — `/authorize-error` (`pages/authorize-error`: default, sign-out)
 
 - Library: `SiteHeader` (brand slot only, with `Logo`), `StatusPage`, `Button`.
 - Local: none. The screen sits outside the shell, because the person may be signed out.
+- `sign-out` (journey 18, `?flow=sign-out`): the same components; the heading and message say the app can't sign
+  the person out, for a sign-out request ingresso cannot trust.
+
+### Signed out — `/signed-out` (`pages/signed-out`: signing-out, done)
+
+- Library: `Card`, `Logo`, `Spinner` (signing-out), `List` with `ListItem` on a `surface` (done: one row per app
+  signed out), `Button` (Sign in again, as a link), `SkipLink`.
+- Local: auth layout (`shared/auth-layout`), and one hidden `iframe` per app's front-channel sign-out address
+  while signing out. The screen sits outside the shell: the session has already ended. When an app started the
+  sign-out, done continues to the app's return address instead of showing Sign in again.
 
 ## Dialogs
 
@@ -97,7 +107,7 @@ All dialogs open through Angular CDK `Dialog` with `modalDialogConfig` and rende
 | Edit app (`dialogs/edit-app`: default, busy, invalid, failed)          | `DialogShell`, `Button`, `Alert` (failed, delete confirmation)              | App form         |
 | Delete app (`dialogs/delete-app`: default, busy, failed)               | `DialogShell`, `AppIcon`, `Button` (`appearance="danger"`), `Alert`         | Tile preview row |
 | Reset layout (`dialogs/reset-layout`: default, busy, failed)                   | `DialogShell`, `Button`, `Alert` (failed)                                   | —                |
-| Sign out (`dialogs/sign-out`: default, busy, failed)                   | `DialogShell`, `Button` (`busy`), `Alert` (failed)                          | —                |
+| Sign out (`dialogs/sign-out`: default, busy, failed)                   | `DialogShell`, `Button` (`busy`), `Alert` (failed); copy says connected apps are signed out too (journey 18) | —                |
 
 ## Notifications
 
