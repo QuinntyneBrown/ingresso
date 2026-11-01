@@ -62,19 +62,29 @@ public sealed class AuthController(ISender sender, SessionSignIn sessions) : Con
     public async Task<ActionResult<CurrentUserDto>> Me(CancellationToken cancellationToken) =>
         await sender.Send(new GetCurrentUserQuery(), cancellationToken) is { } user ? user : Unauthorized();
 
-    /// <summary>Signs the current device out: revokes its server session and clears the cookie (L2-031).</summary>
+    /// <summary>
+    /// Signs the current device out: revokes its server session and clears the cookie (L2-031). <c>signedOut</c> is the
+    /// ticket for the signed-out page when apps signed in under the session must be signed out too (L2-101), else null.
+    /// </summary>
     [HttpPost("api/auth/sign-out")]
     [Authorize]
-    public async Task<IActionResult> SignOutUser(CancellationToken cancellationToken)
+    public async Task<ActionResult<SignOutResultDto>> SignOutUser(CancellationToken cancellationToken)
     {
+        string? ticket = null;
         if (Guid.TryParse(User.FindFirst(SessionSignIn.SessionIdClaim)?.Value, out var sessionId))
         {
-            await sender.Send(new SignOutCommand(sessionId), cancellationToken);
+            ticket = await sender.Send(new SignOutCommand(sessionId), cancellationToken);
         }
 
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return NoContent();
+        return new SignOutResultDto(ticket);
     }
+
+    /// <summary>The apps the signed-out page notifies, from its ticket (L2-101); 404 for an unreadable or old ticket.</summary>
+    [HttpGet("api/auth/signed-out")]
+    [AllowAnonymous]
+    public async Task<ActionResult<SignedOutDto>> SignedOut([FromQuery] string ticket, CancellationToken cancellationToken) =>
+        await sender.Send(new GetSignedOutAppsQuery(ticket), cancellationToken) is { } signedOut ? signedOut : NotFound();
 
     /// <summary>Redeems an email verification link and returns home with the outcome (L2-085).</summary>
     [HttpGet("auth/verify-email")]
@@ -87,3 +97,5 @@ public sealed class AuthController(ISender sender, SessionSignIn sessions) : Con
 }
 
 public sealed record AppNameDto(string Name);
+
+public sealed record SignOutResultDto(string? SignedOut);

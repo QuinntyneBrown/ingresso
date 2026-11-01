@@ -16,6 +16,8 @@ namespace Ingresso.Api.Tests.IdentityProvider;
 public sealed class RelyingParty
 {
     public const string RedirectUri = "https://app.example.com/signin-oidc";
+    public const string SignOutReturnUri = "https://app.example.com/signout-callback-oidc";
+    public const string FrontChannelLogoutUri = "https://app.example.com/frontchannel-logout";
 
     private RelyingParty(ApiFactory factory, string clientId)
     {
@@ -44,6 +46,34 @@ public sealed class RelyingParty
             new NewClient($"{name} {Guid.NewGuid():N}", [RedirectUri], [], Scopes: scopes), CancellationToken.None);
         return new RelyingParty(factory, clientId);
     }
+
+    /// <summary>Registers an app with a sign-out return address and a front-channel sign-out address (journey 18).</summary>
+    public static async Task<RelyingParty> RegisterForSignOutAsync(ApiFactory factory)
+    {
+        factory.CreateHttpsClient().Dispose();
+        using var scope = factory.Services.CreateScope();
+        var clientId = await scope.ServiceProvider.GetRequiredService<IClientRegistry>().RegisterAsync(
+            new NewClient($"Sample app {Guid.NewGuid():N}", [RedirectUri], [SignOutReturnUri], FrontChannelLogoutUri: FrontChannelLogoutUri),
+            CancellationToken.None);
+        return new RelyingParty(factory, clientId);
+    }
+
+    /// <summary>Signs this browser in to the app (it must already have an ingresso session) and returns its ID token.</summary>
+    public async Task<string> SignInAsync(HttpClient browser)
+    {
+        var authorized = await browser.GetAsync(AuthorizePath());
+        var tokens = await JsonAsync(await ExchangeAsync(CallbackParameters(authorized)["code"]));
+        return tokens.GetProperty("id_token").GetString()!;
+    }
+
+    /// <summary>The end-session request path, with any parameter overridden or removed (null).</summary>
+    public static string EndSessionPath(string? idTokenHint, string? returnUri = SignOutReturnUri, string? state = "bye") =>
+        QueryHelpers.AddQueryString("/connect/endsession", new Dictionary<string, string?>
+        {
+            ["id_token_hint"] = idTokenHint,
+            ["post_logout_redirect_uri"] = returnUri,
+            ["state"] = state,
+        }.Where(p => p.Value is not null).ToDictionary(p => p.Key, p => p.Value));
 
     /// <summary>Registers an API with one scope, both unique to the call; returns (audience, scope).</summary>
     public static async Task<(string Audience, string Scope)> RegisterApiAsync(ApiFactory factory)

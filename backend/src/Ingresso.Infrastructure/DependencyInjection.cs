@@ -62,6 +62,8 @@ public static class DependencyInjection
         services.AddOpenIddict().AddCore(o => o.UseEntityFrameworkCore().UseDbContext<AppDbContext>());
         services.AddScoped<IClientRegistry, OpenIddictClientRegistry>();
         services.AddScoped<IResourceRegistry, OpenIddictResourceRegistry>();
+        services.AddDataProtection();
+        services.AddSingleton<ISignOutTickets, DataProtectionSignOutTickets>();
 
         services.Configure<SampleAppOptions>(configuration.GetSection(SampleAppOptions.Section));
         services.AddScoped<DatabaseSeeder>();
