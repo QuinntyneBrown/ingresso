@@ -186,7 +186,7 @@ export class DashboardPage {
     inject(DestroyRef).onDestroy(() => this.store.editing.set(false));
   }
   protected readonly greeting = computed(() => greetingFor(new Date().getHours()));
-  protected readonly firstName = computed(() => this.session.user()?.name.split(' ')[0] ?? '');
+  protected readonly firstName = computed(() => this.session.user()?.displayName?.split(' ')[0] ?? '');
   protected readonly summary = computed(() => {
     if (this.store.status() === 'loading') return 'Loading your apps…';
     const count = this.store.tiles().length;

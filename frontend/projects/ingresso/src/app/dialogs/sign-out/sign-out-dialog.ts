@@ -1,5 +1,5 @@
 import { DialogRef } from '@angular/cdk/dialog';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Alert, Button, DialogShell } from 'components';
 import { SessionStore } from '../../state/session-store';
@@ -25,8 +25,8 @@ export const SIGN_OUT_TITLE_ID = 'ig-sign-out-title';
           Your tiles stay saved. Apps you signed in to with ingresso are signed out too. You'll sign in again
           with an emailed link next time.
         </p>
-        @if (session.user(); as user) {
-          <p class="who">Signed in as {{ user.name }} · {{ user.email }}</p>
+        @if (signedInAs(); as who) {
+          <p class="who">{{ who }}</p>
         }
       </div>
       <ng-container slot="footer">
@@ -58,6 +58,12 @@ export const SIGN_OUT_TITLE_ID = 'ig-sign-out-title';
 export class SignOutDialog {
   protected readonly ref = inject<DialogRef<void>>(DialogRef);
   protected readonly session = inject(SessionStore);
+  /** Who is signing out: the display name and email, or the email alone when no name is set (ADR 0024). */
+  protected readonly signedInAs = computed(() => {
+    const user = this.session.user();
+    if (!user) return null;
+    return `Signed in as ${user.displayName ? `${user.displayName} · ${user.email}` : user.email}`;
+  });
   private readonly router = inject(Router);
   protected readonly titleId = SIGN_OUT_TITLE_ID;
   protected readonly busy = signal(false);

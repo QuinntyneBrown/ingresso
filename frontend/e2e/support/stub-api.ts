@@ -74,7 +74,7 @@ export const DEFAULT_TILES: FakeTile[] = pack([
 ]);
 
 const ME = {
-  name: 'Maya Okafor',
+  displayName: 'Maya Okafor',
   email: 'maya@northwind.example',
   initials: 'MO',
   workspace: 'Northwind',

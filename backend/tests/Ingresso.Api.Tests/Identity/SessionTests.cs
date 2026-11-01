@@ -18,7 +18,7 @@ public sealed class SessionTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var me = await client.GetFromJsonAsync<JsonElement>("/api/auth/me");
 
         Assert.Equal("member", me.GetProperty("role").GetString());
-        Assert.False(string.IsNullOrEmpty(me.GetProperty("name").GetString()));
+        Assert.False(string.IsNullOrEmpty(me.GetProperty("displayName").GetString()));
         Assert.False(string.IsNullOrEmpty(me.GetProperty("initials").GetString()));
     }
 
