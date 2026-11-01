@@ -11,5 +11,6 @@ export * from './lib/profile/profile-api';
 export * from './lib/consent/consent-api';
 export * from './lib/connected-apps/connected-apps-api';
 export * from './lib/sessions/sessions-api';
+export * from './lib/activity/activity-api';
 export * from './lib/tiles/tile';
 export * from './lib/tiles/tiles-api';

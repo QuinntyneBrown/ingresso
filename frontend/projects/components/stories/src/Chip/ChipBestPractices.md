@@ -4,6 +4,7 @@
 
 - Label chips with nouns.
 - Show the pressed state with the attribute, not only a glyph.
+- Use `choice` chips in a labelled group when exactly one filter applies at a time.
 
 #### Don't
 

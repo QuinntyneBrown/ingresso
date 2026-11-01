@@ -1,3 +1,4 @@
+using Ingresso.Application.Activity;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -78,6 +79,7 @@ public static class DependencyInjection
 
         // Signing keys in the database, encrypted, rotating (journey 26).
         services.AddSingleton(SigningKeyPolicyFrom(configuration));
+        services.AddSingleton(new ActivityRetention(configuration.GetValue<TimeSpan?>("Activity:RetentionPeriod") ?? ActivityRetention.Default));
         services.AddSingleton<ISigningKeyFactory, DataProtectionSigningKeyFactory>();
         services.AddSingleton<SigningKeyRing>();
         services.AddSingleton<ISignOutTickets, DataProtectionSignOutTickets>();

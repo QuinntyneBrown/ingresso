@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Ingresso.Application.Common.Exceptions;
 using Ingresso.Application.Common.Interfaces;
+using Ingresso.Domain.Enums;
 
 namespace Ingresso.Application.Identity;
 
@@ -20,7 +21,7 @@ public sealed record EndSessionCommand(Guid SessionId) : IRequest;
 /// <summary>Ends every other active session of the person and returns how many; this device stays signed in (L2-134).</summary>
 public sealed record EndOtherSessionsCommand : IRequest<int>;
 
-public sealed class DevicesHandlers(IAppDbContext db, ICurrentUser currentUser, IClock clock) :
+public sealed class DevicesHandlers(IAppDbContext db, ICurrentUser currentUser, IClock clock, IActivityLog activity) :
     IRequestHandler<GetDevicesQuery, IReadOnlyList<DeviceDto>>,
     IRequestHandler<EndSessionCommand>,
     IRequestHandler<EndOtherSessionsCommand, int>
@@ -34,6 +35,11 @@ public sealed class DevicesHandlers(IAppDbContext db, ICurrentUser currentUser, 
         foreach (var session in others)
         {
             session.RevokedAtUtc = now;
+        }
+
+        if (others.Count > 0)
+        {
+            activity.Record(ActivityEventType.OtherSessionsEnded, currentUser.UserId!.Value, "");
         }
 
         await db.SaveChangesAsync(cancellationToken);
@@ -51,6 +57,7 @@ public sealed class DevicesHandlers(IAppDbContext db, ICurrentUser currentUser, 
         }
 
         session.RevokedAtUtc = now;
+        activity.Record(ActivityEventType.SessionEnded, session.UserId, session.Device);
         await db.SaveChangesAsync(cancellationToken);
     }
 

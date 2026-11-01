@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Ingresso.Application.Common.Exceptions;
 using Ingresso.Application.Common.Interfaces;
+using Ingresso.Domain.Enums;
 
 namespace Ingresso.Application.Consent;
 
@@ -39,8 +40,12 @@ public static class ScopeTitles
     };
 }
 
-public sealed class ConsentHandlers(IConsentStore store, IAppDbContext db) :
-    IRequestHandler<GetConsentQuery, ConsentDto>, IRequestHandler<ApproveConsentCommand>, IRequestHandler<FindApprovalQuery, string?>
+/// <summary>Records that the person chose Deny on the consent page (L2-124, L2-141).</summary>
+public sealed record RecordConsentDeniedCommand(Guid UserId, string ClientId) : IRequest;
+
+public sealed class ConsentHandlers(IConsentStore store, IAppDbContext db, IActivityLog activity) :
+    IRequestHandler<GetConsentQuery, ConsentDto>, IRequestHandler<ApproveConsentCommand>, IRequestHandler<FindApprovalQuery, string?>,
+    IRequestHandler<RecordConsentDeniedCommand>
 {
     public async Task<ConsentDto> Handle(GetConsentQuery request, CancellationToken cancellationToken)
     {
@@ -73,6 +78,15 @@ public sealed class ConsentHandlers(IConsentStore store, IAppDbContext db) :
         // One approval for everything approved so far, so a single authorization covers the next sign-in (L2-125).
         var approved = await store.ApprovedScopesAsync(request.UserId, request.ClientId, cancellationToken);
         await store.ApproveAsync(request.UserId, request.ClientId, [.. approved.Union(scopes, StringComparer.Ordinal)], cancellationToken);
+        activity.Record(ActivityEventType.AppApproved, request.UserId, app.Name);
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task Handle(RecordConsentDeniedCommand request, CancellationToken cancellationToken)
+    {
+        var app = await store.FindAppAsync(request.ClientId, cancellationToken);
+        activity.Record(ActivityEventType.AppDenied, request.UserId, app?.Name ?? request.ClientId);
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<string?> Handle(FindApprovalQuery request, CancellationToken cancellationToken) =>

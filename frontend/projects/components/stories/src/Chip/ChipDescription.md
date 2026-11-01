@@ -1,1 +1,1 @@
-A chip is a pill for a filter or a removable value. A filter chip toggles with `aria-pressed` (two-way `pressed`); a `removable` chip has a remove button labelled "Remove {label}" that emits `removed`.
+A chip is a pill for a filter or a removable value. A filter chip toggles with `aria-pressed` (two-way `pressed`); a `choice` chip is one of a single-choice row (a click only presses it, and the parent unpresses the others); a `removable` chip has a remove button labelled "Remove {label}" that emits `removed`.

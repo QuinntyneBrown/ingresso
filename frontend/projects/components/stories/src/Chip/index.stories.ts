@@ -15,4 +15,5 @@ export default meta;
 
 export { Default } from './ChipDefault.stories';
 export { Filters } from './ChipFilters.stories';
+export { Choice } from './ChipChoice.stories';
 export { Removable } from './ChipRemovable.stories';

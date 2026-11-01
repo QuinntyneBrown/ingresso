@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using Ingresso.Application.Common.Exceptions;
 using Ingresso.Application.Common.Interfaces;
+using Ingresso.Domain.Enums;
 
 namespace Ingresso.Application.Clients;
 
@@ -62,7 +63,8 @@ public abstract class ClientFieldsValidator<T> : AbstractValidator<T>
     }
 }
 
-public sealed class RegisterClientCommandHandler(IClientRegistry clients, IResourceRegistry resources) : IRequestHandler<RegisterClientCommand, RegisteredClientDto>
+public sealed class RegisterClientCommandHandler(
+    IClientRegistry clients, IResourceRegistry resources, IAppDbContext db, IActivityLog activity) : IRequestHandler<RegisterClientCommand, RegisteredClientDto>
 {
     public async Task<RegisteredClientDto> Handle(RegisterClientCommand request, CancellationToken cancellationToken)
     {
@@ -87,6 +89,8 @@ public sealed class RegisterClientCommandHandler(IClientRegistry clients, IResou
             name, Distinct(request.RedirectUris!), Distinct(request.PostLogoutRedirectUris ?? []), Scopes: scopes, FrontChannelLogoutUri: frontChannel,
             ClientSecret: secret, OfflineAccess: request.OfflineAccess, FirstParty: request.FirstParty);
         var clientId = await clients.RegisterAsync(client, cancellationToken);
+        activity.RecordChange(ActivityEventType.AppRegistered, client.Name);
+        await db.SaveChangesAsync(cancellationToken);
         return new RegisteredClientDto(
             new ClientDto(
                 clientId, client.Name, client.RedirectUris, client.PostLogoutRedirectUris, scopes, frontChannel, request.Confidential, request.OfflineAccess,

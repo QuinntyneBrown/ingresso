@@ -30,6 +30,9 @@ export class SettingsPage {
   readonly devicesLoading: Locator;
   readonly devicesFailed: Locator;
   readonly devicesTryAgain: Locator;
+  /** Activity: links to the person's security events (journey 27). */
+  readonly activity: Locator;
+  readonly viewActivity: Locator;
   readonly apps: Locator;
   readonly appRows: Locator;
   readonly registerApp: Locator;
@@ -55,6 +58,8 @@ export class SettingsPage {
     this.connectedLoading = this.connectedApps.locator('[aria-busy="true"]');
     this.connectedFailed = this.connectedApps.getByRole('alert');
     this.connectedTryAgain = this.connectedApps.getByRole('button', { name: 'Try again' });
+    this.activity = page.getByRole('region', { name: 'Activity', exact: true });
+    this.viewActivity = this.activity.getByRole('link', { name: 'View activity' });
     this.devices = page.getByRole('region', { name: 'Devices', exact: true });
     this.deviceRows = this.devices.getByRole('list', { name: 'Signed-in devices' }).getByRole('listitem');
     this.thisDevice = this.deviceRows.filter({ hasText: 'This device' });

@@ -1,4 +1,4 @@
-import { Browser, BrowserContext, Page } from '@playwright/test';
+import { Browser, BrowserContext, Page, request } from '@playwright/test';
 
 /** The seeded person the suite signs in as (Maya Okafor, SeedData.UserEmail). */
 export const MAYA = 'dev@ingresso.dev';
@@ -67,4 +67,17 @@ export async function signInOnAnotherDevice(
   const response = await page.request.post('/api/test/sign-in', { data: { email } });
   if (!response.ok()) throw new Error(`Test sign-in failed for ${email}: ${response.status()}`);
   return { context, page };
+}
+
+/**
+ * Signs the person in <paramref name="times"/> more times, each from a new cookie-less request context, as if from
+ * other browsers, so their activity holds that many more sign-ins (L2-144).
+ */
+export async function signInElsewhere(baseURL: string, email: string, times: number): Promise<void> {
+  for (let i = 0; i < times; i++) {
+    const elsewhere = await request.newContext({ baseURL });
+    const response = await elsewhere.post('/api/test/sign-in', { data: { email } });
+    await elsewhere.dispose();
+    if (!response.ok()) throw new Error(`Test sign-in failed for ${email}: ${response.status()}`);
+  }
 }

@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Activity log
+Person(person, "Person")
+System_Boundary(ingresso, "ingresso") {
+  Container(web, "Web app", "Angular", "Activity page")
+  Container(api, "Ingresso.Api", "ASP.NET Core", "Records events; GET /api/activity; daily pruning")
+  Container(cli, "Ingresso.Cli", ".NET", "clients and keys commands record events")
+  ContainerDb(db, "Database", "SQL Server / SQLite", "ActivityEvents")
+}
+Rel(person, web, "Uses")
+Rel(web, api, "GET /api/activity", "JSON")
+Rel(api, db, "Writes and reads events")
+Rel(cli, db, "Writes events")
+@enduml

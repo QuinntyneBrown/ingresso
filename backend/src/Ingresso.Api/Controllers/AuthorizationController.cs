@@ -64,6 +64,7 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
         // Deny on the consent page: OpenIddict returns access_denied to the checked redirect address (L2-124).
         if ((string?)request[ConsentParameter] == "deny")
         {
+            await sender.Send(new RecordConsentDeniedCommand(person.UserId, request.ClientId!), cancellationToken);
             return Forbid(
                 new AuthenticationProperties(new Dictionary<string, string?>
                 {

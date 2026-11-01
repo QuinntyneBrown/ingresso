@@ -1,3 +1,4 @@
+using Ingresso.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Ingresso.Application.Common.Interfaces;
@@ -8,9 +9,11 @@ namespace Ingresso.Application.SigningKeys;
 public sealed record RotatedSigningKey(string ActiveKid, string? RetiringKid, DateTimeOffset? PublishedUntil);
 
 /// <summary>Makes a new signing key active; the previous active key starts retiring (L2-136).</summary>
-public sealed record RotateSigningKeyCommand : IRequest<RotatedSigningKey>;
+/// <summary><paramref name="Scheduled"/> when the configured schedule rotates, rather than the owner (L2-140, L2-143).</summary>
+public sealed record RotateSigningKeyCommand(bool Scheduled = false) : IRequest<RotatedSigningKey>;
 
-public sealed class RotateSigningKeyCommandHandler(IAppDbContext db, ISigningKeyFactory keys, IClock clock, SigningKeyPolicy policy)
+public sealed class RotateSigningKeyCommandHandler(
+    IAppDbContext db, ISigningKeyFactory keys, IClock clock, SigningKeyPolicy policy, IActivityLog activity)
     : IRequestHandler<RotateSigningKeyCommand, RotatedSigningKey>
 {
     public async Task<RotatedSigningKey> Handle(RotateSigningKeyCommand request, CancellationToken cancellationToken)
@@ -24,6 +27,7 @@ public sealed class RotateSigningKeyCommandHandler(IAppDbContext db, ISigningKey
 
         var active = keys.Create(now);
         db.SigningKeys.Add(active);
+        activity.RecordChange(ActivityEventType.SigningKeyRotated, request.Scheduled ? "scheduled" : "");
         await db.SaveChangesAsync(cancellationToken);
         var retiring = previous.OrderByDescending(k => k.CreatedAtUtc).FirstOrDefault();
         return new RotatedSigningKey(active.Kid, retiring?.Kid, retiring is null ? null : now + policy.RetirementPeriod);

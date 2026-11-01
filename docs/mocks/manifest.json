@@ -138,6 +138,21 @@
       }
     },
     {
+      "id": "activity",
+      "kind": "page",
+      "title": "Activity",
+      "states": [
+        "default",
+        "filtered",
+        "empty",
+        "loading",
+        "error",
+        "admin"
+      ],
+      "route": "/settings/activity",
+      "requirements": []
+    },
+    {
       "id": "brand",
       "kind": "page",
       "title": "Brand guide",

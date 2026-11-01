@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ingresso.Application.Common.Behaviors;
 using Ingresso.Application.Common.Interfaces;
 
@@ -17,6 +18,9 @@ public static class DependencyInjection
         });
         services.AddValidatorsFromAssembly(assembly);
         services.AddScoped<IAuditLog, Common.AuditLog>();
+        services.AddScoped<IActivityLog, Common.ActivityLog>();
+        // Outside a web request (the CLI) no one is signed in; the API registers the request's principal.
+        services.TryAddScoped<ICurrentUser, Common.NoCurrentUser>();
         return services;
     }
 }

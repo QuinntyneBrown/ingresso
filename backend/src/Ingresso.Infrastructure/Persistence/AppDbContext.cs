@@ -18,6 +18,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
     public DbSet<SigningKey> SigningKeys => Set<SigningKey>();
+    public DbSet<ActivityEvent> ActivityEvents => Set<ActivityEvent>();
 
     /// <summary>The Data Protection key ring, shared by the API and the CLI (ADR 0021).</summary>
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();

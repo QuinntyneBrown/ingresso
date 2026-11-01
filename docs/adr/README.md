@@ -22,3 +22,4 @@ them point at that stack's history and are revised as ingresso writes its own.
 | [0019](0019-last-used-is-the-latest-token-issued.md) | An app's "last used" is the latest token ingresso issued it |
 | [0020](0020-coarse-device-description.md) | Sessions keep a coarse device description, not the user agent |
 | [0021](0021-data-protection-keys-in-the-database.md) | Data Protection keys live in the database, protected by a certificate in production |
+| [0022](0022-activity-events-separate-from-audit-entries.md) | Security activity is its own event store, not the audit entries |
