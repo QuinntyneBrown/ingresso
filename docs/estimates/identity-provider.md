@@ -12,4 +12,4 @@
 | consent | 4 days | 100% |
 | connected-apps | 3 days | 100% |
 | devices | 2.5 days | 100% |
-| signing-keys | 3 days | 0% |
+| signing-keys | 3 days | 100% |

@@ -23,26 +23,29 @@ apps never reject a valid token.
   - `ISigningKeyFactory` makes a new key: a 2048-bit RSA private key, exported as PKCS#8 and protected with Data
     Protection (purpose `Ingresso.SigningKeys`), and a random 16-hex-digit `kid`.
   - `RotateSigningKeyCommand` marks the active key retiring and adds a new active key; it returns the new key.
-  - `GetSigningKeysQuery` returns `SigningKeyDto(Kid, State, CreatedAt, RetiredAt, PublishedUntil)`, newest first;
-    it creates the first key when there is none (L2-136).
+  - `GetSigningKeysQuery` returns `SigningKeyDto(Kid, State, CreatedAt, PublishedUntil)`, the active key first,
+    then newest first; it creates the first key when there is none (L2-136).
   - `RotateIfDueCommand` rotates when `RotationInterval` is set and the active key is older (L2-140).
+  - `SigningKeyPolicy(RetirementPeriod, RotationInterval)` holds the retirement period, computed from the token
+    lifetimes, and the optional `IdentityProvider:SigningKeys:RotationInterval`.
 - **Infrastructure**:
   - `DataProtectionSigningKeyFactory` implements `ISigningKeyFactory`.
   - `SigningKeyRing` (singleton) holds the active and retiring keys, decrypted, as `X509SecurityKey`s over
-    self-signed certificates made in memory from each private key. A newer key's certificate expires later, so
-    OpenIddict, which signs with the credential whose certificate expires last, always signs with the active key.
-    Each key's `KeyId` is its `kid`.
-  - `SigningKeyRing.ReloadAsync` reads the keys and, when the set changed, fires a change token.
-  - `SigningKeyOptions` binds `IdentityProvider:SigningKeys` (`RefreshInterval`, default 1 minute;
-    `RotationInterval`, off by default) and computes the retirement period from the token lifetimes.
+    self-signed certificates made in memory from each private key. The active key's certificate expires after
+    every retiring key's, so OpenIddict, which signs with the credential whose certificate expires last, always
+    signs with the active key. Each key's `KeyId` is its `kid`.
+  - `SigningKeyRing.ReloadAsync` reads the keys, creating the first one when there is none, and fires a change
+    token when the published set changed. If the database can't be read on first use, the ring holds a
+    placeholder key until the next reload succeeds, so requests that need no token still work.
   - Data Protection persists its key ring to `AppDbContext` and, in production, protects it with a certificate
     (ADR 0021).
 - **API**:
   - `SigningKeyOptionsSetup` (`IConfigureOptions<OpenIddictServerOptions>`) adds the ring's keys as signing
     credentials, and `SigningKeyChangeTokenSource` makes `IOptionsMonitor<OpenIddictServerOptions>` rebuild the
     options when the ring changes, so OpenIddict signs, validates and publishes the new keys without a restart.
-  - `SigningKeyMaintenance` (hosted service) every `RefreshInterval` sends `RotateIfDueCommand` and reloads the
-    ring, so a `keys rotate` from the CLI reaches a running API within a minute.
+  - `SigningKeyMaintenance` (hosted service) every `IdentityProvider:SigningKeys:RefreshInterval` (default 1
+    minute) sends `RotateIfDueCommand` and reloads the ring, so a `keys rotate` from the CLI reaches a running API
+    within a minute.
 - **Encryption** — codes and refresh tokens are still encrypted with the configured certificate
   (`IdentityProvider:SigningCertificate`, now used for encryption only) or, in Development, a process key.
 

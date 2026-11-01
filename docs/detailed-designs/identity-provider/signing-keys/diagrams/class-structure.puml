@@ -17,18 +17,21 @@ enum SigningKeyState {
 interface ISigningKeyFactory {
   Create(now) : SigningKey
 }
+class SigningKeyPolicy <<record>> {
+  RetirementPeriod : TimeSpan
+  RotationInterval : TimeSpan?
+}
 class RotateSigningKeyCommand <<record>>
 class RotateIfDueCommand <<record>>
 class GetSigningKeysQuery <<record>>
 class SigningKeyDto <<record>> {
   Kid : string
-  State : string
+  State : SigningKeyState
   CreatedAt : DateTimeOffset
-  RetiredAt : DateTimeOffset?
   PublishedUntil : DateTimeOffset?
 }
 class SigningKeyRing {
-  Current : IReadOnlyList<SecurityKey>
+  Keys : IReadOnlyList<X509SecurityKey>
   ReloadAsync()
   GetChangeToken()
 }

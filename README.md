@@ -166,6 +166,22 @@ dotnet run --project backend/src/Ingresso.Cli -- clients add --name "Notes" \
   --redirect-uri https://notes.example.com/signin-oidc --offline-access
 ```
 
+### Rotate signing keys
+
+ingresso signs tokens with keys it keeps in the database, encrypted with ASP.NET Core Data Protection. Outside
+Development, a certificate at `DataProtection:Certificate:Path` (and `:Password`) protects the Data Protection key
+ring. Rotate the signing key and list the keys with:
+
+```bash
+dotnet run --project backend/src/Ingresso.Cli -- keys rotate
+dotnet run --project backend/src/Ingresso.Cli -- keys list
+```
+
+A running API signs with the new key within a minute. The previous key stays published at `/.well-known/jwks`
+until every token it signed has expired (14 days by default). To rotate on a schedule, set
+`IdentityProvider:SigningKeys:RotationInterval`, for example `90.00:00:00`. It is off by default.
+`IdentityProvider:SigningCertificate` now holds only the certificate that encrypts codes and refresh tokens.
+
 ### Run the app
 
 ```bash
