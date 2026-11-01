@@ -2,7 +2,13 @@ import { expect, test } from '../fixtures';
 import { ActivityPage } from '../pages/activity.page';
 import { EndSessionDialog } from '../pages/end-session.dialog';
 import { SettingsPage } from '../pages/settings.page';
-import { signInAs, signInAsNewPerson, signInElsewhere, signInOnAnotherDevice } from '../support/session';
+import {
+  signInAs,
+  signInAsAdministrator,
+  signInAsNewPerson,
+  signInElsewhere,
+  signInOnAnotherDevice,
+} from '../support/session';
 
 test.describe('Review sign-in activity', () => {
   test.skip(!!process.env['E2E_FAKE_API'], 'Needs the real API.');
@@ -64,6 +70,35 @@ test.describe('Review sign-in activity', () => {
 
     await expect(activity.rows).toHaveCount(22);
     await expect(activity.showMore).toBeHidden();
+  });
+
+  // Acceptance Test
+  // Traces to: L2-143
+  // Description: Administrators also see app and key changes, with who made them; a member has no Apps and keys filter.
+  test('administrators see app and key changes', async ({ page }) => {
+    const activity = new ActivityPage(page);
+    await signInAsAdministrator(page);
+    await activity.showMockActivity('admin');
+    await activity.open();
+
+    await activity.choose('Apps and keys');
+
+    await expect(activity.row('Registered Notes')).toContainText('By Maya Reyes');
+    await expect(activity.row('Rotated the signing key')).toContainText('From the CLI');
+    await expect(activity.rows).toHaveCount(2);
+  });
+
+  // Acceptance Test
+  // Traces to: L2-143
+  // Description: A member sees no Apps and keys filter.
+  test('a member has no Apps and keys filter', async ({ page }) => {
+    const activity = new ActivityPage(page);
+    await signInAs(page);
+    await activity.showMockActivity();
+    await activity.open();
+
+    await expect(activity.filter('Sessions')).toBeVisible();
+    await expect(activity.filter('Apps and keys')).toHaveCount(0);
   });
 
   // Acceptance Test

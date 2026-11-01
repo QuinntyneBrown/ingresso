@@ -23,7 +23,7 @@ public sealed class RotateIfDueCommandHandler(IAppDbContext db, IClock clock, Si
         var due = clock.UtcNow - interval;
         var active = await db.SigningKeys.Where(k => k.RetiredAtUtc == null).ToListAsync(cancellationToken);
         return active.Count > 0 && active.All(k => k.CreatedAtUtc <= due)
-            ? await sender.Send(new RotateSigningKeyCommand(), cancellationToken)
+            ? await sender.Send(new RotateSigningKeyCommand(Scheduled: true), cancellationToken)
             : null;
     }
 }

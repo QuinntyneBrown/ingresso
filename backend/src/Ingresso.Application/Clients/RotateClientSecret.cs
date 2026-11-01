@@ -1,3 +1,4 @@
+using Ingresso.Domain.Enums;
 using FluentValidation;
 using FluentValidation.Results;
 using MediatR;
@@ -11,7 +12,8 @@ namespace Ingresso.Application.Clients;
 /// </summary>
 public sealed record RotateClientSecretCommand(string ClientId) : IRequest<RegisteredClientDto>;
 
-public sealed class RotateClientSecretCommandHandler(IClientRegistry clients) : IRequestHandler<RotateClientSecretCommand, RegisteredClientDto>
+public sealed class RotateClientSecretCommandHandler(IClientRegistry clients, IAppDbContext db, IActivityLog activity)
+    : IRequestHandler<RotateClientSecretCommand, RegisteredClientDto>
 {
     public async Task<RegisteredClientDto> Handle(RotateClientSecretCommand request, CancellationToken cancellationToken)
     {
@@ -23,6 +25,9 @@ public sealed class RotateClientSecretCommandHandler(IClientRegistry clients) : 
         }
 
         var secret = RegisterClientCommandHandler.NewSecret();
-        return new RegisteredClientDto((await clients.ReplaceSecretAsync(request.ClientId, secret, cancellationToken))!, secret);
+        var rotated = new RegisteredClientDto((await clients.ReplaceSecretAsync(request.ClientId, secret, cancellationToken))!, secret);
+        activity.RecordChange(ActivityEventType.AppSecretRotated, app.Name);
+        await db.SaveChangesAsync(cancellationToken);
+        return rotated;
     }
 }

@@ -1,3 +1,4 @@
+using Ingresso.Domain.Enums;
 using MediatR;
 using Ingresso.Application.Common.Exceptions;
 using Ingresso.Application.Common.Interfaces;
@@ -16,7 +17,8 @@ public sealed record UpdateClientCommand(
 
 public sealed class UpdateClientCommandValidator : ClientFieldsValidator<UpdateClientCommand>;
 
-public sealed class UpdateClientCommandHandler(IClientRegistry clients, IResourceRegistry resources) : IRequestHandler<UpdateClientCommand, ClientDto>
+public sealed class UpdateClientCommandHandler(IClientRegistry clients, IResourceRegistry resources, IAppDbContext db, IActivityLog activity)
+    : IRequestHandler<UpdateClientCommand, ClientDto>
 {
     public async Task<ClientDto> Handle(UpdateClientCommand request, CancellationToken cancellationToken)
     {
@@ -43,6 +45,9 @@ public sealed class UpdateClientCommandHandler(IClientRegistry clients, IResourc
             name, RegisterClientCommandHandler.Distinct(request.RedirectUris!), RegisterClientCommandHandler.Distinct(request.PostLogoutRedirectUris ?? []),
             Scopes: scopes, FrontChannelLogoutUri: request.FrontChannelLogoutUri?.Trim(), OfflineAccess: request.OfflineAccess,
             FirstParty: request.FirstParty);
-        return (await clients.UpdateAsync(request.ClientId, changes, cancellationToken))!;
+        var updated = (await clients.UpdateAsync(request.ClientId, changes, cancellationToken))!;
+        activity.RecordChange(ActivityEventType.AppUpdated, updated.Name);
+        await db.SaveChangesAsync(cancellationToken);
+        return updated;
     }
 }

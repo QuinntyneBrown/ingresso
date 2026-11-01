@@ -2,8 +2,12 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using Ingresso.Api.Tests.IdentityProvider;
 using Ingresso.Api.Tests.Infrastructure;
+using Ingresso.Application.Activity;
+using Ingresso.Application.SigningKeys;
 using Ingresso.Domain.Entities;
 using Ingresso.Domain.Enums;
 
@@ -237,5 +241,95 @@ public sealed class ActivityTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.Equal([("session-ended", "App 0")], Events(await ActivityAsync(browser, "?category=sessions")));
         Assert.Equal([("signed-in", "Chrome on macOS")], Events(await ActivityAsync(browser, "?category=sign-ins")));
         Assert.Equal(HttpStatusCode.BadRequest, (await browser.GetAsync("/api/activity?category=everything")).StatusCode);
+    }
+
+    private static async Task<List<JsonElement>> ChangesAsync(HttpClient browser) =>
+        (await ActivityAsync(browser, "?category=apps-and-keys")).GetProperty("events").EnumerateArray().ToList();
+
+    // Acceptance Test
+    // Traces to: L2-143
+    // Description: Registering, editing, rotating the secret of, disabling, enabling and deleting an app record events naming the app and the administrator; another administrator sees them, a member never does.
+    [Fact]
+    public async Task App_changes_are_recorded_for_administrators_only()
+    {
+        var adminEmail = NewEmail();
+        var admin = await SignedInAsync(adminEmail);
+        var name = $"Budget {Guid.NewGuid():N}"[..15];
+        var registered = await admin.PostAsJsonAsync("/api/clients", new
+        {
+            name,
+            redirectUris = new[] { "https://budget.example.com/signin-oidc" },
+            confidential = true,
+        });
+        var clientId = (await registered.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("client").GetProperty("clientId").GetString();
+        (await admin.PutAsJsonAsync($"/api/clients/{clientId}", new
+        {
+            name,
+            redirectUris = new[] { "https://budget.example.com/signin-oidc" },
+            postLogoutRedirectUris = Array.Empty<string>(),
+            scopes = Array.Empty<string>(),
+            offlineAccess = false,
+            firstParty = true,
+        })).EnsureSuccessStatusCode();
+        (await admin.PostAsync($"/api/clients/{clientId}/secret", null)).EnsureSuccessStatusCode();
+        (await admin.PostAsync($"/api/clients/{clientId}/disable", null)).EnsureSuccessStatusCode();
+        (await admin.PostAsync($"/api/clients/{clientId}/enable", null)).EnsureSuccessStatusCode();
+        (await admin.DeleteAsync($"/api/clients/{clientId}")).EnsureSuccessStatusCode();
+
+        var another = await SignedInAsync(NewEmail());
+        var member = await SignedInAsync(NewEmail(), administrator: false);
+
+        var mine = (await ChangesAsync(another)).Where(e => e.GetProperty("subject").GetString() == name).ToList();
+        Assert.Equal(
+            ["app-deleted", "app-enabled", "app-disabled", "app-secret-rotated", "app-updated", "app-registered"],
+            mine.Select(e => e.GetProperty("type").GetString()));
+        Assert.All(mine, e => Assert.Equal(adminEmail, e.GetProperty("actor").GetString()));
+        Assert.All(mine, e => Assert.Equal("apps-and-keys", e.GetProperty("category").GetString()));
+        Assert.Empty(await ChangesAsync(member));
+        Assert.DoesNotContain(Events(await ActivityAsync(member)), e => e.Subject == name);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-143
+    // Description: A signing key rotation from the CLI is recorded with no administrator.
+    [Fact]
+    public async Task A_key_rotation_from_the_cli_is_recorded()
+    {
+        var admin = await SignedInAsync(NewEmail());
+        using (var scope = factory.Services.CreateScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<IMediator>().Send(new RotateSigningKeyCommand());
+        }
+
+        var latest = (await ChangesAsync(admin)).First();
+        Assert.Equal("signing-key-rotated", latest.GetProperty("type").GetString());
+        Assert.Equal("", latest.GetProperty("subject").GetString());
+        Assert.Equal(JsonValueKind.Null, latest.GetProperty("actor").ValueKind);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-145
+    // Description: Pruning deletes events older than the 90-day retention period and keeps newer ones.
+    [Fact]
+    public async Task Pruning_deletes_events_past_retention()
+    {
+        var email = NewEmail();
+        await SignedInAsync(email);
+        var userId = await UserIdAsync(email);
+        await factory.WithDbAsync(db =>
+        {
+            db.ActivityEvents.Add(new ActivityEvent { UserId = userId, Type = ActivityEventType.AppApproved, Subject = "Old", OccurredAtUtc = ApiFactory.Today.AddDays(-91) });
+            db.ActivityEvents.Add(new ActivityEvent { UserId = userId, Type = ActivityEventType.AppApproved, Subject = "Recent", OccurredAtUtc = ApiFactory.Today.AddDays(-89) });
+            return db.SaveChangesAsync();
+        });
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<IMediator>().Send(new PruneActivityCommand());
+        }
+
+        var subjects = await factory.WithDbAsync(db => db.ActivityEvents.Where(e => e.UserId == userId).Select(e => e.Subject).ToListAsync());
+        Assert.Contains("Recent", subjects);
+        Assert.DoesNotContain("Old", subjects);
     }
 }

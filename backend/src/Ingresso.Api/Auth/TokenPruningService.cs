@@ -1,10 +1,12 @@
+using MediatR;
 using OpenIddict.Abstractions;
+using Ingresso.Application.Activity;
 
 namespace Ingresso.Api.Auth;
 
 /// <summary>
 /// Removes tokens and authorizations that are expired, revoked or redeemed once a day, so the stores hold only what can
-/// still be used (L2-109). Off in tests (<c>IdentityProvider:Pruning:Enabled</c>).
+/// still be used (L2-109), and security events past their retention period (L2-145). Off in tests (<c>IdentityProvider:Pruning:Enabled</c>).
 /// </summary>
 public sealed class TokenPruningService(IServiceScopeFactory scopes) : BackgroundService
 {
@@ -26,5 +28,7 @@ public sealed class TokenPruningService(IServiceScopeFactory scopes) : Backgroun
         using var scope = scopes.CreateScope();
         await scope.ServiceProvider.GetRequiredService<IOpenIddictTokenManager>().PruneAsync(threshold, cancellationToken);
         await scope.ServiceProvider.GetRequiredService<IOpenIddictAuthorizationManager>().PruneAsync(threshold, cancellationToken);
+        // Security events past their retention period go too (L2-145).
+        await scope.ServiceProvider.GetRequiredService<ISender>().Send(new PruneActivityCommand(), cancellationToken);
     }
 }

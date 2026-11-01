@@ -1,11 +1,11 @@
 // Acceptance Test
 // Traces to: L2-142, L2-144, L2-145
-// Description: The Activity page and the Settings Activity card look as designed in docs/mocks (activity: default, filtered, empty, loading, error; settings: default).
+// Description: The Activity page and the Settings Activity card look as designed in docs/mocks (activity: default, filtered, empty, loading, error, admin; settings: default).
 import type { Page } from '@playwright/test';
 import { expect, test } from '../fixtures';
 import { ActivityPage } from '../pages/activity.page';
 import { SettingsPage } from '../pages/settings.page';
-import { signInAs } from '../support/session';
+import { signInAs, signInAsAdministrator } from '../support/session';
 
 test.describe('Review sign-in activity, visually', () => {
   test.skip(!!process.env['E2E_FAKE_API'], 'Needs the real API.');
@@ -64,6 +64,16 @@ test.describe('Review sign-in activity, visually', () => {
     await activity.open();
     await expect(activity.failed).toBeVisible();
     await expect(page).toHaveScreenshot('error.png', { fullPage: true });
+  });
+
+  test('admin', async ({ page }) => {
+    const activity = new ActivityPage(page);
+    await signInAsAdministrator(page);
+    await activity.showMockActivity('admin');
+    await activity.open();
+    await expect(activity.filter('Apps and keys')).toBeVisible();
+    await expect(activity.rows.first()).toBeVisible();
+    await expect(page).toHaveScreenshot('admin.png', { fullPage: true });
   });
 
   test('the Settings Activity card', async ({ page }) => {
