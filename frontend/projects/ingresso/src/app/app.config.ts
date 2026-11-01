@@ -14,6 +14,8 @@ import {
   HttpConnectedAppsApi,
   SESSIONS_API,
   HttpSessionsApi,
+  ACTIVITY_API,
+  HttpActivityApi,
   HttpConsentApi,
   PROFILE_API,
   HttpTilesApi,
@@ -43,5 +45,6 @@ export const appConfig: ApplicationConfig = {
     { provide: CONSENT_API, useClass: HttpConsentApi },
     { provide: CONNECTED_APPS_API, useClass: HttpConnectedAppsApi },
     { provide: SESSIONS_API, useClass: HttpSessionsApi },
+    { provide: ACTIVITY_API, useClass: HttpActivityApi },
   ],
 };

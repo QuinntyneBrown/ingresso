@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Card, Check, Choice, FieldSet, Link, ToastService } from 'components';
+import { Button, Card, Check, Choice, FieldSet, Link, ToastService } from 'components';
 import { AppDialogs } from '../../state/app-dialogs';
 import { SessionStore } from '../../state/session-store';
 import { ThemePreference, ThemeStore } from '../../state/theme-store';
@@ -23,6 +23,7 @@ const CHOICES: { value: ThemePreference; label: string }[] = [
   selector: 'ig-settings-page',
   imports: [
     AppsCard,
+    Button,
     Card,
     Check,
     Choice,
@@ -41,8 +42,8 @@ const CHOICES: { value: ThemePreference; label: string }[] = [
         <p class="text-muted">
           {{
             administrator()
-              ? 'Your profile, how ingresso looks, your connected apps and devices, and the apps that sign in with it.'
-              : 'Your profile, how ingresso looks, your connected apps and your devices.'
+              ? 'Your profile, how ingresso looks, your connected apps, devices and activity, and the apps that sign in with it.'
+              : 'Your profile, how ingresso looks, your connected apps, devices and activity.'
           }}
         </p>
       </section>
@@ -66,6 +67,10 @@ const CHOICES: { value: ThemePreference; label: string }[] = [
         </ig-card>
         <ig-connected-apps-card (revoke)="revokeAccess($event)" />
         <ig-devices-card (end)="endSessions($event)" />
+        <section ig-card title="Activity">
+          <a slot="actions" ig-button routerLink="/settings/activity">View activity</a>
+          <p class="text-muted">Sign-ins and other security events on your account.</p>
+        </section>
         @if (administrator()) {
           <ig-apps-card
             (register)="register($event)"

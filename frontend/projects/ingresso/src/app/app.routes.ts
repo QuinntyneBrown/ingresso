@@ -52,6 +52,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/settings/settings-page').then((m) => m.SettingsPage),
       },
       {
+        path: 'settings/activity',
+        title: 'Activity · ingresso',
+        loadComponent: () => import('./pages/activity/activity-page').then((m) => m.ActivityPage),
+      },
+      {
         path: 'forbidden',
         title: 'No access · ingresso',
         loadComponent: () => import('./pages/status/forbidden-page').then((m) => m.ForbiddenPage),

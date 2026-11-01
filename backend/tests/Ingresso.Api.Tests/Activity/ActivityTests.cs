@@ -1,9 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Ingresso.Api.Tests.IdentityProvider;
 using Ingresso.Api.Tests.Infrastructure;
 using Ingresso.Domain.Entities;
+using Ingresso.Domain.Enums;
 
 namespace Ingresso.Api.Tests.Activity;
 
@@ -182,5 +184,58 @@ public sealed class ActivityTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.Equal(("other-sessions-ended", ""), events[0]);
         Assert.Equal("signed-in", events[1].Type);
         Assert.Equal(("session-ended", "Safari on iPhone"), events[2]);
+    }
+
+    private Task<Guid> UserIdAsync(string email) =>
+        factory.WithDbAsync(db => db.Users.Where(u => u.Email == email).Select(u => u.Id).SingleAsync());
+
+    private async Task AddEventsAsync(Guid userId, ActivityEventType type, int count) =>
+        await factory.WithDbAsync(db =>
+        {
+            for (var i = 0; i < count; i++)
+            {
+                db.ActivityEvents.Add(new ActivityEvent { UserId = userId, Type = type, Subject = $"App {i}", OccurredAtUtc = ApiFactory.Today });
+            }
+
+            return db.SaveChangesAsync();
+        });
+
+    // Acceptance Test
+    // Traces to: L2-144
+    // Description: Activity comes 20 events at a time, newest first; the next page continues where the last ended.
+    [Fact]
+    public async Task Activity_pages_twenty_events_at_a_time()
+    {
+        var email = NewEmail();
+        var browser = await SignedInAsync(email);
+        await AddEventsAsync(await UserIdAsync(email), ActivityEventType.AppApproved, 24);
+
+        var first = await ActivityAsync(browser);
+        var second = await ActivityAsync(browser, $"?before={first.GetProperty("next").GetInt64()}");
+
+        Assert.Equal(20, first.GetProperty("events").GetArrayLength());
+        Assert.Equal("App 23", Events(first)[0].Subject);
+        Assert.Equal(
+            [("app-approved", "App 3"), ("app-approved", "App 2"), ("app-approved", "App 1"), ("app-approved", "App 0"), ("signed-in", "Chrome on macOS")],
+            Events(second));
+        Assert.Equal(JsonValueKind.Null, second.GetProperty("next").ValueKind);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-144
+    // Description: Activity filters by type; an unknown type is refused.
+    [Fact]
+    public async Task Activity_filters_by_type()
+    {
+        var email = NewEmail();
+        var browser = await SignedInAsync(email);
+        var userId = await UserIdAsync(email);
+        await AddEventsAsync(userId, ActivityEventType.AppDenied, 1);
+        await AddEventsAsync(userId, ActivityEventType.SessionEnded, 1);
+
+        Assert.Equal([("app-denied", "App 0")], Events(await ActivityAsync(browser, "?category=app-access")));
+        Assert.Equal([("session-ended", "App 0")], Events(await ActivityAsync(browser, "?category=sessions")));
+        Assert.Equal([("signed-in", "Chrome on macOS")], Events(await ActivityAsync(browser, "?category=sign-ins")));
+        Assert.Equal(HttpStatusCode.BadRequest, (await browser.GetAsync("/api/activity?category=everything")).StatusCode);
     }
 }

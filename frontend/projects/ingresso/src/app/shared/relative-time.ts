@@ -66,3 +66,47 @@ export function greetingFor(hour: number): string {
   if (hour < 18) return 'Good afternoon';
   return 'Good evening';
 }
+
+const TITLES: Record<string, (subject: string) => string> = {
+  'signed-in': () => 'Signed in to ingresso',
+  'signed-in-to-app': (s) => `Signed in to ${s}`,
+  'app-approved': (s) => `Approved ${s}`,
+  'app-denied': (s) => `Denied ${s}`,
+  'app-access-revoked': (s) => `Revoked ${s}’s access`,
+  'session-ended': (s) => `Ended the session on ${s}`,
+  'other-sessions-ended': () => 'Signed out of other devices',
+  'app-registered': (s) => `Registered ${s}`,
+  'app-updated': (s) => `Edited ${s}`,
+  'app-secret-rotated': (s) => `Rotated ${s}’s secret`,
+  'app-disabled': (s) => `Disabled ${s}`,
+  'app-enabled': (s) => `Enabled ${s}`,
+  'app-deleted': (s) => `Deleted ${s}`,
+  'signing-key-rotated': () => 'Rotated the signing key',
+};
+
+/** What a security event says happened, such as "Signed in to Sample app" (L2-142). */
+export function activityTitle(event: { type: string; subject: string }): string {
+  return TITLES[event.type]?.(event.subject) ?? event.type;
+}
+
+/**
+ * Where or by whom, when known, and when: "Chrome on macOS · 15 minutes ago", "By Maya Reyes · 1 hour ago",
+ * "From the CLI · 5 days ago" or "Yesterday" (L2-142, L2-143).
+ */
+export function activityMeta(
+  event: { type: string; category: string; subject: string; actor: string | null; occurredAt: string },
+  now = Date.now(),
+): string {
+  const where =
+    event.type === 'signed-in'
+      ? event.subject
+      : event.category !== 'apps-and-keys'
+        ? ''
+        : event.actor
+          ? `By ${event.actor}`
+          : event.subject === 'scheduled'
+            ? 'On schedule'
+            : 'From the CLI';
+  const when = agoLabel(event.occurredAt, now);
+  return where ? `${where} · ${when}` : when.charAt(0).toUpperCase() + when.slice(1);
+}
