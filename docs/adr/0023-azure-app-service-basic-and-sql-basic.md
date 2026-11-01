@@ -27,4 +27,8 @@ the web app and the API must share one origin.
 - Basic DTU is slow under load, which is fine for one or two users.
 - The SQL server accepts the Azure-services rule so the web app can connect; the workflow opens and closes a rule for
   its own runner to migrate.
-- Outbound email has no production sender yet; sign-in emails need one before real use.
+- Outbound email goes through Azure Communication Services (pay per message, no monthly fee) from a sender
+  username on a customer-managed domain. The domain's DNS must carry the verification TXT, SPF and DKIM records Azure
+  issues; once the domain shows as Verified, the `EMAIL_DOMAIN_LINKED` repository variable set to `true` links it to
+  the Communication Services resource and switches `Email:Provider` from the dev mailbox to
+  `AzureCommunicationServices`. Until then production keeps mail in the dev mailbox, which sends nothing.

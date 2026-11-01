@@ -53,7 +53,17 @@ public static class DependencyInjection
         var fixedNow = configuration["Clock:FixedUtcNow"];
         services.AddSingleton<IClock>(new SystemClock(string.IsNullOrWhiteSpace(fixedNow) ? null : DateTimeOffset.Parse(fixedNow, System.Globalization.CultureInfo.InvariantCulture)));
         services.AddSingleton<DevMailbox>();
-        services.AddSingleton<IEmailSender, DevMailboxEmailSender>();
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.Section));
+        // The dev mailbox keeps mail on the machine unless Email:Provider names a real sender.
+        var emailProvider = configuration[$"{EmailOptions.Section}:{nameof(EmailOptions.Provider)}"];
+        if (string.Equals(emailProvider, EmailOptions.AzureCommunicationServicesProvider, StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton<IEmailSender, AzureCommunicationServicesEmailSender>();
+        }
+        else
+        {
+            services.AddSingleton<IEmailSender, DevMailboxEmailSender>();
+        }
         services.Configure<OutboxOptions>(configuration.GetSection(OutboxOptions.Section));
         services.AddScoped<IOutbox, Outbox.Outbox>();
         services.AddScoped<OutboxDispatcher>();
