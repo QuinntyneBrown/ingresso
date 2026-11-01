@@ -57,7 +57,7 @@ Legend: ✅ mock exists · ➖ not applicable (reason in manifest) · ❌ missin
 | Add app (`add-app`) | [✅](dialogs/add-app/default.html) | [✅](dialogs/add-app/busy.html) | [✅](dialogs/add-app/invalid.html) | [✅](dialogs/add-app/failed.html) | [✅](dialogs/add-app/duplicate.html) |  |
 | Edit app (`edit-app`) | [✅](dialogs/edit-app/default.html) | [✅](dialogs/edit-app/busy.html) | [✅](dialogs/edit-app/invalid.html) | [✅](dialogs/edit-app/failed.html) |  |  |
 | Delete app (`delete-app`) | [✅](dialogs/delete-app/default.html) | [✅](dialogs/delete-app/busy.html) | ➖ | [✅](dialogs/delete-app/failed.html) |  |  |
-| Reset layout (`reset-layout`) | [✅](dialogs/reset-layout/default.html) | [✅](dialogs/reset-layout/busy.html) | ➖ |  |  |  |
+| Reset layout (`reset-layout`) | [✅](dialogs/reset-layout/default.html) | [✅](dialogs/reset-layout/busy.html) | ➖ | [✅](dialogs/reset-layout/failed.html) |  |  |
 | Sign out (`sign-out`) | [✅](dialogs/sign-out/default.html) | [✅](dialogs/sign-out/busy.html) | ➖ | [✅](dialogs/sign-out/failed.html) |  |  |
 
 ### Notifications

@@ -127,6 +127,24 @@ test.describe('Edit layout', () => {
     expect(await dashboard.grid.placement('Datadog')).toMatchObject({ y: 6 });
   });
 
+  // Acceptance Test
+  // Traces to: L2-019
+  // Description: If the reset request fails, the dialog stays open with an alert and the layout is unchanged.
+  test('a failed reset keeps the dialog open and the layout unchanged', async ({ page }) => {
+    await dashboard.enterEditLayout();
+    await dashboard.grid.press('Datadog', 'ArrowDown');
+    await expect.poll(() => dashboard.grid.placement('Datadog')).toMatchObject({ y: 6 });
+    await page.route('**/api/tiles/reset-layout', (route) => route.fulfill({ status: 500, body: '{}' }));
+
+    await dashboard.resetLayout.click();
+    await dashboard.confirmReset.click();
+
+    await expect(dashboard.resetDialog.getByRole('alert')).toContainText('We couldn’t reset the layout');
+    await expect(dashboard.resetDialog).toBeVisible();
+    await dashboard.keepLayout.click();
+    expect(await dashboard.grid.placement('Datadog')).toMatchObject({ y: 6 });
+  });
+
   test('confirming Reset layout packs tiles in creation order at 3 by 2 and says so', async () => {
     await dashboard.enterEditLayout();
 
