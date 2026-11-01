@@ -1,0 +1,35 @@
+@startuml
+title UML sequence behaviour — Call an app's API with a token
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Person" as person
+participant "Sample app" as app
+box "Ingresso.Api" #EFF8FF
+  participant "OpenIddict server" as oidc
+  participant "AuthorizationController" as authz
+end box
+database "ingresso database" as db
+participant "Sample app API\n(JwtBearer)" as api
+person -> app : Sign in with ingresso
+app -> oidc : authorize (scope openid email sample-api.read, PKCE)
+alt scope not allowed for the app
+  oidc --> app : redirect with error=invalid_scope
+else allowed
+  oidc -> authz : pass-through
+  authz -> db : ListResourcesAsync(scopes)
+  authz --> oidc : SignIn(sub, email, scopes, resources)
+  oidc --> app : redirect with code
+  app -> oidc : token (code, verifier)
+  oidc --> app : ID token + access token (aud, scope, exp)
+  app -> api : GET /api/me, Bearer access token
+  api -> oidc : discovery and JWKS (cached)
+  alt valid signature, issuer, audience, lifetime
+    api --> app : 200 { sub, scope }
+  else expired, altered or other audience
+    api --> app : 401
+  end
+end
+@enduml

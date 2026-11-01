@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Call an app's API with a token
+Person(owner, "Owner")
+System_Boundary(ing, "ingresso") {
+  Container(cli, "Ingresso.Cli", ".NET console", "resources and clients commands")
+  Container(apiSrv, "Ingresso.Api", "ASP.NET Core, OpenIddict", "Authorization, token, discovery and JWKS endpoints")
+  ContainerDb(db, "ingresso database", "SQL Server", "OpenIddict applications, scopes, tokens")
+}
+System_Boundary(sample, "Sample app") {
+  Container(web, "Ingresso.SampleApp", "ASP.NET Core", "Cookie + OpenID Connect; GET /api/me with JwtBearer")
+}
+Rel(owner, cli, "resources add, clients add --scope")
+Rel(cli, db, "Writes scopes and clients")
+Rel(apiSrv, db, "Reads scopes and clients, stores tokens")
+Rel(web, apiSrv, "Code for tokens; discovery and keys", "HTTPS")
+@enduml
