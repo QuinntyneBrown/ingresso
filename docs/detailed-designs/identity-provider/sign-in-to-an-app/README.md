@@ -18,7 +18,8 @@ OpenIddict is the OpenID Connect server ([ADR 0014](../../../adr/0014-openiddict
 
 - **`IdentityProviderSetup.AddIngressoIdentityProvider`** (`Ingresso.Api/Auth`) — configures the OpenIddict
   server:
-  - The issuer is `Site:PublicBaseUrl`.
+  - The issuer is `Site:PublicBaseUrl`. Endpoint addresses in discovery use the origin the request arrived on, which
+    is the same origin in production.
   - Endpoints: `connect/authorize` and `connect/token`. Discovery is at `/.well-known/openid-configuration` and
     the keys at `/.well-known/jwks`.
   - The authorization-code flow only, with PKCE required and `S256` only.
