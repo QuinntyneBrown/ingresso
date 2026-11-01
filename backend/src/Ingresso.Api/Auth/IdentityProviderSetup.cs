@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.IdentityModel.Tokens;
@@ -26,7 +27,6 @@ public static class IdentityProviderSetup
     public static TimeSpan RefreshTokenAbsoluteLifetime(IConfiguration configuration) =>
         configuration.GetValue<TimeSpan?>("IdentityProvider:RefreshTokenAbsoluteLifetime") ?? TimeSpan.FromDays(90);
 
-    private static readonly Lazy<RsaSecurityKey> DevelopmentSigningKey = new(() => new RsaSecurityKey(RSA.Create(2048)));
     private static readonly Lazy<RsaSecurityKey> DevelopmentEncryptionKey = new(() => new RsaSecurityKey(RSA.Create(2048)));
 
     public static IServiceCollection AddIngressoIdentityProvider(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
@@ -35,6 +35,10 @@ public static class IdentityProviderSetup
         var issuer = (configuration.GetSection(SiteOptions.Section).Get<SiteOptions>() ?? new SiteOptions()).PublicBaseUrl;
         var certificatePath = configuration["IdentityProvider:SigningCertificate:Path"];
 
+        services.AddSingleton<IConfigureOptions<OpenIddictServerOptions>, SigningKeyOptionsSetup>();
+        services.AddSingleton<IOptionsChangeTokenSource<OpenIddictServerOptions>, SigningKeyChangeTokenSource>();
+        services.AddSingleton<SigningKeyMaintenance>();
+        services.AddHostedService(sp => sp.GetRequiredService<SigningKeyMaintenance>());
         services.AddOpenIddict().AddServer(options =>
         {
             options.SetIssuer(new Uri(issuer.TrimEnd('/') + "/"));
@@ -67,14 +71,15 @@ public static class IdentityProviderSetup
 
             if (!string.IsNullOrWhiteSpace(certificatePath))
             {
+                // Signing keys come from the database (SigningKeyOptionsSetup); the certificate only encrypts.
                 var certificate = X509CertificateLoader.LoadPkcs12FromFile(certificatePath, configuration["IdentityProvider:SigningCertificate:Password"]);
-                options.AddSigningCertificate(certificate).AddEncryptionCertificate(certificate);
+                options.AddEncryptionCertificate(certificate);
             }
             else if (devOrTest)
             {
-                // Keys change on restart; journey 26 moves them to the database with rotation. They are made once per
-                // process, so test hosts don't each pay for new RSA keys.
-                options.AddSigningKey(DevelopmentSigningKey.Value).AddEncryptionKey(DevelopmentEncryptionKey.Value);
+                // The encryption key changes on restart; it is made once per process, so test hosts don't each pay for
+                // a new RSA key. Signing keys come from the database (journey 26).
+                options.AddEncryptionKey(DevelopmentEncryptionKey.Value);
             }
             else
             {
@@ -122,6 +127,12 @@ public static class IdentityProviderSetup
             {
                 // Development, Playwright and demos run on http://localhost.
                 aspNetCore.DisableTransportSecurityRequirement();
+            }
+
+            if (!devOrTest && string.IsNullOrWhiteSpace(configuration["DataProtection:Certificate:Path"]))
+            {
+                // The signing keys are only as safe as the Data Protection key ring that encrypts them (ADR 0021).
+                throw new InvalidOperationException("DataProtection:Certificate:Path is required outside Development.");
             }
         });
         return services;

@@ -25,8 +25,10 @@ OpenIddict is the OpenID Connect server ([ADR 0014](../../../adr/0014-openiddict
   - The authorization-code flow only, with PKCE required and `S256` only.
   - Pass-through for the authorization endpoint. An event handler on the authorization response sends errors
     that cannot be returned to an app to `/authorize-error`.
-  - Keys: `IdentityProvider:SigningCertificate:Path` (and `:Password`) loads a PFX for signing and encryption.
-    Without one, Development and Testing use ephemeral keys, and any other environment fails at startup.
+  - Keys: signing keys live in the database, encrypted, and rotate (journey 26,
+    [signing keys](../signing-keys/README.md)). `IdentityProvider:SigningCertificate:Path` (and `:Password`) now
+    loads only the encryption certificate; without one, Development and Testing use an ephemeral encryption key,
+    and any other environment fails at startup.
   - Transport security is relaxed only in Development and Testing, which run on `http://localhost`.
 - **`AuthorizationController`** (`GET`/`POST /connect/authorize`, anonymous) — runs after OpenIddict has
   validated the request:
@@ -119,7 +121,7 @@ authorization request.
   response to another origin, so apps use `response_mode=query` (in ASP.NET Core,
   `OpenIdConnectOptions.ResponseMode = "query"`). Allowing each client's own origin in `form-action` on
   authorization responses is deferred.
-- **Ephemeral keys outside production.** They change when the API restarts, so ID tokens issued before a
-  restart no longer validate. Journey 26 moves keys to the database with rotation.
+- **Ephemeral encryption key outside production.** It changes when the API restarts, so codes and refresh tokens
+  issued before a restart no longer work there. Signing keys moved to the database in journey 26.
 - **An unverified email.** It goes to `/verify-email`, and after verifying the person lands on the dashboard,
   not back at the app. They can choose Sign in with ingresso again.

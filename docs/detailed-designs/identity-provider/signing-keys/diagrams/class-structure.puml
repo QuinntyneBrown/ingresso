@@ -1,0 +1,42 @@
+@startuml
+title Class structure — Signing keys
+hide empty members
+class SigningKey {
+  Id : Guid
+  Kid : string
+  ProtectedKey : string
+  CreatedAtUtc : DateTimeOffset
+  RetiredAtUtc : DateTimeOffset?
+  State(now, period) : SigningKeyState
+}
+enum SigningKeyState {
+  Active
+  Retiring
+  Retired
+}
+interface ISigningKeyFactory {
+  Create(now) : SigningKey
+}
+class SigningKeyPolicy <<record>> {
+  RetirementPeriod : TimeSpan
+  RotationInterval : TimeSpan?
+}
+class RotateSigningKeyCommand <<record>>
+class RotateIfDueCommand <<record>>
+class GetSigningKeysQuery <<record>>
+class SigningKeyDto <<record>> {
+  Kid : string
+  State : SigningKeyState
+  CreatedAt : DateTimeOffset
+  PublishedUntil : DateTimeOffset?
+}
+class SigningKeyRing {
+  Keys : IReadOnlyList<X509SecurityKey>
+  ReloadAsync()
+  GetChangeToken()
+}
+SigningKey ..> SigningKeyState
+RotateSigningKeyCommand ..> ISigningKeyFactory
+GetSigningKeysQuery ..> SigningKeyDto : returns
+SigningKeyRing ..> SigningKey : decrypts
+@enduml

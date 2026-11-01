@@ -1,0 +1,24 @@
+@startuml
+title UML sequence behaviour — Rotate from the CLI
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Owner" as owner
+participant "ingresso CLI" as cli
+database "SigningKeys" as db
+participant "SigningKeyMaintenance" as maint
+participant "SigningKeyRing" as ring
+participant "OpenIddict" as oi
+participant "Sample app" as app
+owner -> cli : keys rotate
+cli -> db : retire the active key; add a new active key (Data Protection ciphertext)
+cli --> owner : Active key: 7d1f…
+maint -> ring : ReloadAsync (every minute)
+ring -> db : read active and retiring keys
+ring -> oi : change token fires; options rebuilt with both keys
+app -> oi : refresh_token grant
+oi --> app : tokens signed with kid 7d1f…
+app -> oi : GET /.well-known/jwks
+oi --> app : 7d1f… and 3f9a…
+@enduml

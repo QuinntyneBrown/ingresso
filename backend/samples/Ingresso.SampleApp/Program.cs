@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 // A minimal app that signs people in with ingresso over OpenID Connect (journey 16), calls its own API with the
 // access token ingresso issues (journey 17), and renews that token with a refresh token when it expires (journey 20). Playwright and the demos use it as the relying party; it is also the
@@ -17,6 +18,10 @@ var clientId = builder.Configuration["SampleApp:ClientId"] ?? "ingresso-sample-a
 var audience = builder.Configuration["SampleApp:Audience"] ?? "ingresso-sample-api";
 var apiScope = builder.Configuration["SampleApp:Scope"] ?? "sample-api.read";
 var localAuthority = authority.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase);
+
+// How soon after one refetch of ingresso's keys a token with an unknown key may trigger another (ASP.NET's default
+// is 5 minutes). Playwright rotates keys more than once a run, so it shortens this.
+var keysRefreshInterval = builder.Configuration.GetValue<TimeSpan?>("SampleApp:KeysRefreshInterval");
 
 builder.Services.AddAuthentication(options =>
     {
@@ -45,6 +50,7 @@ builder.Services.AddAuthentication(options =>
         options.MapInboundClaims = false;
         options.GetClaimsFromUserInfoEndpoint = false;
         options.RequireHttpsMetadata = !localAuthority;
+        options.RefreshInterval = keysRefreshInterval ?? options.RefreshInterval;
         // Local runs are plain http; the correlation and nonce cookies must still round-trip.
         options.CorrelationCookie.SameSite = SameSiteMode.Lax;
         options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
@@ -57,6 +63,19 @@ builder.Services.AddAuthentication(options =>
             context.HandleResponse();
             return Task.CompletedTask;
         };
+        // Right after ingresso rotates its signing key (journey 26), the handler doesn't know the new key yet: it
+        // refuses that ID token and fetches the JWKS again. Start the sign-in over once; ingresso's session makes it
+        // quiet.
+        options.Events.OnRemoteFailure = context =>
+        {
+            if (context.Failure is SecurityTokenSignatureKeyNotFoundException && context.Properties?.Items.ContainsKey("retried") != true)
+            {
+                context.Response.Redirect("/signin?again=true");
+                context.HandleResponse();
+            }
+
+            return Task.CompletedTask;
+        };
     })
     // The app's API: accepts only ingresso access tokens issued for its audience, validated against discovery.
     .AddJwtBearer(options =>
@@ -67,6 +86,7 @@ builder.Services.AddAuthentication(options =>
         // An expired token is refused at once, not five minutes later; the app renews it instead.
         options.TokenValidationParameters.ClockSkew = TimeSpan.Zero;
         options.RequireHttpsMetadata = !localAuthority;
+        options.RefreshInterval = keysRefreshInterval ?? options.RefreshInterval;
     });
 builder.Services.AddAuthorization();
 builder.Services.AddHttpClient();
@@ -118,7 +138,16 @@ app.MapGet("/api/me", (HttpContext context) => Results.Ok(new
     }))
     .RequireAuthorization(policy => policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme).RequireAuthenticatedUser());
 
-app.MapGet("/signin", () => Results.Challenge(new AuthenticationProperties { RedirectUri = "/" }));
+app.MapGet("/signin", (bool? again) =>
+{
+    var properties = new AuthenticationProperties { RedirectUri = "/" };
+    if (again == true)
+    {
+        properties.Items["retried"] = "1";
+    }
+
+    return Results.Challenge(properties);
+});
 
 // Signs out here and through ingresso's end-session endpoint, which signs out every app of the session (journey 18).
 app.MapGet("/signout", () => Results.SignOut(
@@ -180,9 +209,24 @@ static async Task<int?> RenewIfExpiredAsync(HttpContext context, IHttpClientFact
 static async Task<string> CallApiAsync(HttpContext context, IHttpClientFactory http)
 {
     var accessToken = await context.GetTokenAsync("access_token");
-    using var request = new HttpRequestMessage(HttpMethod.Get, $"{context.Request.Scheme}://{context.Request.Host}/api/me");
-    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-    using var response = await http.CreateClient().SendAsync(request);
+    async Task<HttpResponseMessage> SendAsync()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"{context.Request.Scheme}://{context.Request.Host}/api/me");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        return await http.CreateClient().SendAsync(request);
+    }
+
+    var response = await SendAsync();
+    // After ingresso rotates its signing key (journey 26), the API refuses the first token signed with the new key
+    // while it fetches the new JWKS, so the app tries once more.
+    if (response.StatusCode == HttpStatusCode.Unauthorized
+        && response.Headers.WwwAuthenticate.ToString().Contains("signature key was not found", StringComparison.OrdinalIgnoreCase))
+    {
+        response.Dispose();
+        response = await SendAsync();
+    }
+
+    using var _ = response;
     if (!response.IsSuccessStatusCode)
     {
         return $"Your API refused the call ({(int)response.StatusCode}).";
