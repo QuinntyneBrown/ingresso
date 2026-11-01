@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MediatR;
 using Ingresso.Api.Auth;
 using Ingresso.Api.Tests.Infrastructure;
+using Ingresso.Application.Common.Interfaces;
 using Ingresso.Application.SigningKeys;
 
 namespace Ingresso.Api.Tests.IdentityProvider;
@@ -103,6 +104,45 @@ public sealed class SigningKeyTests(ApiFactory factory) : IClassFixture<ApiFacto
         var userinfo = new HttpRequestMessage(HttpMethod.Get, "/connect/userinfo");
         userinfo.Headers.Authorization = new("Bearer", before.GetProperty("access_token").GetString());
         Assert.Equal(HttpStatusCode.OK, (await factory.CreateHttpsClient().SendAsync(userinfo)).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-138
+    // Description: A key stays published for the 14-day refresh token lifetime after it retires; after that it leaves the JWKS and its tokens are refused.
+    [Fact]
+    public async Task A_retiring_key_is_published_until_its_tokens_have_expired()
+    {
+        var app = await RelyingParty.RegisterWithOfflineAccessAsync(factory);
+        var before = await app.SignInOfflineAsync();
+        var rotated = await RotateAsync();
+        var recent = await AddRetiredKeyAsync(retiredDaysAgo: 13);
+
+        await factory.WithDbAsync(async db =>
+        {
+            var old = await db.SigningKeys.SingleAsync(k => k.Kid == rotated.RetiringKid);
+            old.RetiredAtUtc = ApiFactory.Today.AddDays(-15);
+            return await db.SaveChangesAsync();
+        });
+        await factory.Services.GetRequiredService<SigningKeyMaintenance>().RunOnceAsync(CancellationToken.None);
+
+        var kids = (await JwksAsync()).Select(k => k.GetProperty("kid").GetString()).ToList();
+        Assert.Contains(recent, kids);
+        Assert.DoesNotContain(rotated.RetiringKid, kids);
+        var userinfo = new HttpRequestMessage(HttpMethod.Get, "/connect/userinfo");
+        userinfo.Headers.Authorization = new("Bearer", before.GetProperty("access_token").GetString());
+        Assert.Equal(HttpStatusCode.Unauthorized, (await factory.CreateHttpsClient().SendAsync(userinfo)).StatusCode);
+    }
+
+    private async Task<string> AddRetiredKeyAsync(int retiredDaysAgo)
+    {
+        var key = factory.Services.GetRequiredService<ISigningKeyFactory>().Create(ApiFactory.Today.AddDays(-retiredDaysAgo - 30));
+        key.RetiredAtUtc = ApiFactory.Today.AddDays(-retiredDaysAgo);
+        await factory.WithDbAsync(db =>
+        {
+            db.SigningKeys.Add(key);
+            return db.SaveChangesAsync();
+        });
+        return key.Kid;
     }
 
     // Acceptance Test

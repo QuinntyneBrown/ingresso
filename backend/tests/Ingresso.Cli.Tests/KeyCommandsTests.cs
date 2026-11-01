@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ingresso.Application;
+using Ingresso.Application.Common.Interfaces;
 using Ingresso.Infrastructure;
 using Ingresso.Infrastructure.Persistence;
 
@@ -52,6 +53,59 @@ public sealed class KeyCommandsTests : IDisposable
             Active key: {active}
             Retiring key: {previous}, published until 2026-11-16 14:00 UTC
             A running API starts signing with the new key within a minute.
+
+            """.ReplaceLineEndings(),
+            output.ReplaceLineEndings());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-136
+    // Description: keys list creates the first key when there is none and prints it as active.
+    [Fact]
+    public async Task List_creates_the_first_key_when_there_is_none()
+    {
+        var (code, output) = await Run("keys", "list");
+
+        Assert.Equal(0, code);
+        Assert.Equal(
+            $"""
+            Signing keys:
+            {await ActiveKidAsync()}  active    created 2026-11-02 14:00 UTC
+
+            """.ReplaceLineEndings(),
+            output.ReplaceLineEndings());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-136, L2-138
+    // Description: keys list prints each key with its state, when it was created and, while retiring, until when it is published.
+    [Fact]
+    public async Task List_prints_each_key_with_its_state()
+    {
+        string retired;
+        using (var scope = services.CreateScope())
+        {
+            var old = scope.ServiceProvider.GetRequiredService<ISigningKeyFactory>().Create(new DateTimeOffset(2026, 9, 1, 9, 0, 0, TimeSpan.Zero));
+            old.RetiredAtUtc = new DateTimeOffset(2026, 10, 1, 9, 0, 0, TimeSpan.Zero);
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.SigningKeys.Add(old);
+            await db.SaveChangesAsync();
+            retired = old.Kid;
+        }
+
+        await Run("keys", "rotate");
+        var retiring = await ActiveKidAsync();
+        await Run("keys", "rotate");
+
+        var (code, output) = await Run("keys", "list");
+
+        Assert.Equal(0, code);
+        Assert.Equal(
+            $"""
+            Signing keys:
+            {await ActiveKidAsync()}  active    created 2026-11-02 14:00 UTC
+            {retiring}  retiring  created 2026-11-02 14:00 UTC, published until 2026-11-16 14:00 UTC
+            {retired}  retired   created 2026-09-01 09:00 UTC
 
             """.ReplaceLineEndings(),
             output.ReplaceLineEndings());

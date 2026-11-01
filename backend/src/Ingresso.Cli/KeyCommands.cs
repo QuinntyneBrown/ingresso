@@ -27,6 +27,15 @@ public static class KeyCommands
 
                 await output.WriteLineAsync("A running API starts signing with the new key within a minute.");
                 return 0;
+            case "list":
+                await output.WriteLineAsync("Signing keys:");
+                foreach (var key in await sender.Send(new GetSigningKeysQuery(), cancellationToken))
+                {
+                    var until = key.PublishedUntil is { } published ? $", published until {Format(published)}" : "";
+                    await output.WriteLineAsync($"{key.Kid}  {key.State.ToString().ToLowerInvariant(),-8}  created {Format(key.CreatedAt)}{until}");
+                }
+
+                return 0;
             default:
                 await output.WriteLineAsync(Usage);
                 return 1;
