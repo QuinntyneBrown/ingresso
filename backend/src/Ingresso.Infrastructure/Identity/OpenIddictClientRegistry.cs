@@ -98,5 +98,6 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
             .ToList(),
         (await applications.GetPropertiesAsync(app, cancellationToken)).TryGetValue(FrontChannelLogoutUriProperty, out var frontChannel)
             ? frontChannel.GetString()
-            : null);
+            : null,
+        await applications.HasClientTypeAsync(app, ClientTypes.Confidential, cancellationToken));
 }

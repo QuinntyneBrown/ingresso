@@ -2,16 +2,61 @@ import { Locator, Page } from '@playwright/test';
 
 export type ThemeChoice = 'Match my system' | 'Light' | 'Dark';
 
-/** Settings: the appearance choice. */
+/** Settings: the appearance choice, and for administrators the Apps card (L2-104). */
 export class SettingsPage {
   readonly heading: Locator;
   readonly appearance: Locator;
   readonly backToApps: Locator;
+  readonly apps: Locator;
+  readonly appRows: Locator;
+  readonly registerApp: Locator;
+  readonly noApps: Locator;
+  readonly appsLoading: Locator;
+  readonly appsFailed: Locator;
+  readonly tryAgain: Locator;
 
   constructor(private readonly page: Page) {
     this.heading = page.getByRole('heading', { level: 1, name: 'Settings' });
     this.appearance = page.getByRole('group', { name: 'Appearance' });
     this.backToApps = page.getByRole('link', { name: 'Back to your apps' });
+    this.apps = page.getByRole('region', { name: 'Apps' });
+    this.appRows = this.apps.getByRole('list', { name: 'Registered apps' }).getByRole('listitem');
+    this.registerApp = this.apps.getByRole('button', { name: 'Register an app' }).first();
+    this.noApps = this.apps.getByRole('heading', { name: 'No apps yet' });
+    this.appsLoading = this.apps.locator('[aria-busy="true"]');
+    this.appsFailed = this.apps.getByRole('alert');
+    this.tryAgain = this.apps.getByRole('button', { name: 'Try again' });
+  }
+
+  /** The row for a registered app, by its name. */
+  app(name: string): Locator {
+    return this.appRows.filter({ hasText: name });
+  }
+
+  /** Answers the apps list with none, as on a fresh install. */
+  async showNoApps(): Promise<void> {
+    await this.page.route('**/api/clients', (route) =>
+      route.request().method() === 'GET' ? route.fulfill({ json: [] }) : route.fallback(),
+    );
+  }
+
+  /** Keeps the apps list loading. */
+  async holdApps(): Promise<void> {
+    await this.page.route('**/api/clients', (route) =>
+      route.request().method() === 'GET' ? new Promise(() => undefined) : route.fallback(),
+    );
+  }
+
+  /** Fails the next load of the apps list. */
+  async failAppsOnce(): Promise<void> {
+    await this.page.route(
+      '**/api/clients',
+      (route) =>
+        route.request().method() === 'GET'
+          ? route.fulfill({ status: 500, contentType: 'application/problem+json', body: '{}' })
+          : route.fallback(),
+      { times: 1 },
+    );
   }
 
   async open(): Promise<void> {
