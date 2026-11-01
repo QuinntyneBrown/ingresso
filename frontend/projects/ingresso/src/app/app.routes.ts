@@ -19,6 +19,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/status/authorize-error-page').then((m) => m.AuthorizeErrorPage),
   },
   {
+    // Outside the shell: the session has already ended (L2-100, L2-101).
+    path: 'signed-out',
+    title: 'Signed out · ingresso',
+    loadComponent: () => import('./pages/signed-out/signed-out-page').then((m) => m.SignedOutPage),
+  },
+  {
     // Every other screen sits inside the shell: header, main region and footer.
     path: '',
     component: AppShell,

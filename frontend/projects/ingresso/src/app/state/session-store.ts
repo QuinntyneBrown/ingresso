@@ -25,7 +25,8 @@ export class SessionStore {
   }
 
   /** Ends the session on the server, then forgets the person. */
-  signOut(): Observable<void> {
+  /** Signs out; emits the signed-out page's ticket when the session's apps must be signed out too (L2-101). */
+  signOut(): Observable<string | null> {
     return this.auth.signOut().pipe(tap(() => this.user.set(null)));
   }
 }

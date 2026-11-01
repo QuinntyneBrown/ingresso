@@ -80,7 +80,8 @@ public sealed class DatabaseSeeder(
         var baseUrl = sampleApp.Value.BaseUrl.TrimEnd('/');
         await clients.RegisterAsync(
             new NewClient(
-                "Sample app", [$"{baseUrl}/signin-oidc"], [$"{baseUrl}/signout-callback-oidc"], SampleAppOptions.ClientId, [SampleAppOptions.Scope]),
+                "Sample app", [$"{baseUrl}/signin-oidc"], [$"{baseUrl}/signout-callback-oidc"], SampleAppOptions.ClientId, [SampleAppOptions.Scope],
+                $"{baseUrl}/frontchannel-logout"),
             cancellationToken);
     }
 }

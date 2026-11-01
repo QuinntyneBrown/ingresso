@@ -16,6 +16,18 @@ export interface CurrentUser {
   emailVerified: boolean;
 }
 
+/** An app the signed-out page signs out: its name and its front-channel sign-out address (journey 18). */
+export interface SignedOutApp {
+  name: string;
+  logoutUri: string;
+}
+
+/** What the signed-out page does: the apps to sign out, then where to continue (null: offer Sign in again). */
+export interface SignedOut {
+  apps: SignedOutApp[];
+  returnUrl: string | null;
+}
+
 export interface AuthApi {
   /** The signed-in user; fails with a 401 `ApiError` when anonymous. */
   me(): Observable<CurrentUser>;
@@ -28,8 +40,13 @@ export interface AuthApi {
   appName(clientId: string): Observable<string>;
   /** Emails an unverified account another verification link; fails with a rate-limited `ApiError` when asked too often. */
   resendVerification(): Observable<void>;
-  /** Ends this device's session on the server and clears its cookie. */
-  signOut(): Observable<void>;
+  /**
+   * Ends this device's session on the server and clears its cookie. Emits the signed-out page's ticket when apps
+   * signed in under the session must be signed out too (L2-101), otherwise null.
+   */
+  signOut(): Observable<string | null>;
+  /** The apps a signed-out ticket names; fails with a not-found `ApiError` for an unreadable or old ticket. */
+  signedOut(ticket: string): Observable<SignedOut>;
 }
 
 export const AUTH_API = new InjectionToken<AuthApi>('AUTH_API');
@@ -60,7 +77,13 @@ export class HttpAuthApi implements AuthApi {
     return this.http.post<void>(`${this.baseUrl}/api/auth/verification-emails`, null);
   }
 
-  signOut(): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/api/auth/sign-out`, null);
+  signOut(): Observable<string | null> {
+    return this.http
+      .post<{ signedOut: string | null } | null>(`${this.baseUrl}/api/auth/sign-out`, null)
+      .pipe(map((result) => result?.signedOut ?? null));
+  }
+
+  signedOut(ticket: string): Observable<SignedOut> {
+    return this.http.get<SignedOut>(`${this.baseUrl}/api/auth/signed-out`, { params: { ticket } });
   }
 }

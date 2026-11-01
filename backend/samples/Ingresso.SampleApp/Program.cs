@@ -71,6 +71,7 @@ app.MapGet("/", async (HttpContext context, IHttpClientFactory http) =>
         : $"""
           <p data-signed-in-as>Signed in as {WebUtility.HtmlEncode(email)}</p>
           <p class="api" data-api-result>{WebUtility.HtmlEncode(await CallApiAsync(context, http))}</p>
+          <p><a class="button" href="/signout">Sign out</a></p>
           """;
     return Results.Content(Page(body), "text/html; charset=utf-8");
 });
@@ -84,6 +85,24 @@ app.MapGet("/api/me", (HttpContext context) => Results.Ok(new
     .RequireAuthorization(policy => policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme).RequireAuthenticatedUser());
 
 app.MapGet("/signin", () => Results.Challenge(new AuthenticationProperties { RedirectUri = "/" }));
+
+// Signs out here and through ingresso's end-session endpoint, which signs out every app of the session (journey 18).
+app.MapGet("/signout", () => Results.SignOut(
+    new AuthenticationProperties { RedirectUri = "/" },
+    [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]));
+
+// Front-channel logout: ingresso loads this in a hidden frame when the ingresso session ends. End this app's session
+// if it came from that ingresso session.
+app.MapGet("/frontchannel-logout", async (HttpContext context, string? sid) =>
+{
+    if (sid is not null && context.User.FindFirst("sid")?.Value == sid)
+    {
+        await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    }
+
+    context.Response.Headers.CacheControl = "no-store";
+    return Results.Content("<!doctype html><title>Signed out</title>", "text/html; charset=utf-8");
+});
 
 app.Run();
 
