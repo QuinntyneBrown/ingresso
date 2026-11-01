@@ -76,11 +76,11 @@ behind their backdrop; only the dialog is mapped.
   email.”). `Skeleton` while loading; a danger `Alert` with a Try again `Button` on error; a success toast through
   `ToastService` after saving. Local: the card's header row (title, lead and button), shared with Apps.
 - Connected apps (journey 24, `default`, `connected-empty`, `connected-loading`, `connected-error`; everyone): a
-  `Card` with a `List` (`surface`) of `ListItem`s (`title` = app name, `meta` = what it can do in plain words and
-  “Approved <date> · Last used <relative time>”) whose `[slot=action]` holds a small secondary `Button` (Revoke,
+  `Card` with a `List` (`surface`) of `ListItem`s (`wrap`; `title` = app name, `meta` = what it can do in plain words,
+  `detail` = “Approved <date> · Last used <relative time>”) whose `[slot=action]` holds a small secondary `Button` (Revoke,
   named “Revoke <app>’s access”) that opens the revoke-access dialog. `EmptyState` (no action) when there are
   none, `Skeleton` while loading, a danger `Alert` with a Try again `Button` on error, and a success toast after
-  revoking. Local: the card's header row.
+  revoking (“Access revoked”, “<app> has to ask again next time.”). Local: the card's header row.
 - Apps (journey 19, `apps`, `apps-empty`, `apps-loading`, `apps-error`; administrators only): a `Card` with a
   primary `Button` (Register an app), `List` (`surface`) of `ListItem` (`title` = app name, `meta` = type and
   client ID), `EmptyState` with a primary `Button` when there are none, `Skeleton` while loading, and a danger

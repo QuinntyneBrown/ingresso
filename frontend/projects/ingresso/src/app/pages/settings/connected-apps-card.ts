@@ -39,7 +39,7 @@ export interface ConnectedAppAction {
           @if (apps().length) {
             <ul ig-list surface aria-label="Connected apps">
               @for (app of apps(); track app.clientId) {
-                <li ig-list-item [title]="app.name" [meta]="can(app)" [detail]="when(app)">
+                <li ig-list-item wrap [title]="app.name" [meta]="can(app)" [detail]="when(app)">
                   <button
                     slot="action"
                     ig-button

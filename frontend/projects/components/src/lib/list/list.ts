@@ -64,15 +64,17 @@ export class ListItem {
   readonly meta = input<string>();
   /** A second meta line, such as dates under a description. */
   readonly detail = input<string>();
+  /** Lets the meta lines wrap instead of ending in an ellipsis; use when they must be read in full. */
+  readonly wrap = input(false, { transform: booleanAttribute });
   /** Highlights the row on hover; use when the row holds the one link or button it acts on. */
   readonly interactive = input(false, { transform: booleanAttribute });
 
   protected readonly catalog = computed(() => this.list?.variant() === 'catalog');
-  protected readonly classes = computed(() =>
-    this.catalog()
-      ? 'catalog__item'
-      : this.interactive()
-        ? 'list__item list__item--interactive'
-        : 'list__item',
-  );
+  protected readonly classes = computed(() => {
+    if (this.catalog()) return 'catalog__item';
+    const classes = ['list__item'];
+    if (this.interactive()) classes.push('list__item--interactive');
+    if (this.wrap()) classes.push('list__item--wrap');
+    return classes.join(' ');
+  });
 }
