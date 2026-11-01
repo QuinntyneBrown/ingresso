@@ -1,6 +1,7 @@
 using MediatR;
 using Ingresso.Application.Common.Exceptions;
 using Ingresso.Application.Common.Interfaces;
+using Ingresso.Domain.Enums;
 
 namespace Ingresso.Application.Consent;
 
@@ -14,16 +15,21 @@ public sealed record GetConnectedAppsQuery : IRequest<IReadOnlyList<ConnectedApp
 /// <summary>Revokes the person's approval of an app and ends its tokens for them; 404 when not connected (L2-129, L2-130).</summary>
 public sealed record RevokeConnectedAppCommand(string ClientId) : IRequest;
 
-public sealed class ConnectedAppsHandlers(IConsentStore store, ICurrentUser currentUser) :
+public sealed class ConnectedAppsHandlers(IConsentStore store, ICurrentUser currentUser, IAppDbContext db, IActivityLog activity) :
     IRequestHandler<GetConnectedAppsQuery, IReadOnlyList<ConnectedAppDto>>,
     IRequestHandler<RevokeConnectedAppCommand>
 {
     public async Task Handle(RevokeConnectedAppCommand request, CancellationToken cancellationToken)
     {
-        if (!await store.RevokeAsync(currentUser.UserId!.Value, request.ClientId, cancellationToken))
+        var userId = currentUser.UserId!.Value;
+        var app = await store.FindAppAsync(request.ClientId, cancellationToken);
+        if (!await store.RevokeAsync(userId, request.ClientId, cancellationToken))
         {
             throw new NotFoundException($"No connected app '{request.ClientId}'.");
         }
+
+        activity.Record(ActivityEventType.AppAccessRevoked, userId, app?.Name ?? request.ClientId);
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<ConnectedAppDto>> Handle(GetConnectedAppsQuery request, CancellationToken cancellationToken)
