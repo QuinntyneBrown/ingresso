@@ -2,11 +2,14 @@ import { expect, test } from '../fixtures';
 import { DashboardPage } from '../pages/dashboard.page';
 
 test.describe('Dashboard', () => {
+  // Acceptance Test
+  // Traces to: L2-146
+  // Description: The heading greets the seeded person by their whole display name; the summary counts their apps.
   test('greets the signed-in person and says how many apps they have', async ({ page }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.open();
 
-    await expect(dashboard.heading).toHaveText('Good afternoon, Maya');
+    await expect(dashboard.heading).toHaveText('Hi, Maya Okafor');
     await expect(dashboard.summary).toHaveText(/^\d+ apps/);
   });
 

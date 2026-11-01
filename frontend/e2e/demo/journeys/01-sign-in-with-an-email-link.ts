@@ -26,7 +26,7 @@ const journey: Journey = async ({ page, shot }) => {
   const path = url.pathname + url.search;
 
   await page.goto(path);
-  await page.getByRole('heading', { level: 1 }).filter({ hasText: 'Good afternoon' }).waitFor();
+  await page.getByRole('heading', { level: 1, name: /^Hi\b/ }).waitFor();
   await shot('private-dashboard');
 
   await page.context().clearCookies();
