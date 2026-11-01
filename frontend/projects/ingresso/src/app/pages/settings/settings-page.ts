@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Card, Check, Choice, FieldSet, Link } from 'components';
+import { Card, Check, Choice, FieldSet, Link, ToastService } from 'components';
+import { AppDialogs } from '../../state/app-dialogs';
 import { SessionStore } from '../../state/session-store';
 import { ThemePreference, ThemeStore } from '../../state/theme-store';
 import { AppsCard } from './apps-card';
@@ -47,7 +48,7 @@ const CHOICES: { value: ThemePreference; label: string }[] = [
           </ig-field-set>
         </ig-card>
         @if (administrator()) {
-          <ig-apps-card />
+          <ig-apps-card (register)="register($event)" />
         }
       </div>
     </div>
@@ -59,4 +60,20 @@ export class SettingsPage {
   protected readonly choices = CHOICES;
   private readonly session = inject(SessionStore);
   protected readonly administrator = computed(() => this.session.user()?.role === 'admin');
+  private readonly dialogs = inject(AppDialogs);
+  private readonly toasts = inject(ToastService);
+  private readonly appsCard = viewChild(AppsCard);
+
+  /** Register an app; a new app is announced and the list reloads (L2-105). */
+  protected register(event: Event): void {
+    this.dialogs.openRegisterApp(event.currentTarget as HTMLElement).subscribe((registered) => {
+      if (!registered) return;
+      this.toasts.show({
+        kind: 'success',
+        title: 'App registered',
+        text: `${registered.client.name} can sign people in with ingresso.`,
+      });
+      this.appsCard()?.reload();
+    });
+  }
 }

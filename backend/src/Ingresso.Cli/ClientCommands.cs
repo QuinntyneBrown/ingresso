@@ -31,7 +31,7 @@ public static class ClientCommands
             {
                 case "add" when Single(options, "--name", out var name) && Only(options, "--name", "--redirect-uri", "--post-logout-redirect-uri", "--front-channel-logout-uri", "--scope")
                                 && All(options, "--front-channel-logout-uri").Count <= 1:
-                    var client = await sender.Send(
+                    var (client, _) = await sender.Send(
                         new RegisterClientCommand(
                             name, All(options, "--redirect-uri"), All(options, "--post-logout-redirect-uri"), All(options, "--scope"),
                             All(options, "--front-channel-logout-uri").SingleOrDefault()),
