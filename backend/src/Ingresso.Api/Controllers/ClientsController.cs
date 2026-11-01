@@ -27,4 +27,18 @@ public sealed class ClientsController(ISender sender) : ControllerBase
         var registered = await sender.Send(command, cancellationToken);
         return StatusCode(StatusCodes.Status201Created, registered);
     }
+
+    /// <summary>Changes an app with the registration rules: 400, 409 and 404 as for registering (L2-112).</summary>
+    [HttpPut("{clientId}")]
+    public async Task<ClientDto> Update(string clientId, ClientChanges changes, CancellationToken cancellationToken) =>
+        await sender.Send(
+            new UpdateClientCommand(
+                clientId, changes.Name, changes.RedirectUris, changes.PostLogoutRedirectUris, changes.Scopes, changes.FrontChannelLogoutUri,
+                changes.OfflineAccess),
+            cancellationToken);
 }
+
+/// <summary>What the edit dialog sends: the registration fields an app may change (L2-112).</summary>
+public sealed record ClientChanges(
+    string? Name, IReadOnlyList<string>? RedirectUris, IReadOnlyList<string>? PostLogoutRedirectUris, IReadOnlyList<string>? Scopes,
+    string? FrontChannelLogoutUri, bool OfflineAccess);

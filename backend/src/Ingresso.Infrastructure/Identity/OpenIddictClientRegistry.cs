@@ -38,17 +38,46 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
             // OpenIddict hashes the secret before it stores it (L2-106).
             ClientSecret = client.ClientSecret,
             ConsentType = ConsentTypes.Implicit,
-            Permissions =
-            {
-                Permissions.Endpoints.Authorization,
-                Permissions.Endpoints.Token,
-                Permissions.Endpoints.Revocation,
-                Permissions.GrantTypes.AuthorizationCode,
-                Permissions.ResponseTypes.Code,
-                Permissions.Scopes.Email,
-            },
             Requirements = { Requirements.Features.ProofKeyForCodeExchange },
         };
+        Apply(descriptor, client);
+        await applications.CreateAsync(descriptor, cancellationToken);
+        return descriptor.ClientId;
+    }
+
+    public async Task<ClientDto?> UpdateAsync(string clientId, NewClient changes, CancellationToken cancellationToken)
+    {
+        if (await applications.FindByClientIdAsync(clientId, cancellationToken) is not { } app)
+        {
+            return null;
+        }
+
+        var descriptor = new OpenIddictApplicationDescriptor();
+        await applications.PopulateAsync(descriptor, app, cancellationToken);
+        descriptor.DisplayName = changes.Name;
+        descriptor.RedirectUris.Clear();
+        descriptor.PostLogoutRedirectUris.Clear();
+        descriptor.Permissions.Clear();
+        descriptor.Properties.Remove(FrontChannelLogoutUriProperty);
+        Apply(descriptor, changes);
+        // The stored secret hash is copied back unchanged, so OpenIddict keeps it rather than hashing it again.
+        await applications.UpdateAsync(app, descriptor, cancellationToken);
+        return await ToDtoAsync(app, cancellationToken);
+    }
+
+    /// <summary>Sets the name, addresses and permissions an app is registered or edited with (L2-087, L2-107, L2-112).</summary>
+    private static void Apply(OpenIddictApplicationDescriptor descriptor, NewClient client)
+    {
+        descriptor.DisplayName = client.Name;
+        foreach (var permission in new[]
+                 {
+                     Permissions.Endpoints.Authorization, Permissions.Endpoints.Token, Permissions.Endpoints.Revocation,
+                     Permissions.GrantTypes.AuthorizationCode, Permissions.ResponseTypes.Code, Permissions.Scopes.Email,
+                 })
+        {
+            descriptor.Permissions.Add(permission);
+        }
+
         foreach (var address in client.RedirectUris)
         {
             descriptor.RedirectUris.Add(new Uri(address));
@@ -79,9 +108,6 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
         {
             descriptor.Permissions.Add(Permissions.Endpoints.EndSession);
         }
-
-        await applications.CreateAsync(descriptor, cancellationToken);
-        return descriptor.ClientId;
     }
 
     public async Task<ClientDto?> RemoveAsync(string clientId, CancellationToken cancellationToken)

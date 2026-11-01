@@ -1,0 +1,145 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using Ingresso.Api.Tests.IdentityProvider;
+using Ingresso.Api.Tests.Infrastructure;
+
+namespace Ingresso.Api.Tests.Clients;
+
+/// <summary>L2-112 to L2-116: administrators edit, rotate, disable, enable and delete registered apps.</summary>
+public sealed class ManageClientsApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
+{
+    private const string Redirect = RelyingParty.RedirectUri;
+
+    private async Task<HttpClient> Administrator()
+    {
+        var client = factory.CreateHttpsClient();
+        await client.SignInAsAsync($"admin-{Guid.NewGuid():N}@example.com", administrator: true);
+        return client;
+    }
+
+    /// <summary>Registers an app through the API and returns its client ID and name.</summary>
+    private static async Task<(string ClientId, string Name)> RegisterAsync(HttpClient admin, bool confidential = false)
+    {
+        var name = $"Notes {Guid.NewGuid():N}"[..14];
+        var response = await admin.PostAsJsonAsync("/api/clients", new { name, redirectUris = new[] { Redirect }, confidential });
+        response.EnsureSuccessStatusCode();
+        var client = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("client");
+        return (client.GetProperty("clientId").GetString()!, name);
+    }
+
+    private static object Changes(string name, string[]? redirectUris = null, bool offlineAccess = false) => new
+    {
+        name,
+        redirectUris = redirectUris ?? new[] { Redirect, "https://app.example.com/oidc-callback" },
+        postLogoutRedirectUris = new[] { "https://app.example.com/signout-callback-oidc" },
+        frontChannelLogoutUri = "https://app.example.com/frontchannel-logout",
+        scopes = Array.Empty<string>(),
+        offlineAccess,
+    };
+
+    // Acceptance Test
+    // Traces to: L2-112, L2-116
+    // Description: An administrator changes an app's name, addresses and offline access; the response and the list show the new values.
+    [Fact]
+    public async Task An_administrator_edits_an_app()
+    {
+        var admin = await Administrator();
+        var (clientId, _) = await RegisterAsync(admin);
+        var renamed = $"Notes {Guid.NewGuid():N}"[..14];
+
+        var response = await admin.PutAsJsonAsync($"/api/clients/{clientId}", Changes(renamed, offlineAccess: true));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var client = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(renamed, client.GetProperty("name").GetString());
+        Assert.Equal([Redirect, "https://app.example.com/oidc-callback"], client.GetProperty("redirectUris").EnumerateArray().Select(u => u.GetString()));
+        Assert.Equal(["https://app.example.com/signout-callback-oidc"], client.GetProperty("postLogoutRedirectUris").EnumerateArray().Select(u => u.GetString()));
+        Assert.Equal("https://app.example.com/frontchannel-logout", client.GetProperty("frontChannelLogoutUri").GetString());
+        Assert.True(client.GetProperty("offlineAccess").GetBoolean());
+        var listed = (await admin.GetFromJsonAsync<JsonElement>("/api/clients")).EnumerateArray().Single(a => a.GetProperty("clientId").GetString() == clientId);
+        Assert.Equal(renamed, listed.GetProperty("name").GetString());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-112
+    // Description: Changes breaking the registration rules change nothing and answer 400 with the registration messages.
+    [Fact]
+    public async Task Invalid_changes_answer_400_and_change_nothing()
+    {
+        var admin = await Administrator();
+        var (clientId, name) = await RegisterAsync(admin);
+
+        var response = await admin.PutAsJsonAsync($"/api/clients/{clientId}", Changes("", ["notes.example.com/signin-oidc"]));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var errors = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors");
+        Assert.Equal("Enter a name for the app.", errors.GetProperty("name")[0].GetString());
+        Assert.Contains("'notes.example.com/signin-oidc'", errors.GetProperty("redirectUris[0]")[0].GetString());
+        var listed = (await admin.GetFromJsonAsync<JsonElement>("/api/clients")).EnumerateArray().Single(a => a.GetProperty("clientId").GetString() == clientId);
+        Assert.Equal(name, listed.GetProperty("name").GetString());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-112
+    // Description: Another app's name is refused with 409; keeping the app's own name is fine.
+    [Fact]
+    public async Task Another_apps_name_is_refused_but_its_own_is_kept()
+    {
+        var admin = await Administrator();
+        var (clientId, name) = await RegisterAsync(admin);
+        var (_, other) = await RegisterAsync(admin);
+
+        var taken = await admin.PutAsJsonAsync($"/api/clients/{clientId}", Changes(other.ToUpperInvariant()));
+        var kept = await admin.PutAsJsonAsync($"/api/clients/{clientId}", Changes(name));
+
+        Assert.Equal(HttpStatusCode.Conflict, taken.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, kept.StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-112, L2-094
+    // Description: After a redirect address is removed, an authorization request using it never redirects there.
+    [Fact]
+    public async Task A_removed_redirect_address_is_no_longer_trusted()
+    {
+        var admin = await Administrator();
+        var (clientId, name) = await RegisterAsync(admin);
+        await admin.PutAsJsonAsync($"/api/clients/{clientId}", Changes(name, ["https://app.example.com/oidc-callback"]));
+        var browser = factory.CreateHttpsClient();
+        await browser.SignInAsAsync(HttpClientExtensions.DevUser);
+
+        var response = await browser.GetAsync(RelyingParty.For(factory, clientId).AuthorizePath());
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/authorize-error", response.Headers.Location!.OriginalString);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-116
+    // Description: Changing an app ingresso doesn't know answers 404.
+    [Fact]
+    public async Task Editing_an_unknown_app_answers_404()
+    {
+        var admin = await Administrator();
+
+        var response = await admin.PutAsJsonAsync("/api/clients/no-such-app", Changes("Notes"));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-116
+    // Description: A member gets 403 and an anonymous caller 401 from every change endpoint.
+    [Theory]
+    [InlineData("PUT", "/api/clients/some-app")]
+    public async Task Only_administrators_change_apps(string method, string path)
+    {
+        var member = factory.CreateHttpsClient();
+        await member.SignInAsAsync(HttpClientExtensions.DevUser);
+        HttpRequestMessage Request() => new(new HttpMethod(method), path) { Content = JsonContent.Create(Changes("Notes")) };
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await member.SendAsync(Request())).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await factory.CreateHttpsClient().SendAsync(Request())).StatusCode);
+    }
+}

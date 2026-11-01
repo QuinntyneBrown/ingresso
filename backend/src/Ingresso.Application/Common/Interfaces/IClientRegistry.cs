@@ -13,6 +13,12 @@ public interface IClientRegistry
     /// <summary>Registers a public client that must use PKCE and returns its generated client ID.</summary>
     Task<string> RegisterAsync(NewClient client, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Replaces the app's name, addresses, scopes and offline access with <paramref name="changes"/>, keeping its type
+    /// and secret; returns the app, or null when no client has this ID (L2-112).
+    /// </summary>
+    Task<ClientDto?> UpdateAsync(string clientId, NewClient changes, CancellationToken cancellationToken);
+
     /// <summary>Removes the client and returns what it was, or null when no client has this ID.</summary>
     Task<ClientDto?> RemoveAsync(string clientId, CancellationToken cancellationToken);
 }

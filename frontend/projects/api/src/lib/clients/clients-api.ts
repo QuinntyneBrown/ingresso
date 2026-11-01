@@ -25,7 +25,12 @@ export interface AppRegistration {
   frontChannelLogoutUri: string | null;
   scopes: string[];
   confidential: boolean;
+  /** Lets the app ask for refresh tokens (L2-107). */
+  offlineAccess: boolean;
 }
+
+/** What the edit dialog sends: everything but the type, which can't change after registration (L2-112). */
+export type AppChanges = Omit<AppRegistration, 'confidential'>;
 
 /** A newly registered app, with its secret when it is confidential; the only time the secret is ever sent (L2-106). */
 export interface AppRegistered {
@@ -48,6 +53,8 @@ export interface ClientsApi {
   register(registration: AppRegistration): Observable<AppRegistered>;
   /** The registered APIs, whose scopes an app may be allowed. */
   resources(): Observable<ApiResource[]>;
+  /** Changes an app with the registration rules; fails as `register` does, or with not-found (L2-112). */
+  update(clientId: string, changes: AppChanges): Observable<RegisteredApp>;
 }
 
 export const CLIENTS_API = new InjectionToken<ClientsApi>('CLIENTS_API');
@@ -67,5 +74,12 @@ export class HttpClientsApi implements ClientsApi {
 
   resources(): Observable<ApiResource[]> {
     return this.http.get<ApiResource[]>(`${this.baseUrl}/api/resources`);
+  }
+
+  update(clientId: string, changes: AppChanges): Observable<RegisteredApp> {
+    return this.http.put<RegisteredApp>(
+      `${this.baseUrl}/api/clients/${encodeURIComponent(clientId)}`,
+      changes,
+    );
   }
 }

@@ -33,6 +33,27 @@ export class SettingsPage {
     return this.appRows.filter({ hasText: name });
   }
 
+  /** The button that opens an app's actions menu (journey 21). */
+  actionsFor(name: string): Locator {
+    return this.apps.getByRole('button', { name: `Actions for ${name}`, exact: true });
+  }
+
+  /** An item in the open actions menu, such as Edit, Rotate secret, Disable, Enable or Delete. */
+  action(label: string): Locator {
+    return this.page.getByRole('menuitem', { name: label, exact: true });
+  }
+
+  /** Opens an app's actions and chooses one. */
+  async chooseAction(name: string, label: string): Promise<void> {
+    await this.actionsFor(name).click();
+    await this.action(label).click();
+  }
+
+  /** The Disabled badge on an app's row (L2-114). */
+  disabledBadge(name: string): Locator {
+    return this.app(name).getByText('Disabled', { exact: true });
+  }
+
   /** Answers the apps list with the mocks' three apps, so screenshots don't depend on what other tests registered. */
   async showMockApps(): Promise<void> {
     const app = (clientId: string, name: string, confidential: boolean) => ({

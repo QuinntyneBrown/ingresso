@@ -1,13 +1,31 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, output, signal } from '@angular/core';
 import { CLIENTS_API, RegisteredApp } from 'api';
-import { Alert, Button, Card, EmptyState, Icon, List, ListItem, Skeleton } from 'components';
+import {
+  Alert,
+  Button,
+  Card,
+  EmptyState,
+  Icon,
+  List,
+  ListItem,
+  Menu,
+  MenuItem,
+  MenuTrigger,
+  Skeleton,
+} from 'components';
 
 type Load = 'loading' | 'ready' | 'failed';
 
-/** Settings → Apps: the apps that sign in with ingresso, for administrators (L2-104). */
+/** An app's action that opens a dialog, with the control focus returns to when it closes. */
+export interface AppAction {
+  app: RegisteredApp;
+  trigger: HTMLElement;
+}
+
+/** Settings → Apps: the apps that sign in with ingresso, for administrators (L2-104), with each app's actions (L2-112 to L2-115). */
 @Component({
   selector: 'ig-apps-card',
-  imports: [Alert, Button, Card, EmptyState, Icon, List, ListItem, Skeleton],
+  imports: [Alert, Button, Card, EmptyState, Icon, List, ListItem, Menu, MenuItem, MenuTrigger, Skeleton],
   template: `
     <section ig-card title="Apps">
       @if (load() !== 'ready' || apps().length) {
@@ -31,7 +49,32 @@ type Load = 'loading' | 'ready' | 'failed';
           @if (apps().length) {
             <ul ig-list surface aria-label="Registered apps">
               @for (app of apps(); track app.clientId) {
-                <li ig-list-item [title]="app.name" [meta]="meta(app)"></li>
+                <li ig-list-item [title]="app.name" [meta]="meta(app)">
+                  <span #actions slot="action" class="actions">
+                    <button
+                      ig-button
+                      type="button"
+                      appearance="ghost"
+                      size="sm"
+                      iconOnly
+                      [attr.aria-label]="'Actions for ' + app.name"
+                      [igMenuTriggerFor]="menu"
+                    >
+                      <ig-icon name="more" />
+                    </button>
+                    <ng-template #menu>
+                      <ig-menu [attr.aria-label]="app.name">
+                        <button
+                          ig-menu-item
+                          type="button"
+                          (triggered)="edit.emit({ app, trigger: menuButton(actions) })"
+                        >
+                          <ig-icon name="edit" size="sm" />Edit
+                        </button>
+                      </ig-menu>
+                    </ng-template>
+                  </span>
+                </li>
               }
             </ul>
           } @else {
@@ -57,6 +100,11 @@ type Load = 'loading' | 'ready' | 'failed';
       color: var(--colorNeutralForeground2);
       margin-bottom: var(--spacingVerticalL);
     }
+    .actions {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacingHorizontalS);
+    }
     .loading {
       display: grid;
       gap: var(--spacingVerticalS);
@@ -69,6 +117,8 @@ export class AppsCard implements OnInit {
 
   /** Register an app was chosen; the page opens the dialog and calls `reload` after. */
   readonly register = output<Event>();
+  /** Edit was chosen in an app's actions; the page opens the edit dialog. */
+  readonly edit = output<AppAction>();
 
   protected readonly load = signal<Load>('loading');
   protected readonly apps = signal<RegisteredApp[]>([]);
@@ -87,6 +137,11 @@ export class AppsCard implements OnInit {
       },
       error: () => this.load.set('failed'),
     });
+  }
+
+  /** The actions button in a row, where focus returns after a dialog it opened. */
+  protected menuButton(actions: HTMLElement): HTMLElement {
+    return actions.querySelector('button') ?? actions;
   }
 
   protected meta(app: RegisteredApp): string {
