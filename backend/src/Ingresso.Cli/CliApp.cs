@@ -4,12 +4,12 @@ using Ingresso.Infrastructure.Persistence;
 namespace Ingresso.Cli;
 
 /// <summary>
-/// Runs one command: migrate, seed, reset, clients (the apps that sign in with ingresso) or resources (the APIs they
-/// call with ingresso access tokens).
+/// Runs one command: migrate, seed, reset, clients (the apps that sign in with ingresso), resources (the APIs they
+/// call with ingresso access tokens) or users (administrators).
 /// </summary>
 public static class CliApp
 {
-    public const string Usage = "Usage: ingresso <migrate|seed|reset --confirm|clients ...|resources ...>";
+    public const string Usage = "Usage: ingresso <migrate|seed|reset --confirm|clients ...|resources ...|users ...>";
 
     public static async Task<int> RunAsync(string[] args, IServiceProvider services, TextWriter output, CancellationToken cancellationToken = default)
     {
@@ -22,6 +22,11 @@ public static class CliApp
         if (command == "resources")
         {
             return await RunSafelyAsync(command, () => ResourceCommands.RunAsync(args[1..], services, output, cancellationToken), output);
+        }
+
+        if (command == "users")
+        {
+            return await RunSafelyAsync(command, () => UserCommands.RunAsync(args[1..], services, output, cancellationToken), output);
         }
 
         var confirmed = args.Length == 2 && args[1] == "--confirm";

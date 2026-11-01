@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Manage clients in Settings
+Person(admin, "Administrator")
+System_Boundary(ingresso, "ingresso") {
+  Container(web, "Web app", "Angular", "Settings → Apps, register-app and client-secret dialogs")
+  Container(api, "Ingresso.Api", "ASP.NET Core", "GET/POST /api/clients, GET /api/resources, Administrator policy")
+  Container(cli, "Ingresso.Cli", ".NET", "users grant-admin, clients")
+  ContainerDb(db, "Database", "SQL Server / SQLite", "Users, OpenIddict applications (hashed secrets)")
+}
+Rel(admin, web, "Uses")
+Rel(admin, cli, "Grants the administrator role")
+Rel(web, api, "JSON over HTTPS, cookie session")
+Rel(api, db, "EF Core")
+Rel(cli, db, "EF Core")
+@enduml

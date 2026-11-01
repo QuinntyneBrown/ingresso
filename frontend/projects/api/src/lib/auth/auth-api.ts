@@ -14,6 +14,8 @@ export interface CurrentUser {
   signInMethod: string | null;
   /** Whether the address has proved inbox control; unverified accounts cannot use tiles (L2-029). */
   emailVerified: boolean;
+  /** `admin` for administrators, who manage the apps that sign in with ingresso (L2-103); otherwise `member`. */
+  role?: 'admin' | 'member';
 }
 
 /** An app the signed-out page signs out: its name and its front-channel sign-out address (journey 18). */

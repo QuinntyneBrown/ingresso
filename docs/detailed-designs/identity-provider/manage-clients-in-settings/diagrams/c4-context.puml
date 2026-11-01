@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Manage clients in Settings
+Person(admin, "Administrator", "Runs ingresso and publishes apps")
+System(ingresso, "ingresso", "Front door and identity provider")
+System_Ext(app, "Published app", "Signs people in with ingresso")
+Rel(admin, ingresso, "Registers apps in Settings → Apps")
+Rel(app, ingresso, "Signs people in; a confidential app sends its secret")
+@enduml

@@ -70,6 +70,10 @@ behind their backdrop; only the dialog is mapped.
   `ErrorSummary`, `Button`, `Link` (`variant="back"`), `Skeleton`, `Alert`.
 - Local: page intro; form actions row (`Cluster`).
 - Built so far (ADR 0013): `Link` (`variant="back"`) and the Appearance `Card` with `FieldSet`, `Choice` and `Check`, applied at once with no Save; the remaining sections are deferred.
+- Apps (journey 19, `apps`, `apps-empty`, `apps-loading`, `apps-error`; administrators only): a `Card` with a
+  primary `Button` (Register an app), `List` (`surface`) of `ListItem` (`title` = app name, `meta` = type and
+  client ID), `EmptyState` with a primary `Button` when there are none, `Skeleton` while loading, and a danger
+  `Alert` with a Try again `Button` on error. Local: the card's header row (title, lead and button).
 
 ### Brand guide — `/brand` (`pages/brand`: default, loading, error)
 
@@ -104,6 +108,8 @@ All dialogs open through Angular CDK `Dialog` with `modalDialogConfig` and rende
 | Dialog (mock folder: states)                                           | Library components                                                          | Local UI         |
 | ---------------------------------------------------------------------- | --------------------------------------------------------------------------- | ---------------- |
 | Add app (`dialogs/add-app`: default, busy, invalid, failed, duplicate) | `DialogShell`, `Button` (`busy`), `Alert` (failed; `warning` for duplicate) | App form         |
+| Register an app (`dialogs/register-app`: default, invalid, busy, error) | `DialogShell`, `ErrorSummary`, `FormField`, `Input` (text, and `textarea` for the address lists, one per line), `FieldSet` + `Choice` + `Check` (APIs as checkboxes, type as radios), `Alert` (error), `Button` (`busy`) | — |
+| Client secret (`dialogs/client-secret`: default, copied) | `DialogShell`, `Alert` (`warning`), `FormField`, `Input` (`readonly`, monospace), `Button` (Copy / Copied, Done) | Copy row (`Input` and `Button` side by side); polite status region for “copied” |
 | Edit app (`dialogs/edit-app`: default, busy, invalid, failed)          | `DialogShell`, `Button`, `Alert` (failed, delete confirmation)              | App form         |
 | Delete app (`dialogs/delete-app`: default, busy, failed)               | `DialogShell`, `AppIcon`, `Button` (`appearance="danger"`), `Alert`         | Tile preview row |
 | Reset layout (`dialogs/reset-layout`: default, busy, failed)                   | `DialogShell`, `Button`, `Alert` (failed)                                   | —                |

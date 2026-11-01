@@ -34,7 +34,9 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
         {
             ClientId = client.ClientId ?? Guid.NewGuid().ToString("N"),
             DisplayName = client.Name,
-            ClientType = ClientTypes.Public,
+            ClientType = client.ClientSecret is null ? ClientTypes.Public : ClientTypes.Confidential,
+            // OpenIddict hashes the secret before it stores it (L2-106).
+            ClientSecret = client.ClientSecret,
             ConsentType = ConsentTypes.Implicit,
             Permissions =
             {
@@ -98,5 +100,6 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
             .ToList(),
         (await applications.GetPropertiesAsync(app, cancellationToken)).TryGetValue(FrontChannelLogoutUriProperty, out var frontChannel)
             ? frontChannel.GetString()
-            : null);
+            : null,
+        await applications.HasClientTypeAsync(app, ClientTypes.Confidential, cancellationToken));
 }

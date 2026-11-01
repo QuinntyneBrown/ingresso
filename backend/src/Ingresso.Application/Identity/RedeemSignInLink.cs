@@ -74,7 +74,11 @@ public sealed class RedeemSignInLinkCommandHandler(IAppDbContext db, IClock cloc
 }
 
 /// <summary>Starts a session for an existing user, or for a new unverified one when asked; the test sign-in seam uses it (ADR 0002, ADR 0009).</summary>
-public sealed record StartSessionCommand(string Email, bool CreateUnverified = false) : IRequest<SignedIn?>;
+/// <summary>
+/// The test seam's sign-in. <paramref name="Administrator"/> signs in as an administrator, creating the account with
+/// a verified email if it does not exist, so tests never change the role of a shared seeded account (L2-103).
+/// </summary>
+public sealed record StartSessionCommand(string Email, bool CreateUnverified = false, bool Administrator = false) : IRequest<SignedIn?>;
 
 public sealed class StartSessionCommandHandler(IAppDbContext db, IClock clock) : IRequestHandler<StartSessionCommand, SignedIn?>
 {
@@ -86,6 +90,22 @@ public sealed class StartSessionCommandHandler(IAppDbContext db, IClock clock) :
             // A brand-new account whose address has not proved inbox control, for tests of L2-029.
             user = User.CreateMember(request.Email, clock.UtcNow);
             db.Users.Add(user);
+        }
+
+        if (request.Administrator)
+        {
+            if (user is null)
+            {
+                user = User.CreateMember(request.Email, clock.UtcNow);
+                db.Users.Add(user);
+                var normalized = request.Email.Trim().ToLowerInvariant();
+                if (!await db.VerifiedEmails.AnyAsync(v => v.NormalizedEmail == normalized, cancellationToken))
+                {
+                    db.VerifiedEmails.Add(new VerifiedEmail { NormalizedEmail = normalized, VerifiedAtUtc = clock.UtcNow });
+                }
+            }
+
+            user.Role = UserRole.Admin;
         }
 
         if (user is null)

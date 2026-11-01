@@ -116,7 +116,14 @@ dotnet run --project backend/src/Ingresso.Cli -- reset --confirm
 ### Register an app for sign-in
 
 ingresso is becoming the OpenID Connect identity provider for your apps (journeys 15–27 in
-[docs/journey.md](docs/journey.md)). Register each app from the CLI; it prints the client ID:
+[docs/journey.md](docs/journey.md)). Administrators register apps in **Settings → Apps**, including confidential
+server apps, whose secret is shown once. Make an account an administrator from the CLI:
+
+```bash
+dotnet run --project backend/src/Ingresso.Cli -- users grant-admin --email you@example.com
+```
+
+Or register each app from the CLI; it prints the client ID:
 
 ```bash
 dotnet run --project backend/src/Ingresso.Cli -- clients add --name "Notes" \

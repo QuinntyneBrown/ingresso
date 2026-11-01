@@ -144,7 +144,7 @@ public sealed partial class ClientCommandsTests : IDisposable
     // Traces to: L2-088
     // Description: A missing redirect address, an empty name or a name over 100 characters is refused with the reason.
     [Theory]
-    [InlineData("Sample app", null, "Add at least one --redirect-uri.")]
+    [InlineData("Sample app", null, "Add at least one redirect address.")]
     [InlineData("", Redirect, "Enter a name for the app.")]
     [InlineData("x", Redirect, "The name must be 100 characters or fewer.")]
     public async Task Add_refuses_a_missing_address_or_a_bad_name(string name, string? redirect, string reason)

@@ -37,6 +37,9 @@ public sealed class RelyingParty
 
     public string Challenge => Base64Url(SHA256.HashData(Encoding.ASCII.GetBytes(Verifier)));
 
+    /// <summary>An app already registered some other way, such as through /api/clients with <see cref="RedirectUri"/>.</summary>
+    public static RelyingParty For(ApiFactory factory, string clientId) => new(factory, clientId);
+
     public static async Task<RelyingParty> RegisterAsync(ApiFactory factory, string name = "Sample app", params string[] scopes)
     {
         factory.CreateHttpsClient().Dispose(); // creates and seeds the database
@@ -123,15 +126,23 @@ public sealed class RelyingParty
     public static Dictionary<string, string> CallbackParameters(HttpResponseMessage response) =>
         QueryHelpers.ParseQuery(response.Headers.Location!.Query).ToDictionary(p => p.Key, p => p.Value.ToString());
 
-    public async Task<HttpResponseMessage> ExchangeAsync(string code, string? verifier = null) =>
-        await Factory.CreateHttpsClient().PostAsync("/connect/token", new FormUrlEncodedContent(new Dictionary<string, string>
+    public async Task<HttpResponseMessage> ExchangeAsync(string code, string? verifier = null, string? clientSecret = null)
+    {
+        var form = new Dictionary<string, string>
         {
             ["grant_type"] = "authorization_code",
             ["client_id"] = ClientId,
             ["redirect_uri"] = RedirectUri,
             ["code"] = code,
             ["code_verifier"] = verifier ?? Verifier,
-        }));
+        };
+        if (clientSecret is not null)
+        {
+            form["client_secret"] = clientSecret;
+        }
+
+        return await Factory.CreateHttpsClient().PostAsync("/connect/token", new FormUrlEncodedContent(form));
+    }
 
     /// <summary>Validates an ID token's signature against the published JWKS, its issuer and its audience.</summary>
     public async Task<JsonWebToken> ValidateIdTokenAsync(string idToken)

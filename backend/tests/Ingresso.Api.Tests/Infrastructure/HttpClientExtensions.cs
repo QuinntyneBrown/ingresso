@@ -8,9 +8,9 @@ public static class HttpClientExtensions
     public const string OtherUser = "other@ingresso.dev";
 
     /// <summary>Signs the client in as a seeded user through the test-only seam.</summary>
-    public static async Task SignInAsAsync(this HttpClient client, string email)
+    public static async Task SignInAsAsync(this HttpClient client, string email, bool administrator = false)
     {
-        var response = await client.PostAsJsonAsync("/api/test/sign-in", new { email });
+        var response = await client.PostAsJsonAsync("/api/test/sign-in", new { email, administrator });
         response.EnsureSuccessStatusCode();
 
         // Echo the XSRF token on later requests, as the web app does (L2-083).

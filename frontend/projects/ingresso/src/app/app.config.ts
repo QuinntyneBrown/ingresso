@@ -2,7 +2,15 @@ import { provideHttpClient, withFetch, withInterceptors, withXsrfConfiguration }
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 import { provideIngressoOverlays } from 'components';
-import { apiErrorInterceptor, AUTH_API, HttpAuthApi, HttpTilesApi, TILES_API } from 'api';
+import {
+  apiErrorInterceptor,
+  AUTH_API,
+  CLIENTS_API,
+  HttpAuthApi,
+  HttpClientsApi,
+  HttpTilesApi,
+  TILES_API,
+} from 'api';
 import { routes } from './app.routes';
 import { unauthorizedInterceptor } from './shared/unauthorized.interceptor';
 
@@ -22,5 +30,6 @@ export const appConfig: ApplicationConfig = {
     ),
     { provide: AUTH_API, useClass: HttpAuthApi },
     { provide: TILES_API, useClass: HttpTilesApi },
+    { provide: CLIENTS_API, useClass: HttpClientsApi },
   ],
 };
