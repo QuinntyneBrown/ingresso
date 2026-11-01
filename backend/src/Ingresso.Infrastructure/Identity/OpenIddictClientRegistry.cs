@@ -106,6 +106,30 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
         await applications.FindByClientIdAsync(clientId, cancellationToken) is { } app
         && (await applications.GetPropertiesAsync(app, cancellationToken)).ContainsKey(DisabledProperty);
 
+    /// <summary>The standard identity scopes every app may ask for; they aren't listed as the app's API scopes (L2-118).</summary>
+    private static readonly string[] IdentityScopePermissions = [Permissions.Scopes.Email, Permissions.Scopes.Profile];
+
+    public async Task<int> AllowIdentityScopesAsync(CancellationToken cancellationToken)
+    {
+        var changed = 0;
+        await foreach (var app in applications.ListAsync(count: null, offset: null, cancellationToken))
+        {
+            var permissions = await applications.GetPermissionsAsync(app, cancellationToken);
+            if (IdentityScopePermissions.All(permissions.Contains))
+            {
+                continue;
+            }
+
+            var descriptor = new OpenIddictApplicationDescriptor();
+            await applications.PopulateAsync(descriptor, app, cancellationToken);
+            descriptor.Permissions.UnionWith(IdentityScopePermissions);
+            await applications.UpdateAsync(app, descriptor, cancellationToken);
+            changed++;
+        }
+
+        return changed;
+    }
+
     /// <summary>Sets the name, addresses and permissions an app is registered or edited with (L2-087, L2-107, L2-112).</summary>
     private static void Apply(OpenIddictApplicationDescriptor descriptor, NewClient client)
     {
@@ -114,6 +138,7 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
                  {
                      Permissions.Endpoints.Authorization, Permissions.Endpoints.Token, Permissions.Endpoints.Revocation,
                      Permissions.GrantTypes.AuthorizationCode, Permissions.ResponseTypes.Code, Permissions.Scopes.Email,
+                     Permissions.Scopes.Profile,
                  })
         {
             descriptor.Permissions.Add(permission);
@@ -169,7 +194,7 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
         (await applications.GetRedirectUrisAsync(app, cancellationToken)).ToList(),
         (await applications.GetPostLogoutRedirectUrisAsync(app, cancellationToken)).ToList(),
         (await applications.GetPermissionsAsync(app, cancellationToken))
-            .Where(p => p.StartsWith(Permissions.Prefixes.Scope, StringComparison.Ordinal) && p != Permissions.Scopes.Email)
+            .Where(p => p.StartsWith(Permissions.Prefixes.Scope, StringComparison.Ordinal) && !IdentityScopePermissions.Contains(p))
             .Select(p => p[Permissions.Prefixes.Scope.Length..])
             .ToList(),
         (await applications.GetPropertiesAsync(app, cancellationToken)).TryGetValue(FrontChannelLogoutUriProperty, out var frontChannel)

@@ -54,6 +54,8 @@ public sealed class DatabaseSeeder(
 
         await db.SaveChangesAsync(cancellationToken);
         await SeedSampleAppAsync(cancellationToken);
+        // Apps registered before journey 22 may now ask for profile (L2-118); a no-op once they all can.
+        await clients.AllowIdentityScopesAsync(cancellationToken);
     }
 
     /// <summary>

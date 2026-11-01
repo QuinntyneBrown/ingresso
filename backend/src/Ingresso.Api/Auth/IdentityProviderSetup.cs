@@ -54,7 +54,9 @@ public static class IdentityProviderSetup
                 o.CodeChallengeMethods.Clear();
                 o.CodeChallengeMethods.Add(CodeChallengeMethods.Sha256);
             });
-            options.RegisterScopes(Scopes.OpenId, Scopes.Email, Scopes.OfflineAccess);
+            // profile and email are the identity scopes any app may ask for; each carries only its own claims (L2-118).
+            options.RegisterScopes(Scopes.OpenId, Scopes.Profile, Scopes.Email, Scopes.OfflineAccess);
+            options.RegisterClaims(Claims.Subject, Claims.Name, Claims.Email, Claims.EmailVerified);
 
             // Access tokens are signed JWTs any app's API can validate with the published keys, and short-lived,
             // because APIs validate them locally without asking ingresso (L2-097).

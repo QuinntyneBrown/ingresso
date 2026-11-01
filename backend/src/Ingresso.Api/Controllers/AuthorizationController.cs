@@ -67,9 +67,9 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
         var identity = new ClaimsIdentity(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, Claims.Name, Claims.Role);
         identity.SetClaim(Claims.Subject, person.UserId.ToString());
         identity.SetClaim("sid", sessionId);
-        identity.SetClaim(Claims.Email, person.Email);
         identity.SetClaim(IdentityProviderSetup.ChainStartedClaim, clock.UtcNow.ToString("O", CultureInfo.InvariantCulture));
         identity.SetScopes(request.GetScopes());
+        SetProfileClaims(identity, person);
         // The access token's audience is each API whose scopes were granted (L2-097).
         var resources = new List<string>();
         await foreach (var resource in scopes.ListResourcesAsync(identity.GetScopes(), HttpContext.RequestAborted))
@@ -79,14 +79,29 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
 
         identity.SetResources(resources.Distinct(StringComparer.Ordinal));
         // The chain start stays inside code and refresh tokens; no app ever sees it.
+        SetDestinations(identity);
+        return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
+    /// <summary>
+    /// The person's details each granted scope allows: `name` with `profile` when they have one, `email` and
+    /// `email_verified` with `email`; with neither, nothing beyond `sub` (L2-118, L2-119). Replaces any already set.
+    /// </summary>
+    private static void SetProfileClaims(ClaimsIdentity identity, SignInClaims person)
+    {
+        identity.SetClaim(Claims.Name, identity.HasScope(Scopes.Profile) ? person.Name : null);
+        identity.SetClaim(Claims.Email, identity.HasScope(Scopes.Email) ? person.Email : null);
+        identity.SetClaim(Claims.EmailVerified, identity.HasScope(Scopes.Email) ? person.EmailVerified : null);
+    }
+
+    /// <summary>The session id goes to the ID token only; the chain start stays inside code and refresh tokens.</summary>
+    private static void SetDestinations(ClaimsIdentity identity) =>
         identity.SetDestinations(claim => claim.Type switch
         {
             "sid" => [Destinations.IdentityToken],
             IdentityProviderSetup.ChainStartedClaim => [],
             _ => [Destinations.IdentityToken, Destinations.AccessToken],
         });
-        return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-    }
 
     /// <summary>
     /// The token endpoint, after OpenIddict has validated the grant. A code is exchanged as OpenIddict validated it. A
@@ -125,6 +140,18 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
 
             var sliding = IdentityProviderSetup.RefreshTokenSlidingLifetime(configuration);
             principal.SetRefreshTokenLifetime(left < sliding ? left : sliding);
+
+            // Renewed tokens carry the person's details as they are now, by the scopes granted at sign-in (L2-119).
+            var person = Guid.TryParse(principal.GetClaim(Claims.Subject), out var userId)
+                ? await sender.Send(new GetSignInClaimsQuery(userId), cancellationToken)
+                : null;
+            if (person is null || principal.Identity is not ClaimsIdentity identity)
+            {
+                return Refuse("The account this token was issued for no longer exists.");
+            }
+
+            SetProfileClaims(identity, person);
+            SetDestinations(identity);
         }
 
         return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
