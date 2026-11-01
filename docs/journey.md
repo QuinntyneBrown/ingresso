@@ -30,7 +30,8 @@
 | 25  | See and end other sessions         | List signed-in devices and end any of them, signing it out of every app.                 | 2             |
 | 26  | Rotate signing keys                | A new signing key takes over; the old one is still published until its tokens expire.    | 1.5           |
 | 27  | Review sign-in activity            | See a log of sign-ins, app approvals, token grants and revocations.                      | 2             |
-|     | **Total**                          |                                                                                          | **49.5**      |
+| 28  | Greet by profile name              | The dashboard says "Hi, {profile name}", or "Hi there" with Add your name, never the email. | 1.5           |
+|     | **Total**                          |                                                                                          | **51**        |
 
 ## Identity provider
 
