@@ -36,16 +36,24 @@ export async function startApi(databaseName = 'e2e'): Promise<ChildProcess> {
     cwd: repoRoot,
     stdio: 'inherit',
   });
-  execFileSync('dotnet', ['run', '--no-build', '--project', 'src/Ingresso.Cli', '--', 'reset', '--confirm'], {
-    cwd: repoRoot,
-    env,
-    stdio: 'inherit',
-  });
-  const api = spawn('dotnet', ['run', '--no-build', '--no-launch-profile', '--project', 'src/Ingresso.Api'], {
-    cwd: repoRoot,
-    env,
-    stdio: process.env['E2E_API_LOGS'] ? 'inherit' : 'ignore',
-  });
+  execFileSync(
+    'dotnet',
+    ['run', '--no-build', '--project', 'backend/src/Ingresso.Cli', '--', 'reset', '--confirm'],
+    {
+      cwd: repoRoot,
+      env,
+      stdio: 'inherit',
+    },
+  );
+  const api = spawn(
+    'dotnet',
+    ['run', '--no-build', '--no-launch-profile', '--project', 'backend/src/Ingresso.Api'],
+    {
+      cwd: repoRoot,
+      env,
+      stdio: process.env['E2E_API_LOGS'] ? 'inherit' : 'ignore',
+    },
+  );
   await waitForApi();
   return api;
 }

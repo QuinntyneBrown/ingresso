@@ -14,8 +14,8 @@ The response is the same whether or not an account exists, so the page reveals n
 
 ### What exists today
 
-`AuthController`, `DevMailboxController` and `TestSignInController` are in `src/Ingresso.Api/Controllers/`;
-`SecurityTokenService` and `DevMailbox` are in `src/Ingresso.Infrastructure/`; the app has
+`AuthController`, `DevMailboxController` and `TestSignInController` are in `backend/src/Ingresso.Api/Controllers/`;
+`SecurityTokenService` and `DevMailbox` are in `backend/src/Ingresso.Infrastructure/`; the app has
 `state/session-store.ts`. There is no sign-in page in `frontend/projects/ingresso/src/app/pages/` yet, and the
 e2e suite signs in through the test seam (`frontend/e2e/support/session.ts`). Keep that seam test-only.
 
@@ -43,7 +43,7 @@ e2e suite signs in through the test seam (`frontend/e2e/support/session.ts`). Ke
   - The mandatory folder structure. Don't add top-level folders or projects without updating its tree.
   - Strict backend layering: Domain, Application, Infrastructure, Api, Cli. Business rules in handlers and
     domain, never controllers. The API never migrates on startup; the CLI `migrate` command does.
-  - Backend acceptance tests are API integration tests in `tests/Ingresso.Api.Tests` on per-fixture in-memory
+  - Backend acceptance tests are API integration tests in `backend/tests/Ingresso.Api.Tests` on per-fixture in-memory
     SQLite. No database server. API tests run sequentially.
   - Frontend acceptance tests are Playwright with the Page Object Model: one page object per screen in
     `frontend/e2e/pages/`, tests in `frontend/e2e/tests/`, never a selector in a test. Chromium only.

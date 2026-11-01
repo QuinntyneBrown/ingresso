@@ -5,27 +5,27 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Api", "src\Ingresso.Api\Ingresso.Api.csproj", "{8E4ED0E1-3A46-47BB-A243-6697FBC06913}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Api", "backend\src\Ingresso.Api\Ingresso.Api.csproj", "{8E4ED0E1-3A46-47BB-A243-6697FBC06913}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Application", "src\Ingresso.Application\Ingresso.Application.csproj", "{557CB0C4-040A-4759-A19E-181BD2BA2653}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Application", "backend\src\Ingresso.Application\Ingresso.Application.csproj", "{557CB0C4-040A-4759-A19E-181BD2BA2653}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Cli", "src\Ingresso.Cli\Ingresso.Cli.csproj", "{8B625F1D-59C1-402E-91F4-8F450B452B53}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Cli", "backend\src\Ingresso.Cli\Ingresso.Cli.csproj", "{8B625F1D-59C1-402E-91F4-8F450B452B53}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Domain", "src\Ingresso.Domain\Ingresso.Domain.csproj", "{458CBE8C-BA7D-4C5A-89C0-D0F66C8045EF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Domain", "backend\src\Ingresso.Domain\Ingresso.Domain.csproj", "{458CBE8C-BA7D-4C5A-89C0-D0F66C8045EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Infrastructure", "src\Ingresso.Infrastructure\Ingresso.Infrastructure.csproj", "{30B11EE7-3402-4488-9457-11FA0F97E75E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Infrastructure", "backend\src\Ingresso.Infrastructure\Ingresso.Infrastructure.csproj", "{30B11EE7-3402-4488-9457-11FA0F97E75E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Api.Tests", "tests\Ingresso.Api.Tests\Ingresso.Api.Tests.csproj", "{2FF5AC9D-AF2F-44C6-A9B0-05364AAD46E0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Api.Tests", "backend\tests\Ingresso.Api.Tests\Ingresso.Api.Tests.csproj", "{2FF5AC9D-AF2F-44C6-A9B0-05364AAD46E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Application.Tests", "tests\Ingresso.Application.Tests\Ingresso.Application.Tests.csproj", "{EF0FC4F7-66A6-4F84-9CE4-1192B5B446AF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Application.Tests", "backend\tests\Ingresso.Application.Tests\Ingresso.Application.Tests.csproj", "{EF0FC4F7-66A6-4F84-9CE4-1192B5B446AF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Cli.Tests", "tests\Ingresso.Cli.Tests\Ingresso.Cli.Tests.csproj", "{7EE8F9D9-5D51-4166-952D-646AC5E88BD0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Cli.Tests", "backend\tests\Ingresso.Cli.Tests\Ingresso.Cli.Tests.csproj", "{7EE8F9D9-5D51-4166-952D-646AC5E88BD0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Domain.Tests", "tests\Ingresso.Domain.Tests\Ingresso.Domain.Tests.csproj", "{6D629CA4-83BA-4E57-A080-2700AFE6E3F5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Domain.Tests", "backend\tests\Ingresso.Domain.Tests\Ingresso.Domain.Tests.csproj", "{6D629CA4-83BA-4E57-A080-2700AFE6E3F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Infrastructure.Tests", "tests\Ingresso.Infrastructure.Tests\Ingresso.Infrastructure.Tests.csproj", "{ECD566EF-2E28-43E0-9EAE-E03FCB9308B4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingresso.Infrastructure.Tests", "backend\tests\Ingresso.Infrastructure.Tests\Ingresso.Infrastructure.Tests.csproj", "{ECD566EF-2E28-43E0-9EAE-E03FCB9308B4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

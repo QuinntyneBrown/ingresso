@@ -7,14 +7,15 @@ ingresso is a front-door dashboard for the apps its owner builds and uses: a dyn
 ```text
 Ingresso.sln
 README.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, SUPPORT.md
-src/
-  Ingresso.Domain/            entities and enums; no dependencies
-  Ingresso.Application/       MediatR handlers, validators, DTOs, IAppDbContext
-  Ingresso.Infrastructure/    AppDbContext, migrations, external clients, auth, seeder
-  Ingresso.Api/               controllers, Program.cs, DI, middleware, Swagger
-  Ingresso.Cli/               migrate, seed, and reset commands
-tests/
-  Ingresso.<Layer>.Tests/     one test project per src project, same name + .Tests
+backend/                      .NET backend (Ingresso.sln, global.json and Directory.Build.props stay at the root)
+  src/
+    Ingresso.Domain/          entities and enums; no dependencies
+    Ingresso.Application/     MediatR handlers, validators, DTOs, IAppDbContext
+    Ingresso.Infrastructure/  AppDbContext, migrations, external clients, auth, seeder
+    Ingresso.Api/             controllers, Program.cs, DI, middleware, Swagger
+    Ingresso.Cli/             migrate, seed, and reset commands
+  tests/
+    Ingresso.<Layer>.Tests/   one test project per backend/src project, same name + .Tests
 frontend/                     Angular workspace (package.json, angular.json, lint/format config)
   projects/
     ingresso/                 the app; pages under src/app/, dialogs under src/app/dialogs/
@@ -41,7 +42,7 @@ New code goes in the folder that owns it; don't add top-level folders or new pro
 
 ## Backend architecture
 
-Layer dependency direction (strict):
+Projects live in `backend/src/` with tests in `backend/tests/`. Layer dependency direction (strict):
 
 - `Ingresso.Domain` — entities + enums, zero deps
 - `Ingresso.Application` — MediatR handlers, validators, DTO contracts, `IAppDbContext`
