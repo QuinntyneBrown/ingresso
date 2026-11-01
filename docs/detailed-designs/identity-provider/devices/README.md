@@ -35,13 +35,14 @@ their tokens.
   session has ended (journey 20), so the apps signed in there can't renew (L2-135).
 - **Web app**:
   - `SESSIONS_API` (`projects/api/src/lib/sessions`): `list()`, `end(id)` and `endOthers()`.
-  - `DevicesCard` (`pages/settings/devices-card.ts`): `Card`, `List`, `ListItem`, `Badge` (This device), `Button`
-    (End session; Sign out of all other devices in `[slot=actions]`), `Skeleton` and `Alert`. Dates use
-    `relative-time`.
+  - `DevicesCard` (`pages/settings/devices-card.ts`): `Card`, `List`, `ListItem` (`wrap`), `Badge` (This device),
+    `Button` (End session; Sign out of all other devices in `[slot=actions]`, which wraps below the title on a
+    phone), `Skeleton` and `Alert`. `deviceLabel` in `relative-time` reads "Active now" for this device and for
+    activity in the last 5 minutes, otherwise "Last active <relative time>", then "· Signed in <date>".
   - `EndSessionDialog` (`dialogs/end-session`): `DialogShell`, `Alert` and a danger `Button`, for one device or all
     the others. It closes with `true` after ending.
-  - `SettingsPage` shows the card for everyone, after Connected apps, and the toasts "Session ended" and "Signed
-    out of other devices".
+  - `SettingsPage` shows the card for everyone, after Connected apps, and the toasts "Session ended" ("<device> is
+    signed out.") and "Signed out of other devices" ("Only this device is signed in now.").
 
 ## Requirements
 

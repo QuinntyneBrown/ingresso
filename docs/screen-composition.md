@@ -83,12 +83,13 @@ behind their backdrop; only the dialog is mapped.
   revoking (“Access revoked”, “<app> has to ask again next time.”). Local: the card's header row.
 - Devices (journey 25, `default`, `devices-only`, `devices-loading`, `devices-error`; everyone): a `Card` whose
   `[slot=actions]` holds a secondary `Button` (Sign out of all other devices, only when there are others), and a
-  `List` (`surface`, labelled “Signed-in devices”) of `ListItem`s (`title` = “<browser> on <system>”, `meta` =
+  `List` (`surface`, labelled “Signed-in devices”) of `ListItem`s (`wrap`; `title` = “<browser> on <system>”, `meta` =
   “Active now” or “Last active <relative time>” · “Signed in <date>”). This device's row has a `Badge`
   (`kind="info"`, “This device”) in `[slot=action]`; every other row a small secondary `Button` (End session, named
   “End the session on <device>”) that opens the end-session dialog. `Skeleton` while loading, a danger `Alert`
   with a Try again `Button` on error, a muted line (“You’re not signed in anywhere else.”) when only this device is
-  signed in, and a success toast after ending sessions. Local: the card's lead line.
+  signed in, and a success toast after ending sessions (“Session ended”, “<device> is signed out.”; “Signed out of
+  other devices”, “Only this device is signed in now.”). Local: the card's lead line.
 - Apps (journey 19, `apps`, `apps-empty`, `apps-loading`, `apps-error`; administrators only): a `Card` with a
   primary `Button` (Register an app), `List` (`surface`) of `ListItem` (`title` = app name, `meta` = type and
   client ID), `EmptyState` with a primary `Button` when there are none, `Skeleton` while loading, and a danger
