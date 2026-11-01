@@ -63,11 +63,12 @@ The CLI `clients` commands keep working and use the same Application handlers.
     app itself. The client type and secret never change here.
   - `RotateClientSecretCommand(ClientId)` throws `ValidationException` for a public app. It returns
     `RegisteredClientDto` with a new 32-byte secret, which replaces the stored hash.
-  - `SetClientDisabledCommand(ClientId, Disabled)` returns the `ClientDto`.
+  - `SetClientDisabledCommand(ClientId, Disabled)` returns the `ClientDto`. `IsClientDisabledQuery(ClientId)` tells
+    the OpenID Connect endpoints whether to refuse an app.
   - `RemoveClientCommand` (journey 15) deletes. OpenIddict's application manager also deletes the app's
     authorizations and tokens.
-  - `IClientRegistry` gains `UpdateAsync`, `ReplaceSecretAsync` and `SetDisabledAsync`. `ClientDto` and
-    `NewClient` gain `Disabled` and `OfflineAccess`.
+  - `IClientRegistry` gains `UpdateAsync`, `ReplaceSecretAsync`, `SetDisabledAsync` and `IsDisabledAsync`.
+    `ClientDto` gains `Disabled`. Registering and editing share `ClientFieldsValidator<T>`.
   - Disabled is the application property `ingresso_disabled`, because OpenIddict has no such field.
 - **Disabled apps at the endpoints** — `AuthorizationController.Authorize` sends a disabled app's request to
   `/authorize-error`, the same page as for an unknown app. `Exchange` refuses a code or refresh token for a
@@ -80,9 +81,9 @@ The CLI `clients` commands keep working and use the same Application handlers.
   - `POST /api/clients/{clientId}/disable` and `…/enable` return `200` with the client.
   - `DELETE /api/clients/{clientId}` returns `204`.
 - **Web app** additions:
-  - `ClientsApi` gains `update`, `rotateSecret`, `disable`, `enable` and `remove`.
+  - `ClientsApi` gains `update`, `rotateSecret`, `setDisabled` and `remove`.
   - `AppsCard` gives each row a `more` actions `Menu` and a Disabled `Badge`. It emits `edit`, `rotateSecret` and
-    `remove` for the page to open dialogs, and handles Disable and Enable itself with a toast.
+    `delete` for the page to open dialogs, and handles Disable and Enable itself with a toast.
   - `RegisterAppDialog` takes an optional app to edit. It then fills the form, shows the type as text, saves with
     `update` and closes with the saved app. Both modes offer "Let it stay signed in with refresh tokens".
   - `RotateSecretDialog` (`dialogs/rotate-secret`) confirms, rotates, and closes with the new secret. The page then

@@ -54,12 +54,17 @@ class SetClientDisabledCommand <<record>> {
   ClientId : string
   Disabled : bool
 }
+class IsClientDisabledQuery <<record>> {
+  ClientId : string
+}
+class AuthorizationController
 interface IClientRegistry {
   ListAsync()
   RegisterAsync(NewClient)
   UpdateAsync(clientId, NewClient)
   ReplaceSecretAsync(clientId, secret)
   SetDisabledAsync(clientId, disabled)
+  IsDisabledAsync(clientId)
   RemoveAsync(clientId)
 }
 class AdministratorHandler
@@ -72,6 +77,7 @@ ClientsController ..> RegisterClientCommand
 ClientsController ..> UpdateClientCommand
 ClientsController ..> RotateClientSecretCommand
 ClientsController ..> SetClientDisabledCommand
+AuthorizationController ..> IsClientDisabledQuery
 RotateClientSecretCommand ..> RegisteredClientDto : returns
 AdministratorHandler ..> User : reads Role
 GrantAdministratorCommand ..> User : sets Role

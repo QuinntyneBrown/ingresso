@@ -1,7 +1,7 @@
 # Estimates
 
 - Overall effort: 64.5 days
-- Complete: 95%
+- Complete: 99.5%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
@@ -9,9 +9,9 @@
 | [platform](platform.md) | 12 days | 100% |
 | [tiles](tiles.md) | 9 days | 100% |
 | [dashboard](dashboard.md) | 13 days | 100% |
-| [identity-provider](identity-provider.md) | 22.5 days | 87% |
+| [identity-provider](identity-provider.md) | 22.5 days | 100% |
 
 ## Roadmap
 
 1. identity: finish the remaining manage-session work (signing out other devices, journey 25)
-2. identity-provider: journeys 15–27 in `docs/journey.md`, next: manage registered apps (journey 21)
+2. identity-provider: journeys 15–27 in `docs/journey.md`, next: share profile details with apps (journey 22)
