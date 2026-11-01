@@ -122,6 +122,7 @@ test.describe('Share profile details with apps', () => {
 
     await sample.open();
     await sample.signInWithIngresso.click();
+    await sample.waitUntilSignedIn();
 
     await expect(sample.greeting).toHaveText('Hello, Maya Reyes');
   });
@@ -135,6 +136,7 @@ test.describe('Share profile details with apps', () => {
 
     await sample.open();
     await sample.signInWithIngresso.click();
+    await sample.waitUntilSignedIn();
 
     await expect(sample.greeting).toHaveText(`Hello, ${email}`);
   });
@@ -155,6 +157,7 @@ test.describe('Share profile details with apps', () => {
     await expect(settings.profileValue('Display name')).toHaveText('<b>Maya</b>');
     await sample.open();
     await sample.signInWithIngresso.click();
+    await sample.waitUntilSignedIn();
     await expect(sample.greeting).toHaveText('Hello, <b>Maya</b>');
   });
 });

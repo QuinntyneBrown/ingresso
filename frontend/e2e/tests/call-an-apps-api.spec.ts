@@ -14,7 +14,7 @@ test.describe("Call an app's API with a token", () => {
     await app.open();
 
     await app.signInWithIngresso.click();
-    await app.waitUntilShown();
+    await app.waitUntilSignedIn();
 
     await expect(app.apiResult).toHaveText(
       `Your API says: hello, ${MAYA}. Scope: openid profile email sample-api.read offline_access`,

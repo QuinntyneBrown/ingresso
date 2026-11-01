@@ -19,7 +19,7 @@ test.describe('Sign in to an app with ingresso', () => {
     await app.open();
 
     await app.signInWithIngresso.click();
-    await app.waitUntilShown();
+    await app.waitUntilSignedIn();
 
     await expect(app.signedInAs).toHaveText(`Signed in as ${MAYA}`);
   });
@@ -39,7 +39,7 @@ test.describe('Sign in to an app with ingresso', () => {
     await signIn.requestLink(email);
     await expect(signIn.lead).toContainText('takes you back to Sample app');
     await signIn.followLink(await signIn.linkFromMailbox(email));
-    await app.waitUntilShown();
+    await app.waitUntilSignedIn();
 
     await expect(app.signedInAs).toHaveText(`Signed in as ${email}`);
   });

@@ -31,9 +31,27 @@ export class SampleAppPage {
     await this.page.goto(SAMPLE_APP_URL);
   }
 
-  /** Waits until the browser is back on the sample app. */
+  /** Waits until the browser is back on the sample app, failing if ingresso shows anything on the way. */
   async waitUntilShown(): Promise<void> {
     await this.page.waitForURL((url) => url.origin === new URL(SAMPLE_APP_URL).origin);
+  }
+
+  /**
+   * Waits until the browser is back on the sample app signed in, choosing Allow on the way when ingresso asks what
+   * the app may see (journey 23). For tests whose subject is not consent.
+   */
+  async waitUntilSignedIn(): Promise<void> {
+    const sample = new URL(SAMPLE_APP_URL).origin;
+    await this.page.waitForURL((url) => url.origin === sample || url.pathname === '/consent');
+    if (new URL(this.page.url()).origin !== sample) {
+      await this.page.getByRole('button', { name: 'Allow' }).click();
+      await this.waitUntilShown();
+    }
+  }
+
+  /** Forgets the sample app's own session, keeping ingresso's, as signing out of the app alone would. */
+  async forgetItsSession(): Promise<void> {
+    await this.page.context().clearCookies({ name: 'sample-app.session' });
   }
 
   /**

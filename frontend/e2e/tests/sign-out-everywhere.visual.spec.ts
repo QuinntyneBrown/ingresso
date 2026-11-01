@@ -21,7 +21,7 @@ test.describe('Sign out everywhere, visually', () => {
     await signInAs(page);
     await app.open();
     await app.signInWithIngresso.click();
-    await app.waitUntilShown();
+    await app.waitUntilSignedIn();
     await dashboard.openSignedIn();
     await dashboard.shell.accountMenu.click();
     await dashboard.shell.signOutItem.click();
