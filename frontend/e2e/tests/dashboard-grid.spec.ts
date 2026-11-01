@@ -133,7 +133,7 @@ test.describe('Dashboard grid', () => {
   // Description: On a phone, a long name with no spaces wraps and the tiles fit, so the page never scrolls sideways.
   test('a long unbroken name does not push the phone dashboard sideways', async ({ page }) => {
     await stubTiles(page, [tile(1, 'Saturdaze', 0, 0, 4, 3), tile(2, 'Faithtech', 4, 0, 4, 3)], {
-      name: 'quinntynebrown@averylongdomainname.example',
+      displayName: 'quinntynebrown@averylongdomainname.example',
     });
     await page.setViewportSize({ width: 390, height: 844 });
     const dashboard = new DashboardPage(page);
