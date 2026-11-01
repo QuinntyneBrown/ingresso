@@ -51,6 +51,14 @@ public sealed class ClientsController(ISender sender) : ControllerBase
     [HttpPost("{clientId}/enable")]
     public async Task<ClientDto> Enable(string clientId, CancellationToken cancellationToken) =>
         await sender.Send(new SetClientDisabledCommand(clientId, Disabled: false), cancellationToken);
+
+    /// <summary>Deletes an app with its authorizations and tokens (L2-115).</summary>
+    [HttpDelete("{clientId}")]
+    public async Task<IActionResult> Delete(string clientId, CancellationToken cancellationToken)
+    {
+        await sender.Send(new RemoveClientCommand(clientId), cancellationToken);
+        return NoContent();
+    }
 }
 
 /// <summary>What the edit dialog sends: the registration fields an app may change (L2-112).</summary>

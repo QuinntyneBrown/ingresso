@@ -2,6 +2,7 @@ import { expect, test } from '../fixtures';
 import { AppShell } from '../pages/app-shell';
 import { AuthorizeErrorPage } from '../pages/authorize-error.page';
 import { ClientSecretDialog } from '../pages/client-secret.dialog';
+import { DeleteClientDialog } from '../pages/delete-client.dialog';
 import { RegisterAppDialog } from '../pages/register-app.dialog';
 import { RotateSecretDialog } from '../pages/rotate-secret.dialog';
 import { SettingsPage } from '../pages/settings.page';
@@ -168,5 +169,48 @@ test.describe('Manage registered apps', () => {
     await error.openForApp(app.clientId, 'https://notes.example.com/signin-oidc');
 
     await expect(error.heading).toBeVisible();
+  });
+
+  // Acceptance Test
+  // Traces to: L2-115
+  // Description: Delete app stays disabled until the app's name is typed; deleting confirms with a toast and removes the row.
+  test('deleting an app after typing its name', async ({ page }) => {
+    const settings = new SettingsPage(page);
+    const shell = new AppShell(page);
+    await signInAsAdministrator(page);
+    const app = await registerAppThroughApi(page);
+    await settings.open();
+    const remove = new DeleteClientDialog(page, app.name);
+
+    await settings.chooseAction(app.name, 'Delete');
+    await expect(remove.delete).toBeDisabled();
+    await remove.confirmName.fill('Not the name');
+    await expect(remove.delete).toBeDisabled();
+    await remove.confirmName.fill(app.name);
+    await remove.delete.click();
+
+    await expect(shell.toast('App deleted')).toBeVisible();
+    await expect(remove.dialog).toBeHidden();
+    await expect(settings.app(app.name)).toHaveCount(0);
+  });
+
+  // Acceptance Test
+  // Traces to: L2-115
+  // Description: When deleting fails, the dialog stays open, says so, and the app stays listed.
+  test('a failed deletion says so', async ({ page }) => {
+    const settings = new SettingsPage(page);
+    await signInAsAdministrator(page);
+    const app = await registerAppThroughApi(page);
+    await settings.open();
+    const remove = new DeleteClientDialog(page, app.name);
+    await remove.failNextDeletion();
+
+    await settings.chooseAction(app.name, 'Delete');
+    await remove.confirmName.fill(app.name);
+    await remove.delete.click();
+
+    await expect(remove.failed).toBeVisible();
+    await remove.cancel.click();
+    await expect(settings.app(app.name)).toHaveCount(1);
   });
 });

@@ -10,6 +10,7 @@ import {
   List,
   ListItem,
   Menu,
+  MenuDivider,
   MenuItem,
   MenuTrigger,
   Skeleton,
@@ -37,6 +38,7 @@ export interface AppAction {
     List,
     ListItem,
     Menu,
+    MenuDivider,
     MenuItem,
     MenuTrigger,
     Skeleton,
@@ -101,6 +103,15 @@ export interface AppAction {
                         <button ig-menu-item type="button" (triggered)="setDisabled(app, !app.disabled)">
                           <ig-icon name="lock" size="sm" />{{ app.disabled ? 'Enable' : 'Disable' }}
                         </button>
+                        <ig-menu-divider />
+                        <button
+                          ig-menu-item
+                          kind="danger"
+                          type="button"
+                          (triggered)="delete.emit({ app, trigger: menuButton(actions) })"
+                        >
+                          <ig-icon name="trash" size="sm" />Delete
+                        </button>
                       </ig-menu>
                     </ng-template>
                   </span>
@@ -152,6 +163,8 @@ export class AppsCard implements OnInit {
   readonly edit = output<AppAction>();
   /** Rotate secret was chosen for a confidential app; the page asks and shows the new secret. */
   readonly rotateSecret = output<AppAction>();
+  /** Delete was chosen; the page asks for the name and deletes the app. */
+  readonly delete = output<AppAction>();
 
   protected readonly load = signal<Load>('loading');
   protected readonly apps = signal<RegisteredApp[]>([]);

@@ -154,6 +154,7 @@ public sealed class ManageClientsApiTests(ApiFactory factory) : IClassFixture<Ap
     [InlineData("POST", "/api/clients/some-app/secret")]
     [InlineData("POST", "/api/clients/some-app/disable")]
     [InlineData("POST", "/api/clients/some-app/enable")]
+    [InlineData("DELETE", "/api/clients/some-app")]
     public async Task Only_administrators_change_apps(string method, string path)
     {
         var member = factory.CreateHttpsClient();
@@ -311,5 +312,35 @@ public sealed class ManageClientsApiTests(ApiFactory factory) : IClassFixture<Ap
         var admin = await Administrator();
 
         Assert.Equal(HttpStatusCode.NotFound, (await admin.PostAsync("/api/clients/no-such-app/disable", null)).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-115, L2-116
+    // Description: Deleting an app answers 204, leaves the list, and its refresh token is refused.
+    [Fact]
+    public async Task Deleting_an_app_removes_it_and_its_tokens()
+    {
+        var admin = await Administrator();
+        var (clientId, _) = await RegisterAsync(admin);
+        var app = RelyingParty.For(factory, clientId);
+        var refreshToken = (await app.SignInOfflineAsync()).GetProperty("refresh_token").GetString()!;
+
+        var response = await admin.DeleteAsync($"/api/clients/{clientId}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var listed = await admin.GetFromJsonAsync<JsonElement>("/api/clients");
+        Assert.DoesNotContain(listed.EnumerateArray(), a => a.GetProperty("clientId").GetString() == clientId);
+        Assert.NotEqual(HttpStatusCode.OK, (await app.RefreshAsync(refreshToken)).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-116
+    // Description: Deleting an app ingresso doesn't know answers 404.
+    [Fact]
+    public async Task Deleting_an_unknown_app_answers_404()
+    {
+        var admin = await Administrator();
+
+        Assert.Equal(HttpStatusCode.NotFound, (await admin.DeleteAsync("/api/clients/no-such-app")).StatusCode);
     }
 }

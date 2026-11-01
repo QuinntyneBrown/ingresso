@@ -52,6 +52,7 @@ const CHOICES: { value: ThemePreference; label: string }[] = [
             (register)="register($event)"
             (edit)="edit($event)"
             (rotateSecret)="rotateSecret($event)"
+            (delete)="delete($event)"
           />
         }
       </div>
@@ -107,6 +108,19 @@ export class SettingsPage {
           text: `${app.name}’s old secret no longer works.`,
         }),
       );
+    });
+  }
+
+  /** Delete an app once its name is typed; a toast confirms it and the list reloads (L2-115). */
+  protected delete({ app, trigger }: AppAction): void {
+    this.dialogs.openDeleteClient(app, trigger).subscribe((deleted) => {
+      if (!deleted) return;
+      this.toasts.show({
+        kind: 'success',
+        title: 'App deleted',
+        text: `${app.name} can no longer sign anyone in.`,
+      });
+      this.appsCard()?.reload();
     });
   }
 }

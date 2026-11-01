@@ -61,6 +61,8 @@ export interface ClientsApi {
   rotateSecret(clientId: string): Observable<AppRegistered>;
   /** Disables an app, or enables it again (L2-114). */
   setDisabled(clientId: string, disabled: boolean): Observable<RegisteredApp>;
+  /** Deletes an app with its tokens (L2-115). */
+  remove(clientId: string): Observable<void>;
 }
 
 export const CLIENTS_API = new InjectionToken<ClientsApi>('CLIENTS_API');
@@ -101,5 +103,8 @@ export class HttpClientsApi implements ClientsApi {
       `${this.baseUrl}/api/clients/${encodeURIComponent(clientId)}/${disabled ? 'disable' : 'enable'}`,
       null,
     );
+  }
+  remove(clientId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/api/clients/${encodeURIComponent(clientId)}`);
   }
 }

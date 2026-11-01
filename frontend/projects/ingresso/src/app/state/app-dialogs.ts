@@ -9,6 +9,7 @@ import {
   ClientSecretDialog,
   CLIENT_SECRET_TITLE_ID,
 } from '../dialogs/client-secret/client-secret-dialog';
+import { DeleteClientDialog, DELETE_CLIENT_TITLE_ID } from '../dialogs/delete-client/delete-client-dialog';
 import { RotateSecretDialog, ROTATE_SECRET_TITLE_ID } from '../dialogs/rotate-secret/rotate-secret-dialog';
 import { EditAppDialog, EDIT_APP_TITLE_ID } from '../dialogs/edit-app/edit-app-dialog';
 import {
@@ -85,6 +86,14 @@ export class AppDialogs {
         restoreFocus: trigger ?? true,
         data: { ...registered, rotated } satisfies ClientSecretData,
       }),
+    ).closed;
+  }
+
+  /** Deletes a registered app once its name is typed (L2-115); emits true when it was deleted. */
+  openDeleteClient(app: RegisteredApp, trigger?: HTMLElement): Observable<boolean | undefined> {
+    return this.dialog.open<boolean>(
+      DeleteClientDialog,
+      modalDialogConfig({ ariaLabelledBy: DELETE_CLIENT_TITLE_ID, restoreFocus: trigger ?? true, data: app }),
     ).closed;
   }
 
