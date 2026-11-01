@@ -102,6 +102,16 @@ behind their backdrop; only the dialog is mapped.
 - `sign-out` (journey 18, `?flow=sign-out`): the same components; the heading and message say the app can't sign
   the person out, for a sign-out request ingresso cannot trust.
 
+### Approve an app — `/consent` (`pages/consent`: default, loading, busy, error, new-scopes)
+
+- Library: `Card`, `Logo`, `List` with `ListItem` on a `surface` (one row per scope: the plain-language title,
+  the scope name as meta), `Skeleton` (loading), `Alert` (error), `Button` (Allow as primary with `busy`, Deny),
+  `SkipLink`.
+- Local: auth layout (`shared/auth-layout`). The screen sits outside the shell, like sign-in for an app. Allow
+  and Deny post the consent form back to `/connect/authorize` with the antiforgery token; the page only reads
+  the request and renders. new-scopes (journey 23) lists only the scopes not yet approved and says what was
+  approved before.
+
 ### Signed out — `/signed-out` (`pages/signed-out`: signing-out, done)
 
 - Library: `Card`, `Logo`, `Spinner` (signing-out), `List` with `ListItem` on a `surface` (done: one row per app
@@ -117,7 +127,7 @@ All dialogs open through Angular CDK `Dialog` with `modalDialogConfig` and rende
 | Dialog (mock folder: states)                                           | Library components                                                          | Local UI         |
 | ---------------------------------------------------------------------- | --------------------------------------------------------------------------- | ---------------- |
 | Add app (`dialogs/add-app`: default, busy, invalid, failed, duplicate) | `DialogShell`, `Button` (`busy`), `Alert` (failed; `warning` for duplicate) | App form         |
-| Register an app (`dialogs/register-app`: default, invalid, busy, error, edit, edit-busy) | `DialogShell`, `ErrorSummary`, `FormField`, `Input` (text, and `textarea` for the address lists, one per line), `FieldSet` + `Choice` + `Check` (APIs and staying signed in as checkboxes, type as radios), `Alert` (error), `Button` (`busy`). Edit mode (journey 21) fills the values, shows the type as text, and saves with Save changes | — |
+| Register an app (`dialogs/register-app`: default, invalid, busy, error, edit, edit-busy) | `DialogShell`, `ErrorSummary`, `FormField`, `Input` (text, and `textarea` for the address lists, one per line), `FieldSet` + `Choice` + `Check` (APIs and staying signed in as checkboxes, type as radios), `Alert` (error), `Button` (`busy`). Edit mode (journey 21) fills the values, shows the type as text, and saves with Save changes. A Consent `Check` (journey 23) marks the app first-party | — |
 | Edit your profile (`dialogs/edit-profile`: default, invalid, busy, error) | `DialogShell`, `ErrorSummary`, `FormField`, `Input` (display name, optional), `Alert` (error), `Button` (Save changes, `busy`) | Email shown as text |
 | Rotate secret (`dialogs/rotate-secret`: default, busy, error) | `DialogShell`, `Alert` (error), `Button` (`appearance="danger"`, `busy`) | — |
 | Delete app — registered app (`dialogs/delete-client`: default, busy, error) | `DialogShell`, `FormField`, `Input` (type the name to confirm), `Alert` (error), `Button` (`appearance="danger"`, `busy`, disabled until the name matches) | — |

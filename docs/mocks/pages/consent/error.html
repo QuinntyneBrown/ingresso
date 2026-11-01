@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Approve an app · error — ingresso mocks</title>
+<meta name="mock:kind" content="page">
+<meta name="mock:screen" content="consent">
+<meta name="mock:state" content="error">
+<meta name="description" content="Approve an app, error state: the consent page.">
+<link rel="icon" href="../../assets/favicon.svg">
+<link rel="stylesheet" href="../../../design-system/tokens/tokens.css">
+<link rel="stylesheet" href="../../../design-system/assets/components.css">
+<link rel="stylesheet" href="../../assets/mock.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="auth-layout"><main id="main" class="auth-card card stack">
+  <div class="logo"><a class="brand-logo" href="../sign-in/default.html" aria-label="ingresso home"><img class="brand-logo__light" src="../../assets/ingresso-logo.svg" alt="ingresso" height="32"><img class="brand-logo__dark" src="../../assets/ingresso-logo-dark.svg" alt="" height="32"></a></div>
+  <div><h1 style="font:var(--text-h2);letter-spacing:var(--letter-spacing-tight)">Sample app wants to use your ingresso account</h1><p class="text-muted" style="margin-top:var(--space-1)">Signed in as maya@northwind.com. ingresso remembers your choice for Sample app.</p></div>
+  <div class="alert alert--danger" role="alert"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 2 20h20zM12 10v4M12 17.5v.5"/></svg><div class="alert__body"><div class="alert__title">We couldn’t save your choice</div><div>Something went wrong on our side. Try again in a moment.</div></div></div>
+  <section class="stack" aria-labelledby="can"><h2 id="can" class="field__label">It will be able to:</h2><ul class="list card card--flush" aria-label="What Sample app asks for"><li class="list__item"><div class="list__body"><div class="list__title">See your display name</div><div class="list__meta">profile</div></div></li><li class="list__item"><div class="list__body"><div class="list__title">See your email address</div><div class="list__meta">email</div></div></li><li class="list__item"><div class="list__body"><div class="list__title">Use Sample API for you</div><div class="list__meta">sample-api.read</div></div></li><li class="list__item"><div class="list__body"><div class="list__title">Stay signed in when you’re not using it</div><div class="list__meta">offline_access</div></div></li></ul></section>
+  <div class="cluster"><button class="btn btn--primary" type="button">Allow</button><button class="btn" type="button">Deny</button></div>
+  <p class="text-muted" style="font:var(--text-body-sm)">Deny sends you back to Sample app without signing in.</p>
+</main></div>
+<nav class="mock-bar" aria-label="Mock navigation">
+  <a class="mock-bar__home" href="../../index.html" aria-label="All mocks">⌂</a>
+  <span class="mock-bar__screen">Approve an app</span>
+  <ul class="mock-bar__states"><li><a href="default.html">default</a></li><li><a href="loading.html">loading</a></li><li><a href="busy.html">busy</a></li><li><a href="error.html" aria-current="page">error</a></li><li><a href="new-scopes.html">new-scopes</a></li></ul>
+  <button type="button" data-theme-toggle aria-pressed="false">☾ Dark</button>
+  <button type="button" data-chrome-toggle aria-label="Hide mock chrome">×</button>
+</nav>
+<script src="../../assets/mock.js"></script>
+</body>
+</html>

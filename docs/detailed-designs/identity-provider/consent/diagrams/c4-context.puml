@@ -1,0 +1,13 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Consent
+Person(person, "Person", "Signs in with ingresso")
+Person(admin, "Administrator", "Registers apps")
+System(ingresso, "ingresso", "Front door and identity provider")
+System_Ext(app, "Published app", "Signs people in with ingresso")
+Rel(person, app, "Signs in")
+Rel(app, ingresso, "Asks for scopes")
+Rel(person, ingresso, "Allows or denies what the app asks for")
+Rel(admin, ingresso, "Marks apps first-party")
+@enduml
