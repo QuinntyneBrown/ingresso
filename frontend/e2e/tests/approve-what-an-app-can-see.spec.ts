@@ -1,6 +1,7 @@
 import { expect, test } from '../fixtures';
 import { ConsentPage } from '../pages/consent.page';
 import { SampleAppPage } from '../pages/sample-app.page';
+import { approveThroughApi, SAMPLE_APP_CLIENT_ID } from '../support/apps';
 import { signInAsNewPerson } from '../support/session';
 
 test.describe('Approve what an app can see', () => {
@@ -86,5 +87,31 @@ test.describe('Approve what an app can see', () => {
     await expect(sample.signInWithIngresso).toBeVisible();
     await sample.signInWithIngresso.click();
     await consent.waitUntilShown();
+  });
+
+  // Acceptance Test
+  // Traces to: L2-125
+  // Description: After approving profile and email, the app's next sign-in asks only for its API and staying signed in.
+  test('only new scopes are asked for', async ({ page }) => {
+    const sample = new SampleAppPage(page);
+    const consent = new ConsentPage(page);
+    const email = await signInAsNewPerson(page);
+    await approveThroughApi(page, SAMPLE_APP_CLIENT_ID, 'openid profile email');
+    await sample.open();
+
+    await sample.signInWithIngresso.click();
+    await consent.waitUntilShown();
+
+    await expect(consent.heading).toHaveText('Sample app wants to do more');
+    await expect(consent.scopeTitles).toHaveText([
+      'Use Sample API for you',
+      'Stay signed in when you’re not using it',
+    ]);
+    await expect(consent.approvedBefore).toHaveText(
+      'You already let it see your display name and see your email address.',
+    );
+    await consent.allow.click();
+    await sample.waitUntilShown();
+    await expect(sample.greeting).toHaveText(`Hello, ${email}`);
   });
 });

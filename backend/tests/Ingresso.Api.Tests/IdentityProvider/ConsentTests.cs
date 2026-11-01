@@ -242,4 +242,43 @@ public sealed class ConsentTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.StartsWith("/consent?", again.Headers.Location!.OriginalString);
     }
+
+    // Acceptance Test
+    // Traces to: L2-125
+    // Description: After approving profile and email, asking for an API scope too asks only for that, and says what was approved.
+    [Fact]
+    public async Task Only_new_scopes_are_asked_for()
+    {
+        var (_, apiScope) = await RelyingParty.RegisterApiAsync(factory);
+        var app = await RelyingParty.RegisterAskingConsentAsync(factory, offlineAccess: false, apiScope);
+        var browser = await SignedInBrowserAsync();
+        await AllowAsync(browser, app, "openid profile email");
+        var all = $"openid profile email {apiScope}";
+
+        var redirected = await browser.GetAsync(app.AuthorizePath(Scope(all)));
+        var page = await RelyingParty.JsonAsync(await browser.GetAsync($"/api/consent?client_id={app.ClientId}&scope={Uri.EscapeDataString(all)}"));
+
+        Assert.StartsWith("/consent?", redirected.Headers.Location!.OriginalString);
+        Assert.Equal([apiScope], page.GetProperty("ask").EnumerateArray().Select(s => s.GetProperty("scope").GetString()));
+        Assert.Equal(["profile", "email"], page.GetProperty("approved").EnumerateArray().Select(s => s.GetProperty("scope").GetString()).Order().Reverse());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-125, L2-123
+    // Description: Allowing the new scope covers all of them, so the next sign-in with every scope does not ask.
+    [Fact]
+    public async Task Allowing_new_scopes_covers_them_all()
+    {
+        var (_, apiScope) = await RelyingParty.RegisterApiAsync(factory);
+        var app = await RelyingParty.RegisterAskingConsentAsync(factory, offlineAccess: false, apiScope);
+        var browser = await SignedInBrowserAsync();
+        await AllowAsync(browser, app, "openid profile email");
+        var all = $"openid profile email {apiScope}";
+
+        await AllowAsync(browser, app, all);
+        var response = await browser.GetAsync(app.AuthorizePath(Scope(all)));
+        var tokens = await RelyingParty.JsonAsync(await app.ExchangeAsync(RelyingParty.CallbackParameters(response)["code"]));
+
+        Assert.Equal(all, tokens.GetProperty("scope").GetString());
+    }
 }
