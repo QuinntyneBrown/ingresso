@@ -10,8 +10,9 @@ public sealed record ClientDto(
 
 /// <summary>
 /// A validated app to register. <paramref name="ClientId"/> is generated unless given (seeded apps use a fixed one);
-/// <paramref name="Scopes"/> are the registered API scopes it is allowed.
+/// <paramref name="Scopes"/> are the registered API scopes it is allowed. A <paramref name="ClientSecret"/> makes it a
+/// confidential client; the registry stores only its hash (L2-106).
 /// </summary>
 public sealed record NewClient(
     string Name, IReadOnlyList<string> RedirectUris, IReadOnlyList<string> PostLogoutRedirectUris, string? ClientId = null,
-    IReadOnlyList<string>? Scopes = null, string? FrontChannelLogoutUri = null);
+    IReadOnlyList<string>? Scopes = null, string? FrontChannelLogoutUri = null, string? ClientSecret = null);

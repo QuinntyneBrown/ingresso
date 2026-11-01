@@ -53,6 +53,44 @@ export class RegisterAppDialog {
     await (entries.confidential ? this.confidential : this.public).check();
   }
 
+  /** Offers the mocks' two APIs, so screenshots don't depend on what other tests registered. */
+  async showMockApis(): Promise<void> {
+    await this.page.route('**/api/resources', (route) =>
+      route.fulfill({
+        json: [
+          { name: 'Notes API', audience: 'notes-api', scopes: ['notes.read'] },
+          { name: 'Sample API', audience: 'ingresso-sample-api', scopes: ['sample-api.read'] },
+        ],
+      }),
+    );
+  }
+
+  /** Answers the next registration as the mocks' confidential Budget app with a fixed secret. */
+  async registerAsMockBudget(): Promise<void> {
+    await this.page.route(
+      '**/api/clients',
+      (route) =>
+        route.request().method() === 'POST'
+          ? route.fulfill({
+              status: 201,
+              json: {
+                client: {
+                  clientId: '7c1e9a40d2b84f3a',
+                  name: 'Budget',
+                  redirectUris: ['https://budget.example.com/signin-oidc'],
+                  postLogoutRedirectUris: [],
+                  scopes: [],
+                  frontChannelLogoutUri: null,
+                  confidential: true,
+                },
+                clientSecret: 'Jd8xQ2mV7rT1kZp4Wn6Yb0Lc3Hs9Gf5Ea_Ru-Ko2Ni',
+              },
+            })
+          : route.fallback(),
+      { times: 1 },
+    );
+  }
+
   /** Fails the next registration with a server error. */
   async failNextRegistration(): Promise<void> {
     await this.page.route(

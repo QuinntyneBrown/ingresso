@@ -1,5 +1,6 @@
 import { expect, test } from '../fixtures';
 import { AppShell } from '../pages/app-shell';
+import { ClientSecretDialog } from '../pages/client-secret.dialog';
 import { RegisterAppDialog } from '../pages/register-app.dialog';
 import { SettingsPage } from '../pages/settings.page';
 import { signInAs, signInAsAdministrator } from '../support/session';
@@ -161,5 +162,38 @@ test.describe('Register an app from the dashboard', () => {
 
     await expect(dialog.failed).toBeVisible();
     await expect(dialog.name).toHaveValue(name);
+  });
+
+  // Acceptance Test
+  // Traces to: L2-106
+  // Description: A confidential app's client ID and secret are shown once with Copy buttons; after Done the secret is nowhere on the page.
+  test('a confidential app shows its secret once', async ({ page }) => {
+    const settings = new SettingsPage(page);
+    const dialog = new RegisterAppDialog(page);
+    const secretDialog = new ClientSecretDialog(page);
+    const name = unique('Budget');
+    await signInAsAdministrator(page);
+    await secretDialog.allowClipboard();
+    await settings.open();
+    await settings.registerApp.click();
+
+    await dialog.fill({ name, redirectUris: ['https://budget.example.com/signin-oidc'], confidential: true });
+    await dialog.register.click();
+
+    await expect(secretDialog.dialog).toHaveAccessibleName(`${name} is registered`);
+    await expect(secretDialog.warning).toBeVisible();
+    const secret = await secretDialog.secret.inputValue();
+    const clientId = await secretDialog.clientId.inputValue();
+    expect(secret.length).toBeGreaterThanOrEqual(43);
+    await secretDialog.copySecret.click();
+    await expect(secretDialog.copySecret).toHaveText('Copied');
+    await expect(secretDialog.copied).toHaveText('Client secret copied');
+    expect(await secretDialog.clipboard()).toBe(secret);
+
+    await secretDialog.done.click();
+
+    await expect(secretDialog.dialog).toBeHidden();
+    await expect(settings.app(name)).toContainText(`Confidential · client ID ${clientId}`);
+    await expect(page.locator('body')).not.toContainText(secret);
   });
 });

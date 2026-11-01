@@ -66,8 +66,14 @@ export class SettingsPage {
 
   /** Register an app; a new app is announced and the list reloads (L2-105). */
   protected register(event: Event): void {
-    this.dialogs.openRegisterApp(event.currentTarget as HTMLElement).subscribe((registered) => {
+    const trigger = event.currentTarget as HTMLElement;
+    this.dialogs.openRegisterApp(trigger).subscribe((registered) => {
       if (!registered) return;
+      if (registered.clientSecret) {
+        // A confidential app's secret is shown once, then the list reloads (L2-106).
+        this.dialogs.openClientSecret(registered, trigger).subscribe(() => this.appsCard()?.reload());
+        return;
+      }
       this.toasts.show({
         kind: 'success',
         title: 'App registered',

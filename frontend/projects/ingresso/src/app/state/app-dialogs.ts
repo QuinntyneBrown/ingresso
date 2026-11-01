@@ -4,12 +4,13 @@ import { Observable } from 'rxjs';
 import { AppRegistered, Tile, TileInput } from 'api';
 import { modalDialogConfig } from 'components';
 import { AddAppDialog, ADD_APP_TITLE_ID } from '../dialogs/add-app/add-app-dialog';
+import { ClientSecretDialog, CLIENT_SECRET_TITLE_ID } from '../dialogs/client-secret/client-secret-dialog';
 import { EditAppDialog, EDIT_APP_TITLE_ID } from '../dialogs/edit-app/edit-app-dialog';
 import { RegisterAppDialog, REGISTER_APP_TITLE_ID } from '../dialogs/register-app/register-app-dialog';
 import { SignOutDialog, SIGN_OUT_TITLE_ID } from '../dialogs/sign-out/sign-out-dialog';
 import { ResetLayoutDialog, RESET_LAYOUT_TITLE_ID } from '../dialogs/reset-layout/reset-layout-dialog';
 
-/** Opens the add-app, edit-app, reset-layout, sign-out and register-app dialogs from anywhere in the app. */
+/** Opens the add-app, edit-app, reset-layout, sign-out, register-app and client-secret dialogs from anywhere in the app. */
 @Injectable({ providedIn: 'root' })
 export class AppDialogs {
   private readonly dialog = inject(Dialog);
@@ -51,6 +52,18 @@ export class AppDialogs {
     return this.dialog.open<AppRegistered>(
       RegisterAppDialog,
       modalDialogConfig({ ariaLabelledBy: REGISTER_APP_TITLE_ID, restoreFocus: trigger ?? true }),
+    ).closed;
+  }
+
+  /** A new confidential app's client ID and secret, shown once (L2-106); completes when it closes. */
+  openClientSecret(registered: AppRegistered, trigger?: HTMLElement): Observable<unknown> {
+    return this.dialog.open(
+      ClientSecretDialog,
+      modalDialogConfig({
+        ariaLabelledBy: CLIENT_SECRET_TITLE_ID,
+        restoreFocus: trigger ?? true,
+        data: registered,
+      }),
     ).closed;
   }
 }

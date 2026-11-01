@@ -33,6 +33,30 @@ export class SettingsPage {
     return this.appRows.filter({ hasText: name });
   }
 
+  /** Answers the apps list with the mocks' three apps, so screenshots don't depend on what other tests registered. */
+  async showMockApps(): Promise<void> {
+    const app = (clientId: string, name: string, confidential: boolean) => ({
+      clientId,
+      name,
+      redirectUris: [],
+      postLogoutRedirectUris: [],
+      scopes: [],
+      frontChannelLogoutUri: null,
+      confidential,
+    });
+    await this.page.route('**/api/clients', (route) =>
+      route.request().method() === 'GET'
+        ? route.fulfill({
+            json: [
+              app('7c1e9a40d2b84f3a', 'Budget', true),
+              app('3f9c2b17e6a54d08', 'Notes', false),
+              app('ingresso-sample-app', 'Sample app', false),
+            ],
+          })
+        : route.fallback(),
+    );
+  }
+
   /** Answers the apps list with none, as on a fresh install. */
   async showNoApps(): Promise<void> {
     await this.page.route('**/api/clients', (route) =>

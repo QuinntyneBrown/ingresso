@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Ingresso.Api.Tests.IdentityProvider;
 using Ingresso.Api.Tests.Infrastructure;
 using Ingresso.Application.Clients;
 
@@ -136,5 +137,72 @@ public sealed class ClientsApiTests(ApiFactory factory) : IClassFixture<ApiFacto
         var response = await member.PostAsJsonAsync("/api/clients", Registration("Sneaky"));
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    private async Task<(string ClientId, string Secret, HttpClient Admin)> RegisterConfidentialAsync()
+    {
+        var admin = await Administrator();
+        var response = await admin.PostAsJsonAsync("/api/clients", new
+        {
+            name = $"Budget {Guid.NewGuid():N}"[..15],
+            redirectUris = new[] { RelyingParty.RedirectUri },
+            confidential = true,
+        });
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(body.GetProperty("client").GetProperty("confidential").GetBoolean());
+        return (body.GetProperty("client").GetProperty("clientId").GetString()!, body.GetProperty("clientSecret").GetString()!, admin);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-106
+    // Description: A confidential app gets a random secret of at least 256 bits, returned once; listing the apps never shows it.
+    [Fact]
+    public async Task A_confidential_app_gets_a_secret_shown_only_once()
+    {
+        var (clientId, secret, admin) = await RegisterConfidentialAsync();
+        var (_, other, _) = await RegisterConfidentialAsync();
+
+        Assert.True(Convert.FromBase64String(secret.Replace('-', '+').Replace('_', '/') + new string('=', (4 - secret.Length % 4) % 4)).Length >= 32);
+        Assert.NotEqual(secret, other);
+        var listed = await admin.GetStringAsync("/api/clients");
+        Assert.DoesNotContain(secret, listed, StringComparison.Ordinal);
+        var app = JsonDocument.Parse(listed).RootElement.EnumerateArray().Single(a => a.GetProperty("clientId").GetString() == clientId);
+        Assert.True(app.GetProperty("confidential").GetBoolean());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-106
+    // Description: A confidential app's code gets tokens with the right secret and PKCE verifier; no secret or a wrong one is invalid_client.
+    [Theory]
+    [InlineData("right", HttpStatusCode.OK, null)]
+    [InlineData("none", HttpStatusCode.Unauthorized, "invalid_client")]
+    [InlineData("wrong", HttpStatusCode.Unauthorized, "invalid_client")]
+    public async Task The_token_endpoint_checks_a_confidential_apps_secret(string secretKind, HttpStatusCode status, string? error)
+    {
+        var (clientId, secret, _) = await RegisterConfidentialAsync();
+        var app = RelyingParty.For(factory, clientId);
+        var browser = factory.CreateHttpsClient();
+        await browser.SignInAsAsync(HttpClientExtensions.DevUser);
+        var code = RelyingParty.CallbackParameters(await browser.GetAsync(app.AuthorizePath()))["code"];
+
+        var response = await app.ExchangeAsync(code, clientSecret: secretKind switch
+        {
+            "right" => secret,
+            "wrong" => secret[..^2] + "xx",
+            _ => null,
+        });
+
+        Assert.Equal(status, response.StatusCode);
+        var json = await RelyingParty.JsonAsync(response);
+        if (error is null)
+        {
+            Assert.False(string.IsNullOrEmpty(json.GetProperty("id_token").GetString()));
+        }
+        else
+        {
+            Assert.Equal(error, json.GetProperty("error").GetString());
+            Assert.False(json.TryGetProperty("id_token", out _));
+        }
     }
 }
