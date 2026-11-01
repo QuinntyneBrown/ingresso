@@ -136,4 +136,38 @@ test.describe('Greet by profile name', () => {
     await expect(dashboard.heading).toHaveText('Hi, Maya Reyes');
     await expect(dashboard.addYourName).toBeHidden();
   });
+
+  // Acceptance Test
+  // Traces to: L2-146
+  // Description: A 100-character name wraps at 320 pixels wide; the page never scrolls sideways.
+  test('a 100-character name wraps without sideways scrolling', async ({ page }) => {
+    const dashboard = new DashboardPage(page);
+    const edit = new EditProfileDialog(page);
+    const longName = 'M' + 'a'.repeat(99);
+    await page.setViewportSize({ width: 320, height: 800 });
+    await signInAsNewPerson(page);
+    await dashboard.openSignedIn();
+    await dashboard.addYourName.click();
+    await edit.displayName.fill(longName);
+    await edit.save.click();
+
+    await expect(dashboard.heading).toHaveText(`Hi, ${longName}`);
+    expect(await dashboard.scrollsSideways()).toBe(false);
+  });
+
+  // Acceptance Test
+  // Traces to: L2-146, L2-037
+  // Description: A name that looks like markup is shown as text, never as HTML.
+  test('a name that looks like markup is shown as text', async ({ page }) => {
+    const dashboard = new DashboardPage(page);
+    const edit = new EditProfileDialog(page);
+    await signInAsNewPerson(page);
+    await dashboard.openSignedIn();
+    await dashboard.addYourName.click();
+    await edit.displayName.fill('<b>Maya</b>');
+    await edit.save.click();
+
+    await expect(dashboard.heading).toHaveText('Hi, <b>Maya</b>');
+    expect(await dashboard.headingHasElements()).toBe(false);
+  });
 });

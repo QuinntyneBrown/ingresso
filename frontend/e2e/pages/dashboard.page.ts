@@ -89,6 +89,27 @@ export class DashboardPage {
     return () => saves;
   }
 
+  /** Shows the signed-in person with this display name (null: none), keeping the rest of the real current user. */
+  async showMockDisplayName(displayName: string | null): Promise<void> {
+    await this.page.route('**/api/auth/me', async (route) => {
+      const response = await route.fetch();
+      const me = await response.json();
+      const words = (displayName ?? '').split(' ').filter(Boolean);
+      const initials = words.length
+        ? words
+            .slice(0, 2)
+            .map((w) => w[0].toUpperCase())
+            .join('')
+        : me.email[0].toUpperCase();
+      await route.fulfill({ response, json: { ...me, displayName, initials } });
+    });
+  }
+
+  /** Whether the heading shows any markup from the display name as elements rather than text. */
+  async headingHasElements(): Promise<boolean> {
+    return this.heading.evaluate((h1) => h1.children.length > 0);
+  }
+
   /** Marks the loaded document, so `wasReloaded` can tell whether the browser loaded the page again. */
   async markPageLoad(): Promise<void> {
     await this.page.evaluate(() => ((window as unknown as { igPageMark?: boolean }).igPageMark = true));
