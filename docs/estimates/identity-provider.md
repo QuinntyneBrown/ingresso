@@ -5,4 +5,4 @@
 | register-a-client | 1.5 days | 100% |
 | sign-in-to-an-app | 5 days | 100% |
 | protect-an-api | 3 days | 100% |
-| sign-out-everywhere | 4 days | 0% |
+| sign-out-everywhere | 4 days | 100% |

@@ -27,7 +27,9 @@ notify and, for app-started sign-out, the return address
 - **`SignOutCommand`** (changed) — revokes the session as before, and returns a signed-out ticket for the session's
   apps that have a front-channel address and the return address it was given; null when there is neither.
 - **`ISignOutTickets`** (`Ingresso.Application/Common/Interfaces`) and **`DataProtectionSignOutTickets`**
-  (`Ingresso.Infrastructure/Identity`) — protect and read tickets with a time-limited protector.
+  (`Ingresso.Infrastructure/Identity`) — protect and read tickets with a Data Protection protector. The ticket
+  carries its issue time from `IClock`, and `GetSignedOutAppsQuery` refuses it once 10 minutes have passed, so
+  tests can move the clock.
 - **`GetSignedOutAppsQuery`** — reads a ticket and returns each app's name and front-channel address with `iss`
   (the issuer) and `sid` appended, and the return address; null for an unreadable or expired ticket.
 - **API**
@@ -42,9 +44,10 @@ notify and, for app-started sign-out, the return address
 - **Web app**
   - `SignOutDialog` copy says connected apps are signed out too; after signing out it goes to
     `/signed-out?ticket=…` when there is a ticket, otherwise to `/sign-in` as before.
-  - `SignedOutPage` (`/signed-out`, outside the shell) fetches the ticket's apps, shows signing-out with one
+  - `SignedOutPage` (`/signed-out`, outside the shell) fetches the ticket's apps, shows signing-out and adds one
     hidden frame per app, waits for every frame to load (5 seconds at most), then shows done with the apps, or
-    goes to the return address.
+    goes to the return address. Frames stay in the page until it is left, so a slow app still receives its
+    request after the page shows done.
   - `AuthorizeErrorPage` reads `flow=sign-out` for its sign-out copy.
 - **Sample app** — a Sign out link signs out of its cookie and through ingresso's end-session endpoint (the
   OpenID Connect handler sends `id_token_hint` and `post_logout_redirect_uri`); `/frontchannel-logout` ends its
