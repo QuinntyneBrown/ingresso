@@ -62,6 +62,7 @@ public static class DependencyInjection
         services.AddOpenIddict().AddCore(o => o.UseEntityFrameworkCore().UseDbContext<AppDbContext>());
         services.AddScoped<IClientRegistry, OpenIddictClientRegistry>();
 
+        services.Configure<SampleAppOptions>(configuration.GetSection(SampleAppOptions.Section));
         services.AddScoped<DatabaseSeeder>();
         services.AddScoped<DatabaseMaintenance>();
         return services;

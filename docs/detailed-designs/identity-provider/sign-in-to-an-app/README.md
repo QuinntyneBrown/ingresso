@@ -50,7 +50,8 @@ OpenIddict is the OpenID Connect server ([ADR 0014](../../../adr/0014-openiddict
   - `AuthorizeErrorPage` (`/authorize-error`, outside the shell) uses `SiteHeader`, `Logo`, `StatusPage` and
     `Button`.
 - **Dev proxy** — `/connect` and `/.well-known` go to the API too, so the issuer and its endpoints share the
-  web origin, as they do in production.
+  web origin, as they do in production. The `/auth` key became `/auth/`, so the web app's own `/authorize-error`
+  is not sent to the API.
 - **Sample relying party** (`backend/samples/Ingresso.SampleApp`) — a minimal ASP.NET Core app using cookies
   and `AddOpenIdConnect` (PKCE, `response_mode=query`). It has Sign in with ingresso and shows the signed-in
   email. `seed` registers it as client `ingresso-sample-app` when `SampleApp:BaseUrl` is configured, as it is

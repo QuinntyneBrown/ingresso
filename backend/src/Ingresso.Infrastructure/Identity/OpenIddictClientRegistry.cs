@@ -28,7 +28,7 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
     {
         var descriptor = new OpenIddictApplicationDescriptor
         {
-            ClientId = Guid.NewGuid().ToString("N"),
+            ClientId = client.ClientId ?? Guid.NewGuid().ToString("N"),
             DisplayName = client.Name,
             ClientType = ClientTypes.Public,
             ConsentType = ConsentTypes.Implicit,

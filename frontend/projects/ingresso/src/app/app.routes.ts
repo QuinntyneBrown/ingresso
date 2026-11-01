@@ -13,6 +13,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/verify-email/verify-email-page').then((m) => m.VerifyEmailPage),
   },
   {
+    // Outside the shell: an app's sign-in request may come from someone who is signed out (L2-094).
+    path: 'authorize-error',
+    title: 'Can’t sign in to this app · ingresso',
+    loadComponent: () => import('./pages/status/authorize-error-page').then((m) => m.AuthorizeErrorPage),
+  },
+  {
     // Every other screen sits inside the shell: header, main region and footer.
     path: '',
     component: AppShell,

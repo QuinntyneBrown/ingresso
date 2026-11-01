@@ -7,6 +7,8 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, of, switchMap } from 'rxjs';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiError, AUTH_API } from 'api';
 import { Alert, AlertKind, Button, describedBy, ErrorSummary, FormField, Input, SkipLink } from 'components';
@@ -43,7 +45,16 @@ const FAILED: Notice = {
 };
 const EMAIL_MESSAGE = 'Enter a valid email address, like maya@northwind.com';
 
-/** Sign in: ask for a single-use link by email. Opening the link in the email starts the session (L2-027, L2-028). */
+/** The client ID of an app's authorization request, when the sign-in return address is one (L2-093). */
+function clientIdOf(returnUrl: string | undefined): string | null {
+  if (!returnUrl?.startsWith('/connect/authorize?')) return null;
+  return new URLSearchParams(returnUrl.slice(returnUrl.indexOf('?'))).get('client_id');
+}
+
+/**
+ * Sign in: ask for a single-use link by email. Opening the link in the email starts the session (L2-027, L2-028).
+ * When an app sent the person here, the page names it and the link returns to the app (L2-093).
+ */
 @Component({
   selector: 'ig-sign-in-page',
   imports: [Alert, AuthLayout, Button, ErrorSummary, FormField, Input, ReactiveFormsModule, SkipLink],
@@ -54,7 +65,12 @@ const EMAIL_MESSAGE = 'Enter a valid email address, like maya@northwind.com';
         <div>
           <h1 class="auth-card__title">Check your inbox</h1>
           <p class="auth-card__lead">
-            If {{ address }} can sign in, a link is on its way. It works once and expires in 15 minutes.
+            @if (appName(); as app) {
+              If {{ address }} can sign in, a link is on its way. It works once, expires in 15 minutes, and
+              takes you back to {{ app }}.
+            } @else {
+              If {{ address }} can sign in, a link is on its way. It works once and expires in 15 minutes.
+            }
           </p>
         </div>
         <ig-alert kind="success" title="Link sent" announce="status"
@@ -63,8 +79,16 @@ const EMAIL_MESSAGE = 'Enter a valid email address, like maya@northwind.com';
         <button ig-button type="button" block (click)="reset()">Use a different email</button>
       } @else {
         <div>
-          <h1 class="auth-card__title">Sign in to ingresso</h1>
-          <p class="auth-card__lead">Enter your email and we’ll send you a link. No password needed.</p>
+          @if (appName(); as app) {
+            <h1 class="auth-card__title">Sign in to continue to {{ app }}</h1>
+            <p class="auth-card__lead">
+              {{ app }} uses your ingresso account. Enter your email and we’ll send you a link. Opening it
+              takes you back to {{ app }}.
+            </p>
+          } @else {
+            <h1 class="auth-card__title">Sign in to ingresso</h1>
+            <p class="auth-card__lead">Enter your email and we’ll send you a link. No password needed.</p>
+          }
         </div>
         <form class="auth-card__form" novalidate (ngSubmit)="submit()" [formGroup]="form">
           @if (showSummary()) {
@@ -119,6 +143,18 @@ export class SignInPage {
 
   /** What the API appended after refusing a link: `used`, `expired` or `invalid`. */
   readonly link = input<string>();
+  /** Where the link returns to, such as an app's authorization request (L2-093). */
+  readonly returnUrl = input<string>();
+
+  /** The name of the app the person is signing in to, looked up by client ID so a crafted link can't set it. */
+  protected readonly appName = toSignal(
+    toObservable(computed(() => clientIdOf(this.returnUrl()))).pipe(
+      switchMap((clientId) =>
+        clientId ? this.auth.appName(clientId).pipe(catchError(() => of(null))) : of(null),
+      ),
+    ),
+    { initialValue: null },
+  );
 
   protected readonly form = new FormGroup({
     email: new FormControl('', {
@@ -145,7 +181,7 @@ export class SignInPage {
     }
     const email = this.form.controls.email.value.trim();
     this.busy.set(true);
-    this.auth.requestSignInLink(email).subscribe({
+    this.auth.requestSignInLink(email, this.returnUrl()).subscribe({
       next: () => {
         this.busy.set(false);
         this.sentTo.set(email);

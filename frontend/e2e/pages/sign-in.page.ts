@@ -10,6 +10,7 @@ export class SignInPage {
   readonly useDifferentEmail: Locator;
   readonly sentMessage: Locator;
   readonly notice: Locator;
+  readonly lead: Locator;
 
   constructor(private readonly page: Page) {
     this.heading = page.getByRole('heading', { level: 1 });
@@ -20,6 +21,7 @@ export class SignInPage {
     this.useDifferentEmail = page.getByRole('button', { name: 'Use a different email' });
     this.sentMessage = page.locator('.auth-card__lead');
     this.notice = page.locator('ig-alert');
+    this.lead = page.locator('.auth-card__lead');
   }
 
   /** Opens sign-in with no session; `link` is what the API appended after a refused link. */
