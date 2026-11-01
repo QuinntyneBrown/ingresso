@@ -80,7 +80,7 @@ The grid refuses an occupied destination without moving any other tile. A commit
 
 ### Behaviour — reset the layout
 
-A confirmation explains that positions and sizes change and nothing is deleted. A confirmed reset packs tiles in creation order at 3 by 2.
+A confirmation explains that positions and sizes change and nothing is deleted. A confirmed reset packs tiles in creation order at 3 by 2. If the request fails the dialog stays open with an alert (mock `dialogs/reset-layout/failed`) and no placement changes; undo after reset is deferred.
 
 ![Sequence diagram: reset the layout](diagrams/sequence-reset.png)
 

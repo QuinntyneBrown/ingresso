@@ -88,7 +88,7 @@ All dialogs open through Angular CDK `Dialog` with `modalDialogConfig` and rende
 | Add app (`dialogs/add-app`: default, busy, invalid, failed, duplicate) | `DialogShell`, `Button` (`busy`), `Alert` (failed; `warning` for duplicate) | App form         |
 | Edit app (`dialogs/edit-app`: default, busy, invalid, failed)          | `DialogShell`, `Button`, `Alert` (failed, delete confirmation)              | App form         |
 | Delete app (`dialogs/delete-app`: default, busy, failed)               | `DialogShell`, `AppIcon`, `Button` (`appearance="danger"`), `Alert`         | Tile preview row |
-| Reset layout (`dialogs/reset-layout`: default, busy)                   | `DialogShell`, `Button`, `Alert` (failed)                                   | —                |
+| Reset layout (`dialogs/reset-layout`: default, busy, failed)                   | `DialogShell`, `Button`, `Alert` (failed)                                   | —                |
 | Sign out (`dialogs/sign-out`: default, busy, failed)                   | `DialogShell`, `Button` (`busy`), `Alert` (failed)                          | —                |
 
 ## Notifications

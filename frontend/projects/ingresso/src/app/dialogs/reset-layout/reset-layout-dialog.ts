@@ -13,7 +13,7 @@ export const RESET_LAYOUT_TITLE_ID = 'ig-reset-layout-title';
     <ig-dialog-shell title="Reset the layout?" [titleId]="titleId">
       <div class="body">
         @if (failed()) {
-          <ig-alert kind="danger" announce="alert" title="We couldn't reset the layout"
+          <ig-alert kind="danger" announce="alert" title="We couldn’t reset the layout"
             >Try again in a moment.</ig-alert
           >
         }

@@ -240,7 +240,8 @@
       "title": "Reset layout",
       "states": [
         "default",
-        "busy"
+        "busy",
+        "failed"
       ],
       "not_applicable": {
         "invalid": "The dialog has no inputs."
