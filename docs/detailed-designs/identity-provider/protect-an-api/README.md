@@ -34,7 +34,8 @@ ingresso's own API is unchanged: it keeps the cookie session and does not accept
 - **`IdentityProviderSetup`** — access tokens are not encrypted (`DisableAccessTokenEncryption`), so any API
   can validate them with the published keys. Their lifetime is `IdentityProvider:AccessTokenLifetime`
   (a `TimeSpan`), 10 minutes by default. OpenIddict checks requested scopes against the scope store and the
-  client's `scp:` permissions, and answers `invalid_scope` to the app for one it may not use.
+  client's `scp:` permissions. It checks permissions before it accepts the redirect address, so a scope the app
+  may not use is refused without a redirect, and the person sees `/authorize-error`, as for an unknown app.
 - **`AuthorizationController`** — after setting the granted scopes, sets the identity's resources from
   `IOpenIddictScopeManager.ListResourcesAsync`, so the access token's `aud` is the audience of each API whose
   scopes were granted.
@@ -153,5 +154,8 @@ The app exchanges its code for an access token, then calls its API, which valida
 
 - **No introspection.** APIs validate JWTs locally; a token stays valid until it expires, which is why the
   lifetime is short. Revoking access is journey 24, refresh tokens journey 20.
+- **The authorize error page names the app or its address.** Its copy ("doesn’t recognise it or the address
+  it gave") also covers a scope the app isn't allowed. That is a misconfiguration the owner fixes with
+  `clients add --scope`; separate copy for it is deferred.
 - **Scopes are global.** A scope belongs to one API, so two APIs cannot both define `read`. Owners prefix
   scopes with the API's name.

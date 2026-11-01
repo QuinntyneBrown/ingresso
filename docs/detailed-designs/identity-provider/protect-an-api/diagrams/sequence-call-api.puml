@@ -16,7 +16,7 @@ participant "Sample app API\n(JwtBearer)" as api
 person -> app : Sign in with ingresso
 app -> oidc : authorize (scope openid email sample-api.read, PKCE)
 alt scope not allowed for the app
-  oidc --> app : redirect with error=invalid_scope
+  oidc --> person : 302 /authorize-error (never redirected to the app)
 else allowed
   oidc -> authz : pass-through
   authz -> db : ListResourcesAsync(scopes)

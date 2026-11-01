@@ -35,6 +35,12 @@ public static class IdentityProviderSetup
             });
             options.RegisterScopes(Scopes.OpenId, Scopes.Email);
 
+            // Access tokens are signed JWTs any app's API can validate with the published keys, and short-lived,
+            // because APIs validate them locally without asking ingresso (L2-097).
+            options.DisableAccessTokenEncryption();
+            options.SetAccessTokenLifetime(
+                configuration.GetValue<TimeSpan?>("IdentityProvider:AccessTokenLifetime") ?? TimeSpan.FromMinutes(10));
+
             if (!string.IsNullOrWhiteSpace(certificatePath))
             {
                 var certificate = X509CertificateLoader.LoadPkcs12FromFile(certificatePath, configuration["IdentityProvider:SigningCertificate:Password"]);
