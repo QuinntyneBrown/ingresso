@@ -69,7 +69,7 @@ flowchart LR
 | `backend/src/Ingresso.Application`    | MediatR, FluentValidation | Commands, queries, validators and DTOs.                                     |
 | `backend/src/Ingresso.Domain`         | .NET                      | Entities and enums, with no dependencies.                                   |
 | `backend/src/Ingresso.Infrastructure` | EF Core, SQL Server       | Persistence, migrations, email, outbox, seeder.                             |
-| `backend/src/Ingresso.Cli`            | .NET console              | Migrate, seed and reset the database.                                       |
+| `backend/src/Ingresso.Cli`            | .NET console              | Migrate, seed and reset the database; register apps for sign-in.            |
 
 The API never applies migrations on startup. Run the CLI `migrate` command instead.
 
@@ -111,6 +111,19 @@ To try the app without SQL Server, use SQLite, as the end-to-end tests do
 export Database__Provider=Sqlite
 export ConnectionStrings__Default="Data Source=ingresso.db"
 dotnet run --project backend/src/Ingresso.Cli -- reset --confirm
+```
+
+### Register an app for sign-in
+
+ingresso is becoming the OpenID Connect identity provider for your apps (journeys 15–27 in
+[docs/journey.md](docs/journey.md)). Register each app from the CLI; it prints the client ID:
+
+```bash
+dotnet run --project backend/src/Ingresso.Cli -- clients add --name "Notes" \
+  --redirect-uri https://notes.example.com/signin-oidc \
+  --post-logout-redirect-uri https://notes.example.com/signout-callback-oidc
+dotnet run --project backend/src/Ingresso.Cli -- clients list
+dotnet run --project backend/src/Ingresso.Cli -- clients remove --client-id <client-id>
 ```
 
 ### Run the app

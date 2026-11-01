@@ -20,6 +20,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
+        // OpenID Connect clients, authorizations, scopes and tokens (ADR 0014).
+        modelBuilder.UseOpenIddict();
+
         // SQLite cannot compare or order DateTimeOffset values; store them as sortable binary
         // in tests and Playwright runs. SQL Server keeps its native datetimeoffset type.
         if (Database.IsSqlite())

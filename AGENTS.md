@@ -13,7 +13,7 @@ backend/                      .NET backend (Ingresso.sln, global.json and Direct
     Ingresso.Application/     MediatR handlers, validators, DTOs, IAppDbContext
     Ingresso.Infrastructure/  AppDbContext, migrations, external clients, auth, seeder
     Ingresso.Api/             controllers, Program.cs, DI, middleware, Swagger
-    Ingresso.Cli/             migrate, seed, and reset commands
+    Ingresso.Cli/             migrate, seed, reset, and clients (app registration) commands
   tests/
     Ingresso.<Layer>.Tests/   one test project per backend/src project, same name + .Tests
 frontend/                     Angular workspace (package.json, angular.json, lint/format config)
@@ -48,7 +48,7 @@ Projects live in `backend/src/` with tests in `backend/tests/`. Layer dependency
 - `Ingresso.Application` — MediatR handlers, validators, DTO contracts, `IAppDbContext`
 - `Ingresso.Infrastructure` — `AppDbContext`, EF migrations, SQL Server, external clients, auth services, seeder
 - `Ingresso.Api` — controllers, `Program.cs`, DI composition, Swagger, middleware
-- `Ingresso.Cli` — database migration, seeding, and reset commands
+- `Ingresso.Cli` — database migration, seeding, and reset commands, and `clients` to register the apps that sign in with ingresso
 
 Non-obvious rules:
 
@@ -60,7 +60,7 @@ Non-obvious rules:
 
 ### Tests
 
-Tests never need a database server: API and Infrastructure tests run on a per-fixture in-memory SQLite database, and Application and CLI tests on EF Core InMemory. Tests of SQL Server-only behaviour use `[SqlServerFact]` with `[Trait("Category", "SqlServer")]` and are skipped unless `INGRESSO_TEST_SQLSERVER` is set. API tests run sequentially. Follow the existing test-project patterns when adding coverage.
+Tests never need a database server: API and Infrastructure tests run on a per-fixture in-memory SQLite database, and Application and CLI tests on EF Core InMemory, except tests that touch OpenIddict's stores, which use in-memory SQLite because those stores need a relational provider. Tests of SQL Server-only behaviour use `[SqlServerFact]` with `[Trait("Category", "SqlServer")]` and are skipped unless `INGRESSO_TEST_SQLSERVER` is set. API tests run sequentially. Follow the existing test-project patterns when adding coverage.
 
 Playwright runs against the API backed by a seeded SQLite database (no LocalDB).
 

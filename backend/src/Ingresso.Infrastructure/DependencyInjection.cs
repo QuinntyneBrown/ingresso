@@ -58,6 +58,10 @@ public static class DependencyInjection
         services.Configure<SiteOptions>(configuration.GetSection(SiteOptions.Section));
         services.AddScoped<ISecurityTokenService, SecurityTokenService>();
 
+        // OpenID Connect server stores in AppDbContext (ADR 0014).
+        services.AddOpenIddict().AddCore(o => o.UseEntityFrameworkCore().UseDbContext<AppDbContext>());
+        services.AddScoped<IClientRegistry, OpenIddictClientRegistry>();
+
         services.AddScoped<DatabaseSeeder>();
         services.AddScoped<DatabaseMaintenance>();
         return services;

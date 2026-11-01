@@ -1,0 +1,39 @@
+@startuml
+title UML sequence behaviour — Register an app for sign-in
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Owner" as owner
+box "Ingresso.Cli" #EFF8FF
+  participant "ClientCommands" as cmds
+end box
+box "Ingresso.Application" #ECFDF3
+  participant "ValidationBehavior" as val
+  participant "RegisterClientCommandHandler" as handler
+end box
+box "Ingresso.Infrastructure" #FFF4E5
+  participant "OpenIddictClientRegistry" as reg
+  database "ingresso database" as db
+end box
+owner -> cmds : clients add --name --redirect-uri ...
+cmds -> val : Send RegisterClientCommand
+alt invalid name or address
+  val --> cmds : ValidationException
+  cmds --> owner : one line per problem, exit 1
+else valid
+  val -> handler : Handle
+  handler -> reg : ListAsync
+  alt name taken (ignoring case)
+    handler --> cmds : ConflictException
+    cmds --> owner : name is taken, exit 1
+  else new name
+    handler -> reg : RegisterAsync(public client, PKCE)
+    reg -> db : INSERT OpenIddictApplications
+    reg --> handler : client ID
+    handler --> cmds : RegisteredClient
+    cmds --> owner : Registered <name>. Client ID: <id>, exit 0
+  end
+end
+@enduml
