@@ -41,6 +41,16 @@ public sealed class ClientsController(ISender sender) : ControllerBase
     [HttpPost("{clientId}/secret")]
     public async Task<RegisteredClientDto> RotateSecret(string clientId, CancellationToken cancellationToken) =>
         await sender.Send(new RotateClientSecretCommand(clientId), cancellationToken);
+
+    /// <summary>Disables an app: it signs no one in and renews no tokens until enabled (L2-114).</summary>
+    [HttpPost("{clientId}/disable")]
+    public async Task<ClientDto> Disable(string clientId, CancellationToken cancellationToken) =>
+        await sender.Send(new SetClientDisabledCommand(clientId, Disabled: true), cancellationToken);
+
+    /// <summary>Enables a disabled app again (L2-114).</summary>
+    [HttpPost("{clientId}/enable")]
+    public async Task<ClientDto> Enable(string clientId, CancellationToken cancellationToken) =>
+        await sender.Send(new SetClientDisabledCommand(clientId, Disabled: false), cancellationToken);
 }
 
 /// <summary>What the edit dialog sends: the registration fields an app may change (L2-112).</summary>

@@ -1,5 +1,6 @@
 import { expect, test } from '../fixtures';
 import { AppShell } from '../pages/app-shell';
+import { AuthorizeErrorPage } from '../pages/authorize-error.page';
 import { ClientSecretDialog } from '../pages/client-secret.dialog';
 import { RegisterAppDialog } from '../pages/register-app.dialog';
 import { RotateSecretDialog } from '../pages/rotate-secret.dialog';
@@ -131,5 +132,41 @@ test.describe('Manage registered apps', () => {
 
     await expect(rotate.failed).toBeVisible();
     await expect(rotate.dialog).toBeVisible();
+  });
+
+  // Acceptance Test
+  // Traces to: L2-114
+  // Description: Disable confirms with a toast and shows a Disabled badge and Enable; Enable reverses it.
+  test('disabling and enabling an app', async ({ page }) => {
+    const settings = new SettingsPage(page);
+    const shell = new AppShell(page);
+    await signInAsAdministrator(page);
+    const app = await registerAppThroughApi(page);
+    await settings.open();
+
+    await settings.chooseAction(app.name, 'Disable');
+
+    await expect(shell.toast('App disabled')).toBeVisible();
+    await expect(settings.disabledBadge(app.name)).toBeVisible();
+    await settings.chooseAction(app.name, 'Enable');
+    await expect(shell.toast('App enabled')).toBeVisible();
+    await expect(settings.disabledBadge(app.name)).toBeHidden();
+  });
+
+  // Acceptance Test
+  // Traces to: L2-114
+  // Description: A disabled app's sign-in goes to the authorize error page instead of the app.
+  test("a disabled app's sign-in is refused", async ({ page }) => {
+    const settings = new SettingsPage(page);
+    const error = new AuthorizeErrorPage(page);
+    await signInAsAdministrator(page);
+    const app = await registerAppThroughApi(page);
+    await settings.open();
+    await settings.chooseAction(app.name, 'Disable');
+    await expect(settings.disabledBadge(app.name)).toBeVisible();
+
+    await error.openForApp(app.clientId, 'https://notes.example.com/signin-oidc');
+
+    await expect(error.heading).toBeVisible();
   });
 });

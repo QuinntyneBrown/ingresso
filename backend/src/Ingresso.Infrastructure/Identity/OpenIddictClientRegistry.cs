@@ -12,6 +12,9 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
     /// <summary>OpenIddict has no field for it, so the front-channel sign-out address is an application property (L2-099).</summary>
     public const string FrontChannelLogoutUriProperty = "frontchannel_logout_uri";
 
+    /// <summary>OpenIddict has no disabled state either, so it is an application property (L2-114).</summary>
+    public const string DisabledProperty = "ingresso_disabled";
+
     public async Task<IReadOnlyList<ClientDto>> ListAsync(CancellationToken cancellationToken)
     {
         var clients = new List<ClientDto>();
@@ -76,6 +79,32 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
         await applications.UpdateAsync(app, secret, cancellationToken);
         return await ToDtoAsync(app, cancellationToken);
     }
+
+    public async Task<ClientDto?> SetDisabledAsync(string clientId, bool disabled, CancellationToken cancellationToken)
+    {
+        if (await applications.FindByClientIdAsync(clientId, cancellationToken) is not { } app)
+        {
+            return null;
+        }
+
+        var descriptor = new OpenIddictApplicationDescriptor();
+        await applications.PopulateAsync(descriptor, app, cancellationToken);
+        if (disabled)
+        {
+            descriptor.Properties[DisabledProperty] = JsonSerializer.SerializeToElement(true);
+        }
+        else
+        {
+            descriptor.Properties.Remove(DisabledProperty);
+        }
+
+        await applications.UpdateAsync(app, descriptor, cancellationToken);
+        return await ToDtoAsync(app, cancellationToken);
+    }
+
+    public async Task<bool> IsDisabledAsync(string clientId, CancellationToken cancellationToken) =>
+        await applications.FindByClientIdAsync(clientId, cancellationToken) is { } app
+        && (await applications.GetPropertiesAsync(app, cancellationToken)).ContainsKey(DisabledProperty);
 
     /// <summary>Sets the name, addresses and permissions an app is registered or edited with (L2-087, L2-107, L2-112).</summary>
     private static void Apply(OpenIddictApplicationDescriptor descriptor, NewClient client)
@@ -147,5 +176,6 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
             ? frontChannel.GetString()
             : null,
         await applications.HasClientTypeAsync(app, ClientTypes.Confidential, cancellationToken),
-        await applications.HasPermissionAsync(app, Permissions.GrantTypes.RefreshToken, cancellationToken));
+        await applications.HasPermissionAsync(app, Permissions.GrantTypes.RefreshToken, cancellationToken),
+        (await applications.GetPropertiesAsync(app, cancellationToken)).ContainsKey(DisabledProperty));
 }

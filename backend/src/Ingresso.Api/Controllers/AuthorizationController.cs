@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using Ingresso.Api.Auth;
+using Ingresso.Application.Clients;
 using Ingresso.Application.Common.Interfaces;
 using Ingresso.Application.Identity;
 using static OpenIddict.Abstractions.OpenIddictConstants;
@@ -32,6 +33,12 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
     {
         var request = HttpContext.GetOpenIddictServerRequest()
             ?? throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
+
+        // A disabled app signs no one in; it gets the same page as an app ingresso doesn't know (L2-114).
+        if (await sender.Send(new IsClientDisabledQuery(request.ClientId!), cancellationToken))
+        {
+            return Redirect("/authorize-error");
+        }
 
         var session = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         if (!session.Succeeded || !Guid.TryParse(session.Principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
@@ -93,6 +100,11 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
             ?? throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
         var principal = (await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)).Principal
             ?? throw new InvalidOperationException("The validated grant has no principal.");
+
+        if (await sender.Send(new IsClientDisabledQuery(request.ClientId!), cancellationToken))
+        {
+            return Refuse("This app is disabled.");
+        }
 
         if (request.IsRefreshTokenGrantType())
         {

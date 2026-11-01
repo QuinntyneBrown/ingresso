@@ -29,7 +29,7 @@ public sealed class ManageClientsApiTests(ApiFactory factory) : IClassFixture<Ap
     private static async Task<(string ClientId, string Name, string? Secret)> RegisterWithSecretAsync(HttpClient admin, bool confidential)
     {
         var name = $"Notes {Guid.NewGuid():N}"[..14];
-        var response = await admin.PostAsJsonAsync("/api/clients", new { name, redirectUris = new[] { Redirect }, confidential });
+        var response = await admin.PostAsJsonAsync("/api/clients", new { name, redirectUris = new[] { Redirect }, confidential, offlineAccess = true });
         response.EnsureSuccessStatusCode();
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
         var secret = body.GetProperty("clientSecret").ValueKind == JsonValueKind.Null ? null : body.GetProperty("clientSecret").GetString();
@@ -152,6 +152,8 @@ public sealed class ManageClientsApiTests(ApiFactory factory) : IClassFixture<Ap
     [Theory]
     [InlineData("PUT", "/api/clients/some-app")]
     [InlineData("POST", "/api/clients/some-app/secret")]
+    [InlineData("POST", "/api/clients/some-app/disable")]
+    [InlineData("POST", "/api/clients/some-app/enable")]
     public async Task Only_administrators_change_apps(string method, string path)
     {
         var member = factory.CreateHttpsClient();
@@ -220,5 +222,94 @@ public sealed class ManageClientsApiTests(ApiFactory factory) : IClassFixture<Ap
         (await admin.PutAsJsonAsync($"/api/clients/{clientId}", Changes(name))).EnsureSuccessStatusCode();
 
         Assert.Equal(HttpStatusCode.OK, (await SignInWithSecretAsync(clientId, secret)).StatusCode);
+    }
+
+    private static async Task AssertInvalidGrantAsync(HttpResponseMessage response)
+    {
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("invalid_grant", (await RelyingParty.JsonAsync(response)).GetProperty("error").GetString());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-114, L2-116
+    // Description: Disable and enable return the app with its state, and the list says whether each app is disabled.
+    [Fact]
+    public async Task Disable_and_enable_change_the_apps_state()
+    {
+        var admin = await Administrator();
+        var (clientId, _) = await RegisterAsync(admin);
+
+        var disabled = await admin.PostAsync($"/api/clients/{clientId}/disable", null);
+        var listed = (await admin.GetFromJsonAsync<JsonElement>("/api/clients")).EnumerateArray().Single(a => a.GetProperty("clientId").GetString() == clientId);
+        var enabled = await admin.PostAsync($"/api/clients/{clientId}/enable", null);
+
+        Assert.True((await disabled.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("disabled").GetBoolean());
+        Assert.True(listed.GetProperty("disabled").GetBoolean());
+        Assert.False((await enabled.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("disabled").GetBoolean());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-114
+    // Description: A disabled app's authorization request gets no code and goes to the authorize error page.
+    [Fact]
+    public async Task A_disabled_app_signs_no_one_in()
+    {
+        var admin = await Administrator();
+        var (clientId, _) = await RegisterAsync(admin);
+        await admin.PostAsync($"/api/clients/{clientId}/disable", null);
+        var browser = factory.CreateHttpsClient();
+        await browser.SignInAsAsync(HttpClientExtensions.DevUser);
+
+        var response = await browser.GetAsync(RelyingParty.For(factory, clientId).AuthorizePath());
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/authorize-error", response.Headers.Location!.OriginalString);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-114
+    // Description: A code issued before the app was disabled is refused at the token endpoint.
+    [Fact]
+    public async Task A_disabled_app_cannot_exchange_a_code()
+    {
+        var admin = await Administrator();
+        var (clientId, _) = await RegisterAsync(admin);
+        var app = RelyingParty.For(factory, clientId);
+        var browser = factory.CreateHttpsClient();
+        await browser.SignInAsAsync(HttpClientExtensions.DevUser);
+        var code = RelyingParty.CallbackParameters(await browser.GetAsync(app.AuthorizePath()))["code"];
+
+        await admin.PostAsync($"/api/clients/{clientId}/disable", null);
+
+        await AssertInvalidGrantAsync(await app.ExchangeAsync(code));
+    }
+
+    // Acceptance Test
+    // Traces to: L2-114
+    // Description: A disabled app's refresh token is refused, and works again once the app is enabled.
+    [Fact]
+    public async Task A_disabled_app_cannot_renew_until_it_is_enabled()
+    {
+        var admin = await Administrator();
+        var (clientId, _) = await RegisterAsync(admin);
+        var app = RelyingParty.For(factory, clientId);
+        var refreshToken = (await app.SignInOfflineAsync()).GetProperty("refresh_token").GetString()!;
+
+        await admin.PostAsync($"/api/clients/{clientId}/disable", null);
+        await AssertInvalidGrantAsync(await app.RefreshAsync(refreshToken));
+        await admin.PostAsync($"/api/clients/{clientId}/enable", null);
+
+        Assert.Equal(HttpStatusCode.OK, (await app.RefreshAsync(refreshToken)).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-116
+    // Description: Disabling an app ingresso doesn't know answers 404.
+    [Fact]
+    public async Task Disabling_an_unknown_app_answers_404()
+    {
+        var admin = await Administrator();
+
+        Assert.Equal(HttpStatusCode.NotFound, (await admin.PostAsync("/api/clients/no-such-app/disable", null)).StatusCode);
     }
 }

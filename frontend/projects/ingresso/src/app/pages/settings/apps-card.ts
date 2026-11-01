@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, OnInit, output, signal } fr
 import { CLIENTS_API, RegisteredApp } from 'api';
 import {
   Alert,
+  Badge,
   Button,
   Card,
   EmptyState,
@@ -12,6 +13,7 @@ import {
   MenuItem,
   MenuTrigger,
   Skeleton,
+  ToastService,
 } from 'components';
 
 type Load = 'loading' | 'ready' | 'failed';
@@ -25,7 +27,20 @@ export interface AppAction {
 /** Settings → Apps: the apps that sign in with ingresso, for administrators (L2-104), with each app's actions (L2-112 to L2-115). */
 @Component({
   selector: 'ig-apps-card',
-  imports: [Alert, Button, Card, EmptyState, Icon, List, ListItem, Menu, MenuItem, MenuTrigger, Skeleton],
+  imports: [
+    Alert,
+    Badge,
+    Button,
+    Card,
+    EmptyState,
+    Icon,
+    List,
+    ListItem,
+    Menu,
+    MenuItem,
+    MenuTrigger,
+    Skeleton,
+  ],
   template: `
     <section ig-card title="Apps">
       @if (load() !== 'ready' || apps().length) {
@@ -51,6 +66,9 @@ export interface AppAction {
               @for (app of apps(); track app.clientId) {
                 <li ig-list-item [title]="app.name" [meta]="meta(app)">
                   <span #actions slot="action" class="actions">
+                    @if (app.disabled) {
+                      <ig-badge>Disabled</ig-badge>
+                    }
                     <button
                       ig-button
                       type="button"
@@ -80,6 +98,9 @@ export interface AppAction {
                             <ig-icon name="refresh" size="sm" />Rotate secret
                           </button>
                         }
+                        <button ig-menu-item type="button" (triggered)="setDisabled(app, !app.disabled)">
+                          <ig-icon name="lock" size="sm" />{{ app.disabled ? 'Enable' : 'Disable' }}
+                        </button>
                       </ig-menu>
                     </ng-template>
                   </span>
@@ -123,6 +144,7 @@ export interface AppAction {
 })
 export class AppsCard implements OnInit {
   private readonly clients = inject(CLIENTS_API);
+  private readonly toasts = inject(ToastService);
 
   /** Register an app was chosen; the page opens the dialog and calls `reload` after. */
   readonly register = output<Event>();
@@ -147,6 +169,30 @@ export class AppsCard implements OnInit {
         this.load.set('ready');
       },
       error: () => this.load.set('failed'),
+    });
+  }
+
+  /** Disables or enables an app at once and confirms it with a toast (L2-114). */
+  protected setDisabled(app: RegisteredApp, disabled: boolean): void {
+    this.clients.setDisabled(app.clientId, disabled).subscribe({
+      next: (changed) => {
+        this.apps.update((apps) => apps.map((a) => (a.clientId === changed.clientId ? changed : a)));
+        this.toasts.show(
+          disabled
+            ? {
+                kind: 'success',
+                title: 'App disabled',
+                text: `${app.name} can’t sign anyone in until you enable it.`,
+              }
+            : { kind: 'success', title: 'App enabled', text: `${app.name} can sign people in again.` },
+        );
+      },
+      error: () =>
+        this.toasts.show({
+          kind: 'danger',
+          title: disabled ? 'We couldn’t disable the app' : 'We couldn’t enable the app',
+          text: 'Try again in a moment.',
+        }),
     });
   }
 
