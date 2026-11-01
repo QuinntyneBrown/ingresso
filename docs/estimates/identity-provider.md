@@ -11,3 +11,4 @@
 | share-profile-claims | 3 days | 100% |
 | consent | 4 days | 100% |
 | connected-apps | 3 days | 100% |
+| devices | 2.5 days | 0% |

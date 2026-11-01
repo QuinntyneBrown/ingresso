@@ -123,6 +123,9 @@
         "connected-empty",
         "connected-loading",
         "connected-error",
+        "devices-only",
+        "devices-loading",
+        "devices-error",
         "apps",
         "apps-menu",
         "apps-empty",
@@ -399,6 +402,22 @@
       "title": "Revoke access",
       "states": [
         "default",
+        "busy",
+        "error"
+      ],
+      "opens_from": "settings",
+      "requirements": [],
+      "not_applicable": {
+        "invalid": "It has no input; it only confirms."
+      }
+    },
+    {
+      "id": "end-session",
+      "kind": "dialog",
+      "title": "End session",
+      "states": [
+        "default",
+        "all",
         "busy",
         "error"
       ],

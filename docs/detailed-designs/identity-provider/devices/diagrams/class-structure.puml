@@ -1,0 +1,37 @@
+@startuml
+title Class structure — Devices
+hide empty members
+class Session {
+  Id : Guid
+  UserId : Guid
+  Device : string
+  CreatedAtUtc : DateTimeOffset
+  LastSeenAtUtc : DateTimeOffset
+  RevokedAtUtc : DateTimeOffset?
+}
+class DeviceDescription <<static>> {
+  From(userAgent) : string
+}
+class GetDevicesQuery <<record>>
+class EndSessionCommand <<record>> {
+  SessionId : Guid
+}
+class EndOtherSessionsCommand <<record>>
+class DeviceDto <<record>> {
+  Id : Guid
+  Device : string
+  SignedInAt : DateTimeOffset
+  LastActiveAt : DateTimeOffset
+  Current : bool
+}
+interface ICurrentUser {
+  UserId : Guid?
+  SessionId : Guid?
+}
+GetDevicesQuery ..> DeviceDto : returns
+GetDevicesQuery ..> Session
+EndSessionCommand ..> Session
+EndOtherSessionsCommand ..> Session
+GetDevicesQuery ..> ICurrentUser
+DeviceDescription ..> Session : describes
+@enduml
