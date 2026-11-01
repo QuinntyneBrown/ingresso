@@ -21,12 +21,13 @@ export class DeleteClientDialog {
 
   /** Fails the next deletion with a server error. */
   async failNextDeletion(): Promise<void> {
-    await this.page.route(
-      '**/api/clients/*',
-      (route) =>
-        route.request().method() === 'DELETE' ? route.fulfill({ status: 500, json: {} }) : route.fallback(),
-      { times: 1 },
-    );
+    // Counts only the DELETE: a times-limited route would also count other requests that fall through.
+    let pending = true;
+    await this.page.route('**/api/clients/*', (route) => {
+      if (!pending || route.request().method() !== 'DELETE') return route.fallback();
+      pending = false;
+      return route.fulfill({ status: 500, json: {} });
+    });
   }
 
   /** Holds the next deletion until the test ends, to look at the busy state. */

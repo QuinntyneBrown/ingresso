@@ -24,7 +24,11 @@ export class SessionStore {
     });
   }
 
-  /** Ends the session on the server, then forgets the person. */
+  /** Loads the person again, as after they change their display name, so the header shows it (L2-117). */
+  refresh(): void {
+    this.auth.me().subscribe({ next: (user) => this.user.set(user) });
+  }
+
   /** Signs out; emits the signed-out page's ticket when the session's apps must be signed out too (L2-101). */
   signOut(): Observable<string | null> {
     return this.auth.signOut().pipe(tap(() => this.user.set(null)));

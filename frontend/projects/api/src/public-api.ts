@@ -7,5 +7,6 @@ export * from './lib/core/api-error';
 export * from './lib/core/api-error.interceptor';
 export * from './lib/auth/auth-api';
 export * from './lib/clients/clients-api';
+export * from './lib/profile/profile-api';
 export * from './lib/tiles/tile';
 export * from './lib/tiles/tiles-api';

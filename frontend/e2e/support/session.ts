@@ -36,3 +36,14 @@ export async function endIngressoSessionQuietly(page: Page): Promise<void> {
   const response = await page.request.post('/api/auth/sign-out', { headers: { 'X-XSRF-TOKEN': xsrf } });
   if (!response.ok()) throw new Error(`Ending the ingresso session failed: ${response.status()}`);
 }
+
+/**
+ * Signs the context in as a brand-new verified account and returns its address, so a test can change the account
+ * (such as its display name, L2-117) without touching anyone else's. The seam only creates verified accounts as
+ * administrators; the role doesn't matter to the profile.
+ */
+export async function signInAsNewPerson(page: Page): Promise<string> {
+  const email = `person-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
+  await signInAsAdministrator(page, email);
+  return email;
+}

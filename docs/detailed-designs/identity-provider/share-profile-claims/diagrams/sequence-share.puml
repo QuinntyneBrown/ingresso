@@ -1,0 +1,26 @@
+@startuml
+title UML sequence behaviour — Set a name, then sign in to an app
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Person" as person
+participant "Settings" as web
+participant "ProfileController" as profile
+participant "Sample app" as app
+participant "AuthorizationController" as authz
+participant "UserinfoController" as userinfo
+person -> web : Edit profile, Save changes
+web -> profile : PUT /api/profile { displayName }
+profile --> web : 200 profile
+web --> person : "Profile saved" toast, header updated
+person -> app : Sign in with ingresso
+app -> authz : /connect/authorize scope=openid profile email
+authz -> authz : sub, sid; name with profile; email, email_verified with email
+authz --> app : code
+app -> authz : /connect/token
+authz --> app : ID token with name and email
+app -> userinfo : GET /connect/userinfo (Bearer)
+userinfo --> app : { sub, name, email, email_verified }
+app --> person : "Hello, Maya Reyes"
+@enduml

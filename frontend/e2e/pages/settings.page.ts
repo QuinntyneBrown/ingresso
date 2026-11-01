@@ -6,6 +6,12 @@ export type ThemeChoice = 'Match my system' | 'Light' | 'Dark';
 export class SettingsPage {
   readonly heading: Locator;
   readonly appearance: Locator;
+  /** The Profile card (L2-117). */
+  readonly profile: Locator;
+  readonly editProfile: Locator;
+  readonly profileLoading: Locator;
+  readonly profileFailed: Locator;
+  readonly profileTryAgain: Locator;
   readonly backToApps: Locator;
   readonly apps: Locator;
   readonly appRows: Locator;
@@ -18,6 +24,11 @@ export class SettingsPage {
   constructor(private readonly page: Page) {
     this.heading = page.getByRole('heading', { level: 1, name: 'Settings' });
     this.appearance = page.getByRole('group', { name: 'Appearance' });
+    this.profile = page.getByRole('region', { name: 'Profile' });
+    this.editProfile = this.profile.getByRole('button', { name: 'Edit profile' });
+    this.profileLoading = this.profile.locator('[aria-busy="true"]');
+    this.profileFailed = this.profile.getByRole('alert');
+    this.profileTryAgain = this.profile.getByRole('button', { name: 'Try again' });
     this.backToApps = page.getByRole('link', { name: 'Back to your apps' });
     this.apps = page.getByRole('region', { name: 'Apps' });
     this.appRows = this.apps.getByRole('list', { name: 'Registered apps' }).getByRole('listitem');
@@ -31,6 +42,47 @@ export class SettingsPage {
   /** The row for a registered app, by its name. */
   app(name: string): Locator {
     return this.appRows.filter({ hasText: name });
+  }
+
+  /** The value the Profile card shows for a detail, such as "Display name" or "Email". */
+  profileValue(label: string): Locator {
+    return this.profile
+      .getByRole('list', { name: 'Your profile' })
+      .getByRole('listitem')
+      .filter({ has: this.page.locator('.list__title').getByText(label, { exact: true }) })
+      .locator('.list__meta');
+  }
+
+  /** Answers the profile with the mocks' person, so screenshots don't depend on the signed-in account. */
+  async showMockProfile(displayName: string | null = 'Maya Reyes'): Promise<void> {
+    await this.page.route('**/api/profile', (route) =>
+      route.request().method() === 'GET'
+        ? route.fulfill({ json: { displayName, email: 'maya@northwind.com', emailVerified: true } })
+        : route.fallback(),
+    );
+  }
+
+  /** The Profile card has loaded its values. */
+  async profileShown(): Promise<void> {
+    await this.profileValue('Email').waitFor();
+  }
+
+  /** Fails the next profile load with a server error. */
+  async failProfileOnce(): Promise<void> {
+    // Counts only the GET: a times-limited route would also count other requests that fall through.
+    let pending = true;
+    await this.page.route('**/api/profile', (route) => {
+      if (!pending || route.request().method() !== 'GET') return route.fallback();
+      pending = false;
+      return route.fulfill({ status: 500, json: {} });
+    });
+  }
+
+  /** Holds the profile load until the test ends, to look at the loading state. */
+  async holdProfile(): Promise<void> {
+    await this.page.route('**/api/profile', (route) =>
+      route.request().method() === 'GET' ? new Promise(() => undefined) : route.fallback(),
+    );
   }
 
   /** The button that opens an app's actions menu (journey 21). */

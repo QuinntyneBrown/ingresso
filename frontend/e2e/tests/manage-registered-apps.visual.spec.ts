@@ -18,10 +18,12 @@ test.describe('Manage registered apps, visually', () => {
   async function openApps(page: Page): Promise<SettingsPage> {
     const settings = new SettingsPage(page);
     await signInAsAdministrator(page);
+    await settings.showMockProfile();
     await settings.showMockApps();
     await new RegisterAppDialog(page).showMockApis();
     await settings.open();
     await expect(settings.appRows).toHaveCount(3);
+    await settings.profileShown();
     return settings;
   }
 

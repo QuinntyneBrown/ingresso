@@ -118,8 +118,8 @@
         "default",
         "loading",
         "error",
-        "invalid",
         "success",
+        "profile-unset",
         "apps",
         "apps-menu",
         "apps-empty",
@@ -360,6 +360,19 @@
       "not_applicable": {
         "invalid": "Delete app stays disabled until the name matches, so nothing invalid can be sent."
       }
+    },
+    {
+      "id": "edit-profile",
+      "kind": "dialog",
+      "title": "Edit your profile",
+      "states": [
+        "default",
+        "invalid",
+        "busy",
+        "error"
+      ],
+      "opens_from": "settings",
+      "requirements": []
     },
     {
       "id": "app-toast",

@@ -28,6 +28,9 @@ public interface IClientRegistry
     /// <summary>Whether a registered app is disabled; false for an unknown client, which OpenIddict refuses anyway (L2-114).</summary>
     Task<bool> IsDisabledAsync(string clientId, CancellationToken cancellationToken);
 
+    /// <summary>Lets every app ask for the identity scopes `profile` and `email`, as apps registered before journey 22 couldn't; returns how many changed (L2-118).</summary>
+    Task<int> AllowIdentityScopesAsync(CancellationToken cancellationToken);
+
     /// <summary>Removes the client and returns what it was, or null when no client has this ID.</summary>
     Task<ClientDto?> RemoveAsync(string clientId, CancellationToken cancellationToken);
 }

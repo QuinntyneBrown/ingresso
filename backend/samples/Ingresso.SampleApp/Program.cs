@@ -34,6 +34,8 @@ builder.Services.AddAuthentication(options =>
         options.UsePkce = true;
         options.Scope.Clear();
         options.Scope.Add("openid");
+        // profile brings the person's display name as `name`; email brings their address (L2-118).
+        options.Scope.Add("profile");
         options.Scope.Add("email");
         options.Scope.Add(apiScope);
         // A refresh token, so the app renews its access token without sending the person back (journey 20).
@@ -86,7 +88,10 @@ app.MapGet("/", async (HttpContext context, IHttpClientFactory http, IOptionsMon
     var renewed = renewals > 0
         ? $"""<p data-token-renewals>Access token renewed quietly {renewals} {(renewals == 1 ? "time" : "times")}.</p>"""
         : "";
+    // The display name when ingresso sent one, else the email; always encoded, never markup (L2-037).
+    var greeting = context.User.FindFirst("name")?.Value ?? email;
     var body = $"""
+        <p class="greeting" data-greeting>Hello, {WebUtility.HtmlEncode(greeting)}</p>
         <p data-signed-in-as>Signed in as {WebUtility.HtmlEncode(email)}</p>
         <p class="api" data-api-result>{WebUtility.HtmlEncode(await CallApiAsync(context, http))}</p>
         {renewed}
@@ -192,6 +197,7 @@ static string Page(string body) => $$"""
         h1 { margin: 0 0 8px; font-size: 28px; }
         .button { display: inline-block; padding: 10px 18px; border-radius: 8px; background: #1d2433; color: #fff;
                   text-decoration: none; font-weight: 600; }
+        .greeting { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
         .api { margin: 16px 0 0; padding: 12px 16px; border-radius: 8px; background: #eef4ff; }
         .button:focus-visible { outline: 3px solid #4f7cff; outline-offset: 2px; }
       </style>

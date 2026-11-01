@@ -14,6 +14,7 @@ test.describe('Register an app, visually', () => {
   async function openSettings(page: Page): Promise<SettingsPage> {
     const settings = new SettingsPage(page);
     await signInAsAdministrator(page);
+    await settings.showMockProfile();
     return settings;
   }
 
@@ -33,6 +34,7 @@ test.describe('Register an app, visually', () => {
     await settings.showMockApps();
     await settings.open();
     await expect(settings.appRows).toHaveCount(3);
+    await settings.profileShown();
     await expect(page).toHaveScreenshot('apps.png', { fullPage: true });
   });
 
@@ -42,6 +44,7 @@ test.describe('Register an app, visually', () => {
     await settings.showMockApps();
     await settings.open();
     await expect(settings.appRows).toHaveCount(3);
+    await settings.profileShown();
     await expect(page).toHaveScreenshot('apps-dark.png', { fullPage: true });
   });
 
@@ -51,6 +54,7 @@ test.describe('Register an app, visually', () => {
     await settings.showMockApps();
     await settings.open();
     await expect(settings.appRows).toHaveCount(3);
+    await settings.profileShown();
     await expect(page).toHaveScreenshot('apps-phone.png', { fullPage: true });
   });
 

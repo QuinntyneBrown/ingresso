@@ -6,6 +6,8 @@ export class SampleAppPage {
   readonly heading: Locator;
   readonly signInWithIngresso: Locator;
   readonly signedInAs: Locator;
+  /** "Hello, <name>": the display name with the profile scope, else the email (L2-118). */
+  readonly greeting: Locator;
   /** What the sample app's own API answered, called with the person's access token (journey 17). */
   readonly apiResult: Locator;
   readonly signOut: Locator;
@@ -18,6 +20,7 @@ export class SampleAppPage {
     this.heading = page.getByRole('heading', { level: 1 });
     this.signInWithIngresso = page.getByRole('link', { name: 'Sign in with ingresso' });
     this.signedInAs = page.locator('[data-signed-in-as]');
+    this.greeting = page.locator('[data-greeting]');
     this.apiResult = page.locator('[data-api-result]');
     this.signOut = page.getByRole('link', { name: 'Sign out' });
     this.renewals = page.locator('[data-token-renewals]');

@@ -1,0 +1,40 @@
+@startuml
+title Class structure — Share profile claims
+hide empty members
+class User {
+  Id : Guid
+  Email : string
+  Name : string?
+  Initials : string
+}
+class ProfileDto <<record>> {
+  DisplayName : string?
+  Email : string
+  EmailVerified : bool
+}
+class GetProfileQuery <<record>>
+class UpdateProfileCommand <<record>> {
+  DisplayName : string?
+}
+class UpdateProfileCommandValidator {
+  MaxLength = 100
+  no control characters
+}
+class SignInClaimsDto <<record>> {
+  UserId : Guid
+  Email : string
+  EmailVerified : bool
+  Name : string?
+}
+class ProfileController
+class UserinfoController
+class AuthorizationController
+ProfileController ..> GetProfileQuery
+ProfileController ..> UpdateProfileCommand
+UpdateProfileCommandValidator ..> UpdateProfileCommand : validates
+GetProfileQuery ..> ProfileDto : returns
+UpdateProfileCommand ..> ProfileDto : returns
+UpdateProfileCommand ..> User : sets Name
+AuthorizationController ..> SignInClaimsDto : claims by scope
+UserinfoController ..> SignInClaimsDto : claims by scope
+@enduml

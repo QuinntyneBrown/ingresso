@@ -64,12 +64,17 @@ behind their backdrop; only the dialog is mapped.
 - Library: as sign-in, plus `Alert` (`success`).
 - Local: auth layout.
 
-### Settings — `/settings` (`pages/settings`: default, loading, invalid, success, error)
+### Settings — `/settings` (`pages/settings`: default, loading, error, success, profile-unset)
 
 - Library: `Card` (one per section, `title`), `FormField`, `Input`, `Choice` + `Check` (theme), `Switch`,
   `ErrorSummary`, `Button`, `Link` (`variant="back"`), `Skeleton`, `Alert`.
-- Local: page intro; form actions row (`Cluster`).
-- Built so far (ADR 0013): `Link` (`variant="back"`) and the Appearance `Card` with `FieldSet`, `Choice` and `Check`, applied at once with no Save; the remaining sections are deferred.
+- Local: page intro; the card header row.
+- Built so far (ADR 0013): `Link` (`variant="back"`) and the Appearance `Card` with `FieldSet`, `Choice` and `Check`, applied at once with no Save. Notification switches are deferred.
+- Profile (journey 22, ADR 0017; `default`, `loading`, `error`, `success`, `profile-unset`): a `Card` with a secondary
+  `Button` (`edit` icon, Edit profile) that opens the edit-profile dialog, and a `List` (`surface`) of two
+  `ListItem`s (`title` = Display name or Email, `meta` = the value, or “Not set. Your greeting and apps use your
+  email.”). `Skeleton` while loading; a danger `Alert` with a Try again `Button` on error; a success toast through
+  `ToastService` after saving. Local: the card's header row (title, lead and button), shared with Apps.
 - Apps (journey 19, `apps`, `apps-empty`, `apps-loading`, `apps-error`; administrators only): a `Card` with a
   primary `Button` (Register an app), `List` (`surface`) of `ListItem` (`title` = app name, `meta` = type and
   client ID), `EmptyState` with a primary `Button` when there are none, `Skeleton` while loading, and a danger
@@ -113,6 +118,7 @@ All dialogs open through Angular CDK `Dialog` with `modalDialogConfig` and rende
 | ---------------------------------------------------------------------- | --------------------------------------------------------------------------- | ---------------- |
 | Add app (`dialogs/add-app`: default, busy, invalid, failed, duplicate) | `DialogShell`, `Button` (`busy`), `Alert` (failed; `warning` for duplicate) | App form         |
 | Register an app (`dialogs/register-app`: default, invalid, busy, error, edit, edit-busy) | `DialogShell`, `ErrorSummary`, `FormField`, `Input` (text, and `textarea` for the address lists, one per line), `FieldSet` + `Choice` + `Check` (APIs and staying signed in as checkboxes, type as radios), `Alert` (error), `Button` (`busy`). Edit mode (journey 21) fills the values, shows the type as text, and saves with Save changes | — |
+| Edit your profile (`dialogs/edit-profile`: default, invalid, busy, error) | `DialogShell`, `ErrorSummary`, `FormField`, `Input` (display name, optional), `Alert` (error), `Button` (Save changes, `busy`) | Email shown as text |
 | Rotate secret (`dialogs/rotate-secret`: default, busy, error) | `DialogShell`, `Alert` (error), `Button` (`appearance="danger"`, `busy`) | — |
 | Delete app — registered app (`dialogs/delete-client`: default, busy, error) | `DialogShell`, `FormField`, `Input` (type the name to confirm), `Alert` (error), `Button` (`appearance="danger"`, `busy`, disabled until the name matches) | — |
 | Client secret (`dialogs/client-secret`: default, copied, rotated) | `DialogShell`, `Alert` (`warning`), `FormField`, `Input` (`readonly`, monospace), `Button` (Copy / Copied, Done) | Copy row (`Input` and `Button` side by side); polite status region for “copied” |
@@ -136,4 +142,4 @@ All dialogs open through Angular CDK `Dialog` with `modalDialogConfig` and rende
 4. Directory category sections.
 5. Delete dialog tile preview row.
 6. Brand guide swatches and logo specimens.
-7. Settings form actions row.
+7. Settings card header row (title, lead and button), shared by Profile and Apps.

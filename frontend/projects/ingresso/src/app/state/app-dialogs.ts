@@ -1,7 +1,7 @@
 import { Dialog } from '@angular/cdk/dialog';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AppRegistered, RegisteredApp, Tile, TileInput } from 'api';
+import { AppRegistered, Profile, RegisteredApp, Tile, TileInput } from 'api';
 import { modalDialogConfig } from 'components';
 import { AddAppDialog, ADD_APP_TITLE_ID } from '../dialogs/add-app/add-app-dialog';
 import {
@@ -12,6 +12,7 @@ import {
 import { DeleteClientDialog, DELETE_CLIENT_TITLE_ID } from '../dialogs/delete-client/delete-client-dialog';
 import { RotateSecretDialog, ROTATE_SECRET_TITLE_ID } from '../dialogs/rotate-secret/rotate-secret-dialog';
 import { EditAppDialog, EDIT_APP_TITLE_ID } from '../dialogs/edit-app/edit-app-dialog';
+import { EditProfileDialog, EDIT_PROFILE_TITLE_ID } from '../dialogs/edit-profile/edit-profile-dialog';
 import {
   RegisterAppData,
   RegisterAppDialog,
@@ -62,6 +63,18 @@ export class AppDialogs {
     return this.dialog.open<AppRegistered>(
       RegisterAppDialog,
       modalDialogConfig({ ariaLabelledBy: REGISTER_APP_TITLE_ID, restoreFocus: trigger ?? true }),
+    ).closed;
+  }
+
+  /** Edit the signed-in person's profile (L2-117); emits the saved profile when it was saved, then completes. */
+  openEditProfile(profile: Profile, trigger?: HTMLElement): Observable<Profile | undefined> {
+    return this.dialog.open<Profile>(
+      EditProfileDialog,
+      modalDialogConfig({
+        ariaLabelledBy: EDIT_PROFILE_TITLE_ID,
+        restoreFocus: trigger ?? true,
+        data: profile,
+      }),
     ).closed;
   }
 
