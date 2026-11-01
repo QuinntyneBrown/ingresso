@@ -5,7 +5,7 @@
 A registered app (journey 15) sends people to ingresso to sign in, over OpenID Connect with the authorization
 code flow and PKCE. A person who already has an ingresso session goes straight back to the app. A person
 without one signs in by email link first, on a sign-in page that names the app, and then continues to the app.
-The app receives an ID token with the person's id and email.
+The app receives an ID token with the person's id, plus the profile details its scopes allow (journey 22).
 
 **authorization request** — the browser redirect from an app to `/connect/authorize` with its client ID,
 redirect address, `S256` code challenge, `state` and `nonce`
@@ -32,8 +32,9 @@ OpenIddict is the OpenID Connect server ([ADR 0014](../../../adr/0014-openiddict
   validated the request:
   - No cookie session → `302 /sign-in?returnUrl=<the authorization request>`.
   - A session whose email is not verified → `302 /verify-email`.
-  - Otherwise it signs in to OpenIddict with `sub` (user id) and `email`, both sent to the ID token, plus the
-    requested scopes. OpenIddict then redirects to the app with the code.
+  - Otherwise it signs in to OpenIddict with `sub` (user id) and the requested scopes. Since journey 22, `name`
+    comes only with `profile`, and `email` and `email_verified` only with `email`
+    ([Share profile claims](../share-profile-claims/README.md)). OpenIddict then redirects to the app with the code.
 - **Token endpoint** — handled by OpenIddict without pass-through. It checks the code, the PKCE verifier and
   the client, and issues the ID token.
 - **`GetSignInClaimsQuery`** (`Ingresso.Application/Identity`) — loads the person's id and email, and whether

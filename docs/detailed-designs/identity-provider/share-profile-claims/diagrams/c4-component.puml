@@ -1,0 +1,23 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Share profile claims
+Container_Boundary(api, "Ingresso.Api") {
+  Component(profile, "ProfileController", "Controller", "GET/PUT api/profile")
+  Component(authz, "AuthorizationController", "Controller", "Claims by scope at sign-in and renewal")
+  Component(userinfo, "UserinfoController", "Controller", "connect/userinfo, pass-through")
+  Component(setup, "IdentityProviderSetup", "OpenIddict", "Scopes openid, profile, email; claims in discovery")
+}
+Container_Boundary(appl, "Ingresso.Application") {
+  Component(get, "GetProfileQueryHandler", "MediatR handler", "The signed-in person's profile")
+  Component(update, "UpdateProfileCommandHandler", "MediatR handler", "Trims, validates, sets or clears Name")
+  Component(claims, "GetSignInClaimsQueryHandler", "MediatR handler", "Id, email, verified, name")
+}
+Container_Boundary(infra, "Ingresso.Infrastructure") {
+  Component(registry, "OpenIddictClientRegistry", "IClientRegistry", "Every app may ask for profile and email")
+}
+Rel(profile, get, "Sends")
+Rel(profile, update, "Sends")
+Rel(authz, claims, "Sends")
+Rel(userinfo, claims, "Sends")
+@enduml

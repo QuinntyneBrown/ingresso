@@ -8,3 +8,4 @@
 | sign-out-everywhere | 4 days | 100% |
 | manage-clients-in-settings | 6 days | 100% |
 | refresh-tokens | 3 days | 100% |
+| share-profile-claims | 3 days | 0% |

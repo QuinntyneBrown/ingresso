@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Share profile claims
+Person(person, "Person")
+System_Ext(app, "Published app", "Relying party")
+System_Boundary(ingresso, "ingresso") {
+  Container(web, "Web app", "Angular", "Settings → Profile card, Edit your profile dialog")
+  Container(api, "Ingresso.Api", "ASP.NET Core + OpenIddict", "GET/PUT /api/profile, /connect/authorize, /connect/token, /connect/userinfo")
+  ContainerDb(db, "Database", "SQL Server / SQLite", "Users (Name), OpenIddict applications and tokens")
+}
+Rel(person, web, "Uses")
+Rel(web, api, "JSON over HTTPS, cookie session")
+Rel(app, api, "OpenID Connect; bearer access token for userinfo")
+Rel(api, db, "EF Core")
+@enduml

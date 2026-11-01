@@ -1,0 +1,11 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Share profile claims
+Person(person, "Person", "Signs in with ingresso")
+System(ingresso, "ingresso", "Front door and identity provider")
+System_Ext(app, "Published app", "Signs people in with ingresso")
+Rel(person, ingresso, "Sets their display name in Settings → Profile")
+Rel(person, app, "Signs in")
+Rel(app, ingresso, "Asks for openid, profile, email; calls userinfo")
+@enduml
