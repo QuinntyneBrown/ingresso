@@ -96,7 +96,7 @@ jobs:
       - name: Deploy API
         run: |
           az webapp deploy --resource-group "$RESOURCE_GROUP" --name "${{ steps.infra.outputs.site }}" \
-            --src-path publish/api.zip --type zip --async true
+            --src-path publish/api.zip --type zip --track-status false
 
       - name: Smoke test
         run: |
