@@ -1,17 +1,18 @@
 # Estimates
 
-- Overall effort: 84 days
-- Complete: 99.6%
+- Overall effort: 85.5 days
+- Complete: 97.8%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
 | [identity](identity.md) | 8 days | 96% |
 | [platform](platform.md) | 12 days | 100% |
 | [tiles](tiles.md) | 9 days | 100% |
-| [dashboard](dashboard.md) | 13 days | 100% |
-| [identity-provider](identity-provider.md) | 42 days | 100% |
+| [dashboard](dashboard.md) | 14 days | 93% |
+| [identity-provider](identity-provider.md) | 42.5 days | 99% |
 
 ## Roadmap
 
 1. identity: finish the remaining manage-session work (the 30-day absolute session limit)
 2. identity-provider: journeys 15–27 in `docs/journey.md` are complete
+3. dashboard and identity-provider: journey 28, greet by profile name (show-dashboard, share-profile-claims)

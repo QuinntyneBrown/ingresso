@@ -16,7 +16,7 @@ Each folder holds one vertical feature slice. Its `README.md` traces to the L2 r
 
 | Feature | L2 requirements |
 |---------|-----------------|
-| [Show the dashboard](dashboard/show-dashboard/README.md) | `L2-008`, `L2-009`, `L2-010`, `L2-011`, `L2-053`, `L2-042` |
+| [Show the dashboard](dashboard/show-dashboard/README.md) | `L2-008`, `L2-009`, `L2-010`, `L2-011`, `L2-053`, `L2-042`, `L2-146` |
 | [Open an app](dashboard/open-app/README.md) | `L2-012`, `L2-013`, `L2-014` |
 | [Edit the layout](dashboard/edit-layout/README.md) | `L2-015`, `L2-016`, `L2-017`, `L2-019`, `L2-020`, `L2-051`, `L2-052`, `L2-054` |
 | [Quick jump](dashboard/quick-jump/README.md) | `L2-021`, `L2-022`, `L2-023` |

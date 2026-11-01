@@ -7,7 +7,7 @@ People set their display name in **Settings → Profile**. Apps then receive wha
 they get only the subject id, `sub`. These claims come in the ID token and from the OpenID Connect userinfo
 endpoint.
 
-**display name** — the optional name a person chooses, shown in the header greeting and initials and sent to
+**display name** — the optional name a person chooses, shown in the dashboard greeting and header initials and sent to
 apps as `name`
 
 **identity scope** — `openid`, `profile` or `email`. Any registered app may ask for one, unlike API scopes
@@ -17,7 +17,7 @@ The profile is shown in a card and edited in a dialog ([ADR 0017](../../../adr/0
 
 ## Description
 
-- **Account** — `User.Name` already exists: nullable, `nvarchar(120)`, used for the greeting and initials. This
+- **Account** — `User.Name` already exists: nullable, `nvarchar(120)`, used for the dashboard greeting and initials. This
   design adds no column and no migration. The 100-character rule is enforced by validation, under the column's
   limit.
 - **Profile API** (`ProfileController`, `[Authorize]`, the signed-in person only):
@@ -54,7 +54,17 @@ The profile is shown in a card and edited in a dialog ([ADR 0017](../../../adr/0
   - `EditProfileDialog` (`dialogs/edit-profile`): `DialogShell`, `ErrorSummary`, `FormField`, `Input` and
     `Alert`. It closes with the saved profile.
   - On save, `SettingsPage` shows the "Profile saved" toast, shows the saved profile in the card and calls
-    `SessionStore.refresh()`, so the header greeting and initials update.
+    `SessionStore.refresh()`, so the header initials and the dashboard greeting update (L2-146).
+- **Current user contract (journey 28)** — `GET /api/auth/me` returns `CurrentUserDto(DisplayName, Email,
+  Initials, Role, UnreadNotificationCount, EmailVerified)`. `displayName` is `User.Name`, null when not set; the
+  `name` field, which fell back to the email, is removed ([ADR 0024](../../../adr/0024-greet-by-profile-name.md)),
+  so no client has to guess whether a name is an address. The frontend `CurrentUser` mirrors it with
+  `displayName: string | null`. Its callers:
+  - `DashboardPage` — the greeting, "Hi, {displayName}" or "Hi there" with Add your name.
+  - `SignOutDialog` — "Signed in as {displayName} · {email}", or "Signed in as {email}" with no name.
+  - `AppShell` — the avatar uses `initials` only; the initials rules are unchanged (the first letters of up to two
+    words of the name, otherwise the email's first letter).
+  - Every other caller reads `email`, `emailVerified` or `role`, which are unchanged.
 - **Sample app** — asks for `openid profile email sample-api.read offline_access` and greets the person with
   "Hello, <name>" when the ID token carries `name`, and with their email otherwise.
 

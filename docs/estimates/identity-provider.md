@@ -8,7 +8,7 @@
 | sign-out-everywhere | 4 days | 100% |
 | manage-clients-in-settings | 6 days | 100% |
 | refresh-tokens | 3 days | 100% |
-| share-profile-claims | 3 days | 100% |
+| share-profile-claims | 3.5 days | 86% |
 | consent | 4 days | 100% |
 | connected-apps | 3 days | 100% |
 | devices | 2.5 days | 100% |
