@@ -34,6 +34,20 @@ public sealed class TestSignInController(ISender sender, Auth.SessionSignIn sess
         return NoContent();
     }
 
+    /// <summary>One URL for local use: signs in the seeded user (or <c>?email=</c>) and opens the dashboard.</summary>
+    [HttpGet("sign-in")]
+    public async Task<IActionResult> OpenSignedIn([FromQuery] string email = "dev@ingresso.dev", CancellationToken cancellationToken = default)
+    {
+        var signedIn = await sender.Send(new StartSessionCommand(email), cancellationToken);
+        if (signedIn is null)
+        {
+            return NotFound();
+        }
+
+        await sessions.SignInAsync(HttpContext, signedIn);
+        return Redirect("/");
+    }
+
     [HttpPost("sign-out")]
     public async Task<IActionResult> SignOutUser()
     {

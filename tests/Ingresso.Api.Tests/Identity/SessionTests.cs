@@ -110,4 +110,20 @@ public sealed class SessionTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    // Acceptance Test
+    // Traces to: L2-027
+    // Description: Where the test seam is enabled, opening one URL signs in the seeded user and lands on the dashboard.
+    [Fact]
+    public async Task Opening_the_dev_sign_in_url_signs_in_the_seeded_user()
+    {
+        var client = factory.CreateHttpsClient();
+
+        var response = await client.GetAsync("/api/test/sign-in");
+        var me = await client.GetAsync("/api/auth/me");
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/", response.Headers.Location?.OriginalString);
+        Assert.Equal(HttpStatusCode.OK, me.StatusCode);
+    }
 }
