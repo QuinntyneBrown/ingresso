@@ -13,7 +13,7 @@ backend/                      .NET backend (Ingresso.sln, global.json and Direct
     Ingresso.Application/     MediatR handlers, validators, DTOs, IAppDbContext
     Ingresso.Infrastructure/  AppDbContext, migrations, external clients, auth, seeder
     Ingresso.Api/             controllers, Program.cs, DI, middleware, Swagger
-    Ingresso.Cli/             migrate, seed, reset, and clients (app registration) commands
+    Ingresso.Cli/             migrate, seed, reset, clients (app registration) and resources (API) commands
   tests/
     Ingresso.<Layer>.Tests/   one test project per backend/src project, same name + .Tests
   samples/
@@ -50,7 +50,7 @@ Projects live in `backend/src/` with tests in `backend/tests/`. Layer dependency
 - `Ingresso.Application` — MediatR handlers, validators, DTO contracts, `IAppDbContext`
 - `Ingresso.Infrastructure` — `AppDbContext`, EF migrations, SQL Server, external clients, auth services, seeder
 - `Ingresso.Api` — controllers, `Program.cs`, DI composition, Swagger, middleware
-- `Ingresso.Cli` — database migration, seeding, and reset commands, and `clients` to register the apps that sign in with ingresso
+- `Ingresso.Cli` — database migration, seeding, and reset commands, `clients` to register the apps that sign in with ingresso, and `resources` to register the APIs they call with ingresso access tokens
 
 Non-obvious rules:
 

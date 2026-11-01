@@ -20,7 +20,7 @@ namespace Ingresso.Api.Controllers;
 [AllowAnonymous]
 [IgnoreAntiforgeryToken]
 [ApiExplorerSettings(IgnoreApi = true)]
-public sealed class AuthorizationController(ISender sender) : ControllerBase
+public sealed class AuthorizationController(ISender sender, IOpenIddictScopeManager scopes) : ControllerBase
 {
     [HttpGet("connect/authorize")]
     [HttpPost("connect/authorize")]
@@ -50,6 +50,14 @@ public sealed class AuthorizationController(ISender sender) : ControllerBase
         identity.SetClaim(Claims.Subject, person.UserId.ToString());
         identity.SetClaim(Claims.Email, person.Email);
         identity.SetScopes(request.GetScopes());
+        // The access token's audience is each API whose scopes were granted (L2-097).
+        var resources = new List<string>();
+        await foreach (var resource in scopes.ListResourcesAsync(identity.GetScopes(), HttpContext.RequestAborted))
+        {
+            resources.Add(resource);
+        }
+
+        identity.SetResources(resources.Distinct(StringComparer.Ordinal));
         identity.SetDestinations(_ => [Destinations.IdentityToken, Destinations.AccessToken]);
         return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }

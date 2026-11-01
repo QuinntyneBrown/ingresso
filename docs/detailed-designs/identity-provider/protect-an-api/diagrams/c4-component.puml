@@ -1,0 +1,33 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Call an app's API with a token
+Container_Boundary(cli, "Ingresso.Cli") {
+  Component(cmds, "ResourceCommands", "Console", "Parses options, prints results and errors")
+}
+Container_Boundary(appl, "Ingresso.Application") {
+  Component(reg, "RegisterResourceCommandHandler", "MediatR handler", "Validates and registers")
+  Component(list, "GetResourcesQueryHandler", "MediatR handler", "Lists by name")
+  Component(rem, "RemoveResourceCommandHandler", "MediatR handler", "Removes by audience")
+  Component(client, "RegisterClientCommandHandler", "MediatR handler", "Checks requested scopes exist")
+  Component(port, "IResourceRegistry", "Interface", "Resource store contract")
+}
+Container_Boundary(infra, "Ingresso.Infrastructure") {
+  Component(impl, "OpenIddictResourceRegistry", "IResourceRegistry", "Uses IOpenIddictScopeManager")
+}
+Container_Boundary(api, "Ingresso.Api") {
+  Component(authz, "AuthorizationController", "Controller", "Sets scopes and resources (aud)")
+  Component(setup, "IdentityProviderSetup", "OpenIddict server", "Unencrypted JWT access tokens, lifetime")
+}
+ContainerDb(db, "ingresso database", "SQL Server", "OpenIddictScopes")
+Rel(cmds, reg, "Sends RegisterResourceCommand")
+Rel(cmds, list, "Sends GetResourcesQuery")
+Rel(cmds, rem, "Sends RemoveResourceCommand")
+Rel(reg, port, "Uses")
+Rel(list, port, "Uses")
+Rel(rem, port, "Uses")
+Rel(client, port, "Uses")
+Rel(impl, port, "Implements")
+Rel(impl, db, "Reads and writes", "EF Core stores")
+Rel(authz, db, "Lists resources for scopes", "IOpenIddictScopeManager")
+@enduml

@@ -231,6 +231,38 @@ public sealed partial class ClientCommandsTests : IDisposable
     }
 
     // Acceptance Test
+    // Traces to: L2-096
+    // Description: clients add --scope allows the app a registered API scope, and clients list shows it.
+    [Fact]
+    public async Task Add_with_a_registered_scope_allows_it()
+    {
+        await Run("resources", "add", "--name", "Sample API", "--audience", "ingresso-sample-api", "--scope", "sample-api.read");
+
+        var (code, added) = await Run("clients", "add", "--name", "Sample app", "--redirect-uri", Redirect, "--scope", "sample-api.read");
+
+        Assert.Equal(0, code);
+        await WithApplications(async manager =>
+        {
+            var app = await manager.FindByClientIdAsync(ClientIdIn(added));
+            Assert.True(await manager.HasPermissionAsync(app!, Permissions.Prefixes.Scope + "sample-api.read"));
+        });
+        Assert.Contains("  Scope: sample-api.read", (await Run("clients", "list")).Output);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-096
+    // Description: A scope no API has is refused, named in the output, and nothing is registered.
+    [Fact]
+    public async Task Add_with_an_unknown_scope_is_refused()
+    {
+        var (code, output) = await Run("clients", "add", "--name", "Notes", "--redirect-uri", Redirect, "--scope", "notes.write");
+
+        Assert.Equal(1, code);
+        Assert.Contains("No API has scope 'notes.write'.", output);
+        Assert.Equal(0, await ApplicationCount());
+    }
+
+    // Acceptance Test
     // Traces to: L2-090
     // Description: Running seed again leaves registered apps unchanged.
     [Fact]

@@ -61,6 +61,7 @@ public static class DependencyInjection
         // OpenID Connect server stores in AppDbContext (ADR 0014).
         services.AddOpenIddict().AddCore(o => o.UseEntityFrameworkCore().UseDbContext<AppDbContext>());
         services.AddScoped<IClientRegistry, OpenIddictClientRegistry>();
+        services.AddScoped<IResourceRegistry, OpenIddictResourceRegistry>();
 
         services.Configure<SampleAppOptions>(configuration.GetSection(SampleAppOptions.Section));
         services.AddScoped<DatabaseSeeder>();

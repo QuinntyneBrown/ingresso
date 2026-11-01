@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Call an app's API with a token
+Person(owner, "Owner", "Publishes apps and their APIs")
+Person(person, "Person", "Uses the owner's apps")
+System(ingresso, "ingresso", "Identity provider: issues ID and access tokens")
+System_Ext(app, "Owner's app", "Signs people in with ingresso")
+System_Ext(api, "Owner's API", "Accepts ingresso access tokens for its audience")
+Rel(owner, ingresso, "Registers APIs, scopes and apps", "CLI")
+Rel(person, app, "Uses")
+Rel(app, ingresso, "Exchanges a code for tokens", "OpenID Connect")
+Rel(app, api, "Calls with the access token", "HTTPS, Bearer")
+Rel(api, ingresso, "Reads discovery and signing keys", "HTTPS")
+@enduml

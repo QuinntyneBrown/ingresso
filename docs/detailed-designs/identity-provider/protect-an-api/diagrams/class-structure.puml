@@ -1,0 +1,42 @@
+@startuml
+title Class structure — Call an app's API with a token
+skinparam classAttributeIconSize 0
+package "Ingresso.Application.Resources" {
+  class RegisterResourceCommand <<record>> {
+    +Name : string?
+    +Audience : string?
+    +Scopes : IReadOnlyList<string>
+  }
+  class RegisterResourceCommandValidator
+  class RegisterResourceCommandHandler
+  class GetResourcesQuery <<record>>
+  class RemoveResourceCommand <<record>> {
+    +Audience : string
+  }
+  class ResourceDto <<record>> {
+    +Name : string
+    +Audience : string
+    +Scopes : IReadOnlyList<string>
+  }
+}
+package "Ingresso.Application.Clients" {
+  class RegisterClientCommand <<record>> {
+    +Scopes : IReadOnlyList<string>
+  }
+  class ClientDto <<record>> {
+    +Scopes : IReadOnlyList<string>
+  }
+}
+interface IResourceRegistry {
+  +ListAsync() : IReadOnlyList<ResourceDto>
+  +RegisterAsync(ResourceDto)
+  +RemoveAsync(audience) : ResourceDto?
+}
+class OpenIddictResourceRegistry
+RegisterResourceCommandValidator ..> RegisterResourceCommand
+RegisterResourceCommandHandler ..> RegisterResourceCommand
+RegisterResourceCommandHandler --> IResourceRegistry
+OpenIddictResourceRegistry ..|> IResourceRegistry
+IResourceRegistry ..> ResourceDto
+RegisterClientCommand ..> IResourceRegistry : scopes checked by handler
+@enduml

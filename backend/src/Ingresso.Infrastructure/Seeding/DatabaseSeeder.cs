@@ -1,4 +1,5 @@
 using Ingresso.Application.Clients;
+using Ingresso.Application.Resources;
 using Ingresso.Application.Tiles;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,8 @@ namespace Ingresso.Infrastructure.Seeding;
 /// Adds a dev user and sample tiles, and the sample relying party when configured. Rows that already exist (by email,
 /// tile name per user, or client ID) are left alone, so it is safe to re-run.
 /// </summary>
-public sealed class DatabaseSeeder(AppDbContext db, IClock clock, IClientRegistry clients, IOptions<SampleAppOptions> sampleApp)
+public sealed class DatabaseSeeder(
+    AppDbContext db, IClock clock, IClientRegistry clients, IResourceRegistry resources, IOptions<SampleAppOptions> sampleApp)
 {
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
@@ -54,17 +56,31 @@ public sealed class DatabaseSeeder(AppDbContext db, IClock clock, IClientRegistr
         await SeedSampleAppAsync(cancellationToken);
     }
 
-    /// <summary>Registers the sample relying party (journey 16) under its fixed client ID, once.</summary>
+    /// <summary>
+    /// Registers the sample app's API (journey 17) and the sample relying party (journey 16) under its fixed client ID,
+    /// allowed that API's scope, once each.
+    /// </summary>
     private async Task SeedSampleAppAsync(CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(sampleApp.Value.BaseUrl) || await clients.FindNameAsync(SampleAppOptions.ClientId, cancellationToken) is not null)
+        if (string.IsNullOrWhiteSpace(sampleApp.Value.BaseUrl))
+        {
+            return;
+        }
+
+        if ((await resources.ListAsync(cancellationToken)).All(r => r.Audience != SampleAppOptions.Audience))
+        {
+            await resources.RegisterAsync(new ResourceDto("Sample API", SampleAppOptions.Audience, [SampleAppOptions.Scope]), cancellationToken);
+        }
+
+        if (await clients.FindNameAsync(SampleAppOptions.ClientId, cancellationToken) is not null)
         {
             return;
         }
 
         var baseUrl = sampleApp.Value.BaseUrl.TrimEnd('/');
         await clients.RegisterAsync(
-            new NewClient("Sample app", [$"{baseUrl}/signin-oidc"], [$"{baseUrl}/signout-callback-oidc"], SampleAppOptions.ClientId),
+            new NewClient(
+                "Sample app", [$"{baseUrl}/signin-oidc"], [$"{baseUrl}/signout-callback-oidc"], SampleAppOptions.ClientId, [SampleAppOptions.Scope]),
             cancellationToken);
     }
 }

@@ -12,8 +12,8 @@ public sealed class DatabaseSeederTests : IDisposable
     private readonly SqliteDatabase database = new();
 
     // Acceptance Test
-    // Traces to: L2-090, L2-093
-    // Description: With SampleApp:BaseUrl configured, seed registers the sample relying party once under its fixed client ID; without it, no app is registered.
+    // Traces to: L2-090, L2-093, L2-098
+    // Description: With SampleApp:BaseUrl configured, seed registers the sample API and the sample relying party, allowed its scope, once; without it, neither.
     [Fact]
     public async Task Seed_registers_the_sample_app_only_when_configured_and_only_once()
     {
@@ -28,9 +28,14 @@ public sealed class DatabaseSeederTests : IDisposable
         Assert.Equal("Sample app", sample.Name);
         Assert.Equal(["http://localhost:5201/signin-oidc"], sample.RedirectUris);
         Assert.Equal(["http://localhost:5201/signout-callback-oidc"], sample.PostLogoutRedirectUris);
+        Assert.Equal([SampleAppOptions.Scope], sample.Scopes);
+        var api = Assert.Single(await configured.RunAsync(sp => sp.GetRequiredService<IResourceRegistry>().ListAsync(CancellationToken.None)));
+        Assert.Equal(("Sample API", SampleAppOptions.Audience), (api.Name, api.Audience));
+        Assert.Equal([SampleAppOptions.Scope], api.Scopes);
 
         await database.RunAsync(sp => Seed(sp));
         Assert.Empty(await database.RunAsync(sp => sp.GetRequiredService<IClientRegistry>().ListAsync(CancellationToken.None)));
+        Assert.Empty(await database.RunAsync(sp => sp.GetRequiredService<IResourceRegistry>().ListAsync(CancellationToken.None)));
     }
 
     [Fact]

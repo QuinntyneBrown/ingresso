@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using Ingresso.Api.Tests.Infrastructure;
 using Ingresso.Application.Clients;
 using Ingresso.Application.Common.Interfaces;
+using Ingresso.Application.Resources;
 
 namespace Ingresso.Api.Tests.IdentityProvider;
 
@@ -34,13 +35,36 @@ public sealed class RelyingParty
 
     public string Challenge => Base64Url(SHA256.HashData(Encoding.ASCII.GetBytes(Verifier)));
 
-    public static async Task<RelyingParty> RegisterAsync(ApiFactory factory, string name = "Sample app")
+    public static async Task<RelyingParty> RegisterAsync(ApiFactory factory, string name = "Sample app", params string[] scopes)
     {
         factory.CreateHttpsClient().Dispose(); // creates and seeds the database
         using var scope = factory.Services.CreateScope();
         var registry = scope.ServiceProvider.GetRequiredService<IClientRegistry>();
-        var clientId = await registry.RegisterAsync(new NewClient($"{name} {Guid.NewGuid():N}", [RedirectUri], []), CancellationToken.None);
+        var clientId = await registry.RegisterAsync(
+            new NewClient($"{name} {Guid.NewGuid():N}", [RedirectUri], [], Scopes: scopes), CancellationToken.None);
         return new RelyingParty(factory, clientId);
+    }
+
+    /// <summary>Registers an API with one scope, both unique to the call; returns (audience, scope).</summary>
+    public static async Task<(string Audience, string Scope)> RegisterApiAsync(ApiFactory factory)
+    {
+        factory.CreateHttpsClient().Dispose();
+        var id = Guid.NewGuid().ToString("N")[..8];
+        var (audience, scopeName) = ($"api-{id}", $"api-{id}.read");
+        using var scope = factory.Services.CreateScope();
+        await scope.ServiceProvider.GetRequiredService<IResourceRegistry>()
+            .RegisterAsync(new ResourceDto($"API {id}", audience, [scopeName]), CancellationToken.None);
+        return (audience, scopeName);
+    }
+
+    /// <summary>Signs in as the seeded person, authorizes with these scopes, and exchanges the code; returns the access token.</summary>
+    public async Task<string> AccessTokenAsync(string scope)
+    {
+        var browser = Factory.CreateHttpsClient();
+        await browser.SignInAsAsync(HttpClientExtensions.DevUser);
+        var authorized = await browser.GetAsync(AuthorizePath(new Dictionary<string, string?> { ["scope"] = $"openid email {scope}" }));
+        var response = await ExchangeAsync(CallbackParameters(authorized)["code"]);
+        return (await JsonAsync(response)).GetProperty("access_token").GetString()!;
     }
 
     /// <summary>The authorization request path, with any parameter overridden or removed (null).</summary>
