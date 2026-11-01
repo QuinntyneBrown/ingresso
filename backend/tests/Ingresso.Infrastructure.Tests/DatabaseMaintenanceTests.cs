@@ -37,6 +37,24 @@ public sealed class DatabaseMaintenanceTests : IDisposable
         Assert.Empty(await db.Database.GetPendingMigrationsAsync());
     }
 
+    // Acceptance Test
+    // Traces to: L2-090
+    // Description: Migrate creates the OpenID Connect client, authorization, scope and token tables on SQLite.
+    [Fact]
+    public async Task Migrate_creates_the_openid_connect_tables_on_sqlite()
+    {
+        using var services = Services();
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        await scope.ServiceProvider.GetRequiredService<DatabaseMaintenance>().MigrateAsync();
+
+        var tables = await db.Database
+            .SqlQueryRaw<string>("SELECT name AS Value FROM sqlite_master WHERE type = 'table' AND name LIKE 'OpenIddict%'")
+            .ToListAsync();
+        Assert.Equal(["OpenIddictApplications", "OpenIddictAuthorizations", "OpenIddictScopes", "OpenIddictTokens"], tables.Order());
+    }
+
     public void Dispose()
     {
         Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
