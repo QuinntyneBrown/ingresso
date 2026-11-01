@@ -14,6 +14,7 @@ public interface IAppDbContext
     DbSet<SessionApp> SessionApps { get; }
     DbSet<Notification> Notifications { get; }
     DbSet<AuditEntry> AuditEntries { get; }
+    DbSet<SigningKey> SigningKeys { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

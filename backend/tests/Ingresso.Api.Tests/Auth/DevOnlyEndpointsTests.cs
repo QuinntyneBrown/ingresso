@@ -31,6 +31,7 @@ public sealed class DevOnlyEndpointsTests(DevOnlyEndpointsTests.ProductionFactor
             base.ConfigureWebHost(builder);
             builder.UseEnvironment("Production");
             builder.UseSetting("IdentityProvider:SigningCertificate:Path", TestSigningCertificate.Path);
+            builder.UseSetting("DataProtection:Certificate:Path", TestSigningCertificate.Path);
         }
     }
 }

@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Ingresso.Application.Common;
 using Ingresso.Application.Common.Interfaces;
 using Ingresso.Application.Common.Messages;
+using Ingresso.Application.SigningKeys;
+using Microsoft.AspNetCore.DataProtection;
 using Ingresso.Infrastructure.Email;
 using Ingresso.Infrastructure.Identity;
 using Ingresso.Infrastructure.Outbox;
@@ -63,12 +65,41 @@ public static class DependencyInjection
         services.AddScoped<IClientRegistry, OpenIddictClientRegistry>();
         services.AddScoped<IConsentStore, OpenIddictConsentStore>();
         services.AddScoped<IResourceRegistry, OpenIddictResourceRegistry>();
-        services.AddDataProtection();
+        // One Data Protection key ring for the API and the CLI, in the database; a certificate protects it in
+        // production (ADR 0021).
+        var dataProtection = services.AddDataProtection().SetApplicationName("ingresso").PersistKeysToDbContext<AppDbContext>();
+        var dataProtectionCertificate = configuration["DataProtection:Certificate:Path"];
+        if (!string.IsNullOrWhiteSpace(dataProtectionCertificate))
+        {
+            var certificate = System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadPkcs12FromFile(
+                dataProtectionCertificate, configuration["DataProtection:Certificate:Password"]);
+            dataProtection.ProtectKeysWithCertificate(certificate).UnprotectKeysWithAnyCertificate(certificate);
+        }
+
+        // Signing keys in the database, encrypted, rotating (journey 26).
+        services.AddSingleton(SigningKeyPolicyFrom(configuration));
+        services.AddSingleton<ISigningKeyFactory, DataProtectionSigningKeyFactory>();
+        services.AddSingleton<SigningKeyRing>();
         services.AddSingleton<ISignOutTickets, DataProtectionSignOutTickets>();
 
         services.Configure<SampleAppOptions>(configuration.GetSection(SampleAppOptions.Section));
         services.AddScoped<DatabaseSeeder>();
         services.AddScoped<DatabaseMaintenance>();
         return services;
+    }
+
+    /// <summary>
+    /// A replaced key stays published for the longest lifetime of a token ingresso signs: the refresh token, the access
+    /// token or the identity token (20 minutes, OpenIddict's default) (L2-138).
+    /// </summary>
+    private static SigningKeyPolicy SigningKeyPolicyFrom(IConfiguration configuration)
+    {
+        TimeSpan[] lifetimes =
+        [
+            configuration.GetValue<TimeSpan?>("IdentityProvider:RefreshTokenSlidingLifetime") ?? TimeSpan.FromDays(14),
+            configuration.GetValue<TimeSpan?>("IdentityProvider:AccessTokenLifetime") ?? TimeSpan.FromMinutes(10),
+            TimeSpan.FromMinutes(20),
+        ];
+        return new SigningKeyPolicy(lifetimes.Max(), configuration.GetValue<TimeSpan?>("IdentityProvider:SigningKeys:RotationInterval"));
     }
 }

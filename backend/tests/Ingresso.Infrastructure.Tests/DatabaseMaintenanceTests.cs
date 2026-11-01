@@ -38,6 +38,27 @@ public sealed class DatabaseMaintenanceTests : IDisposable
     }
 
     // Acceptance Test
+    // Traces to: L2-139
+    // Description: On a migrated SQLite database the first signing key is created, encrypted with a Data Protection key the database keeps.
+    [Fact]
+    public async Task Migrate_lets_the_signing_keys_and_their_data_protection_key_be_stored_on_sqlite()
+    {
+        using var services = Services();
+        using (var scope = services.CreateScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<DatabaseMaintenance>().MigrateAsync();
+        }
+
+        var ring = services.GetRequiredService<Ingresso.Infrastructure.Identity.SigningKeyRing>();
+        await ring.ReloadAsync(CancellationToken.None);
+
+        using var check = services.CreateScope();
+        var db = check.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Equal(ring.Keys.Single().KeyId, (await db.SigningKeys.SingleAsync()).Kid);
+        Assert.NotEmpty(await db.DataProtectionKeys.ToListAsync());
+    }
+
+    // Acceptance Test
     // Traces to: L2-090
     // Description: Migrate creates the OpenID Connect client, authorization, scope and token tables on SQLite.
     [Fact]
