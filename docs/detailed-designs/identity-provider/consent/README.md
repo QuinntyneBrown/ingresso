@@ -21,8 +21,9 @@ The page is a web app page that resumes the authorize request
   - With `consent=deny` in the request, it answers `access_denied` through OpenIddict (L2-124).
   - Otherwise it sends `GetConsentQuery(userId, clientId, scopes)`. When the result has scopes to ask, it
     redirects to `/consent` with the authorize query (L2-121).
-  - Otherwise it attaches the approval that covers the requested scopes, when there is one, with
-    `SetAuthorizationId`, so the tokens belong to it (L2-123).
+  - Otherwise it sends `FindApprovalQuery` and attaches the approval that covers the requested scopes, when there
+    is one, with `SetAuthorizationId`, so the tokens belong to it (L2-123). First-party and `openid`-only sign-ins
+    have no approval and get OpenIddict's ad-hoc authorization as before.
 - **Application** (`Ingresso.Application/Consent/Consent.cs`):
   - `GetConsentQuery` returns `ConsentDto(AppName, Email, Ask, Approved)`. `Ask` is the requested scopes minus
     `openid` minus the scopes already approved; it is empty for a first-party app. `Ask` and `Approved` are
@@ -50,14 +51,20 @@ The page is a web app page that resumes the authorize request
     `Skeleton`, `Alert` and `Button`. Allow shows busy, posts, then calls `location.assign` with
     `/connect/authorize` and the same query. Deny calls `location.assign` with `consent=deny` added. A failed
     Allow shows the error alert; a failed load goes to the error page.
-  - `RegisterAppDialog` gains a Consent `Check`, "Trusted first-party app — skip the consent screen".
-- **Sample app** — the seeded sample app is registered `explicit`, so it shows the consent page.
+  - `RegisterAppDialog` gains a Consent `Check`, "Trusted first-party app — skip the consent screen", in a
+    `FieldSet` with a `hint`. `FieldSet` gained the `hint` input (`{id}-help`, the group's description) for it.
+  - The new-scopes wording joins the approved titles and says a repeated "see your" once: "You already let it
+    see your display name and email address."
+- **Sample app** — the seeded sample app is registered `explicit`, so it shows the consent page. On
+  `access_denied` it returns home and says "You chose not to let Sample app use your ingresso account."
 
 ## Behaviour as built
 
 - Apps registered before this journey keep the `implicit` consent type, so they skip the page until an
   administrator unticks the option.
 - App and API names are rendered by Angular interpolation, so markup shows as text (L2-037).
+- Playwright specs whose subject is not consent approve on the way with `SampleAppPage.waitUntilSignedIn`; the
+  API tests' relying party registers first-party apps unless a test is about consent.
 
 ## Requirements
 

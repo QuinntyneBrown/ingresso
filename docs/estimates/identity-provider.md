@@ -9,4 +9,4 @@
 | manage-clients-in-settings | 6 days | 100% |
 | refresh-tokens | 3 days | 100% |
 | share-profile-claims | 3 days | 100% |
-| consent | 4 days | 0% |
+| consent | 4 days | 100% |
