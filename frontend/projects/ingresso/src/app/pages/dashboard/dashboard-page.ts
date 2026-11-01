@@ -50,6 +50,13 @@ import { injectWideViewport } from '../../shared/wide-viewport';
       <section class="intro">
         <h1>{{ greeting() }}</h1>
         <p class="text-muted">{{ summary() }}</p>
+        @if (session.user() && !session.user()!.displayName) {
+          <p class="intro__action">
+            <button ig-button type="button" appearance="link" size="sm" aria-haspopup="dialog">
+              Add your name
+            </button>
+          </p>
+        }
         <p class="visually-hidden" role="status">{{ store.matchSummary() }}</p>
       </section>
 
@@ -138,7 +145,7 @@ import { injectWideViewport } from '../../shared/wide-viewport';
 export class DashboardPage {
   protected readonly store = inject(TilesStore);
   protected readonly dialogs = inject(AppDialogs);
-  private readonly session = inject(SessionStore);
+  protected readonly session = inject(SessionStore);
   private readonly toasts = inject(ToastService);
   private readonly router = inject(Router);
 

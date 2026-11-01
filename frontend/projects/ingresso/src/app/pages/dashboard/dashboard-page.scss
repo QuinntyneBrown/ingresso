@@ -14,8 +14,11 @@
   gap: var(--spacingVerticalXS);
 }
 .intro h1 {
-  /* A name with no spaces, such as an email address, wraps rather than running off a phone screen. */
+  /* A display name of up to 100 characters, even with no spaces, wraps rather than running off a phone screen (L2-146). */
   overflow-wrap: anywhere;
+}
+.intro__action {
+  justify-self: start;
 }
 .grid {
   display: grid;

@@ -8,6 +8,8 @@ import { EditAppDialog } from './edit-app.dialog';
 export class DashboardPage {
   readonly shell: AppShell;
   readonly heading: Locator;
+  /** The intro's link to Edit your profile, shown while no display name is set (L2-146). */
+  readonly addYourName: Locator;
   readonly summary: Locator;
   readonly tiles: Locator;
   readonly emptyTitle: Locator;
@@ -29,6 +31,7 @@ export class DashboardPage {
   constructor(private readonly page: Page) {
     this.shell = new AppShell(page);
     this.heading = page.getByRole('heading', { level: 1 });
+    this.addYourName = page.locator('.intro').getByRole('button', { name: 'Add your name' });
     this.summary = page.locator('.intro p.text-muted');
     this.tiles = page.locator('ig-app-tile');
     this.emptyTitle = page.getByRole('heading', { name: 'No apps behind this door yet' });
