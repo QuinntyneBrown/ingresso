@@ -43,7 +43,7 @@ export interface DeviceAction {
         @default {
           <ul ig-list surface aria-label="Signed-in devices">
             @for (device of devices(); track device.id) {
-              <li ig-list-item [title]="device.device" [meta]="when(device)">
+              <li ig-list-item wrap [title]="device.device" [meta]="when(device)">
                 @if (device.current) {
                   <ig-badge slot="action" kind="info">This device</ig-badge>
                 } @else {
