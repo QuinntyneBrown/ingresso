@@ -60,16 +60,16 @@ flowchart LR
   cli[Ingresso.Cli] --> infra
 ```
 
-| Component                      | Technology                | Responsibility                                                              |
-| ------------------------------ | ------------------------- | --------------------------------------------------------------------------- |
-| `frontend/projects/ingresso`   | Angular                   | The web app: dashboard, directory and dialogs.                              |
-| `frontend/projects/components` | Angular, Storybook        | The `ig-*` component library on Fluent UI v9 design tokens.                 |
-| `frontend/projects/api`        | TypeScript                | Typed API contracts, injection tokens and clients.                          |
-| `src/Ingresso.Api`             | ASP.NET Core              | Controllers, authentication, authorization, rate limiting, problem details. |
-| `src/Ingresso.Application`     | MediatR, FluentValidation | Commands, queries, validators and DTOs.                                     |
-| `src/Ingresso.Domain`          | .NET                      | Entities and enums, with no dependencies.                                   |
-| `src/Ingresso.Infrastructure`  | EF Core, SQL Server       | Persistence, migrations, email, outbox, seeder.                             |
-| `src/Ingresso.Cli`             | .NET console              | Migrate, seed and reset the database.                                       |
+| Component                             | Technology                | Responsibility                                                              |
+| ------------------------------------- | ------------------------- | --------------------------------------------------------------------------- |
+| `frontend/projects/ingresso`          | Angular                   | The web app: dashboard, directory and dialogs.                              |
+| `frontend/projects/components`        | Angular, Storybook        | The `ig-*` component library on Fluent UI v9 design tokens.                 |
+| `frontend/projects/api`               | TypeScript                | Typed API contracts, injection tokens and clients.                          |
+| `backend/src/Ingresso.Api`            | ASP.NET Core              | Controllers, authentication, authorization, rate limiting, problem details. |
+| `backend/src/Ingresso.Application`    | MediatR, FluentValidation | Commands, queries, validators and DTOs.                                     |
+| `backend/src/Ingresso.Domain`         | .NET                      | Entities and enums, with no dependencies.                                   |
+| `backend/src/Ingresso.Infrastructure` | EF Core, SQL Server       | Persistence, migrations, email, outbox, seeder.                             |
+| `backend/src/Ingresso.Cli`            | .NET console              | Migrate, seed and reset the database.                                       |
 
 The API never applies migrations on startup. Run the CLI `migrate` command instead.
 
@@ -98,8 +98,8 @@ Set the connection string, then migrate and seed:
 
 ```bash
 export ConnectionStrings__Default="Server=localhost;Database=Ingresso;Trusted_Connection=True;TrustServerCertificate=True"
-dotnet run --project src/Ingresso.Cli -- migrate
-dotnet run --project src/Ingresso.Cli -- seed
+dotnet run --project backend/src/Ingresso.Cli -- migrate
+dotnet run --project backend/src/Ingresso.Cli -- seed
 ```
 
 Seeding is idempotent and safe to re-run. `reset --confirm` drops and recreates the database; without the flag it refuses.
@@ -110,14 +110,14 @@ To try the app without SQL Server, use SQLite, as the end-to-end tests do
 ```bash
 export Database__Provider=Sqlite
 export ConnectionStrings__Default="Data Source=ingresso.db"
-dotnet run --project src/Ingresso.Cli -- reset --confirm
+dotnet run --project backend/src/Ingresso.Cli -- reset --confirm
 ```
 
 ### Run the app
 
 ```bash
 # Terminal 1: the API, with Swagger at /swagger
-dotnet run --project src/Ingresso.Api
+dotnet run --project backend/src/Ingresso.Api
 
 # Terminal 2: the web app at http://localhost:4200
 cd frontend && npm start
@@ -158,8 +158,8 @@ A husky pre-commit hook formats and lints staged frontend files. CI runs every c
 
 ```text
 Ingresso.sln
-src/                 .NET projects: Domain, Application, Infrastructure, Api, Cli
-tests/               one test project per src project
+backend/src/         .NET projects: Domain, Application, Infrastructure, Api, Cli
+backend/tests/       one test project per backend/src project
 frontend/            Angular workspace: ingresso, api, components, perf-test, e2e
 docs/                requirements, designs, mocks, design system, journeys, prompts, demos
 .github/             CI workflows
