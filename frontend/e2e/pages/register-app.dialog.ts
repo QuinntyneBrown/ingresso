@@ -28,6 +28,8 @@ export class RegisterAppDialog {
   readonly failed: Locator;
   /** Lets the app ask for refresh tokens (L2-107, L2-112). */
   readonly staySignedIn: Locator;
+  /** Marks the app first-party, so it skips the consent page (L2-126). */
+  readonly firstParty: Locator;
   readonly save: Locator;
   readonly saving: Locator;
   /** In edit mode, the type is text that can't be changed. */
@@ -52,6 +54,7 @@ export class RegisterAppDialog {
     this.staySignedIn = this.dialog.getByRole('checkbox', {
       name: 'Let it stay signed in with refresh tokens',
     });
+    this.firstParty = this.dialog.getByRole('checkbox', { name: /^Trusted first-party app/ });
     this.save = this.dialog.getByRole('button', { name: 'Save changes' });
     this.saving = this.dialog.getByRole('button', { name: 'Saving…' });
     this.fixedType = this.dialog.getByText(/An app’s type can’t change after it’s registered\./);

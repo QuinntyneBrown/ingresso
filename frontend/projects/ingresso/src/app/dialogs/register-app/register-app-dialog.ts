@@ -183,6 +183,16 @@ const lines = (value: string): string[] =>
             refresh tokens
           </label>
         </ig-field-set>
+        <ig-field-set
+          legend="Consent"
+          controlId="client-first-party"
+          hint="Only for apps you run yourself. People are never asked what it can see."
+        >
+          <label ig-choice>
+            <input ig-check type="checkbox" formControlName="firstParty" />Trusted first-party app — skip the
+            consent screen
+          </label>
+        </ig-field-set>
         @if (editing) {
           <div class="fixed-type">
             <span class="fixed-type__label">Type</span>
@@ -259,6 +269,7 @@ export class RegisterAppDialog implements OnInit {
     frontChannelLogoutUri: '',
     confidential: false,
     offlineAccess: false,
+    firstParty: false,
   });
 
   protected readonly summary = computed<FieldErrorItem[]>(() =>
@@ -278,6 +289,7 @@ export class RegisterAppDialog implements OnInit {
         frontChannelLogoutUri: app.frontChannelLogoutUri ?? '',
         confidential: app.confidential,
         offlineAccess: app.offlineAccess ?? false,
+        firstParty: app.firstParty ?? false,
       });
       this.chosen.set(new Set(app.scopes));
     }
@@ -313,6 +325,7 @@ export class RegisterAppDialog implements OnInit {
       scopes: [...this.chosen()],
       confidential: value.confidential,
       offlineAccess: value.offlineAccess,
+      firstParty: value.firstParty,
     };
     this.busy.set(true);
     this.failed.set(false);

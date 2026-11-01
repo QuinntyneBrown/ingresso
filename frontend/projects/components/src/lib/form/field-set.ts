@@ -1,12 +1,18 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-/** A group of choices (topics, format, price) with a legend, optional hint and an error (`{id}-error`). */
+/**
+ * A group of choices (topics, format, price) with a legend, an optional hint (`{id}-help`, which describes the group)
+ * and an error (`{id}-error`).
+ */
 @Component({
   selector: 'ig-field-set',
   template: `
-    <fieldset>
+    <fieldset [attr.aria-describedby]="hint() ? controlId() + '-help' : null">
       <legend>{{ legend() }}</legend>
       <ng-content />
+      @if (hint()) {
+        <span class="field__help" [id]="controlId() + '-help'">{{ hint() }}</span>
+      }
       @if (error()) {
         <span class="field__error" [id]="controlId() + '-error'">{{ error() }}</span>
       }
@@ -27,6 +33,12 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       padding: 0;
       margin-bottom: var(--spacingHorizontalS);
     }
+    .field__help {
+      display: block;
+      margin-top: var(--spacingHorizontalXS);
+      font: var(--ig-text-body-sm);
+      color: var(--colorNeutralForeground2);
+    }
     .field__error {
       display: flex;
       gap: var(--spacingHorizontalXS);
@@ -43,5 +55,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 export class FieldSet {
   readonly legend = input.required<string>();
   readonly controlId = input.required<string>();
+  readonly hint = input<string | null>(null);
   readonly error = input<string | null>(null);
 }

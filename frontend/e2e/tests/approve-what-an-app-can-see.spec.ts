@@ -1,8 +1,10 @@
 import { expect, test } from '../fixtures';
 import { ConsentPage } from '../pages/consent.page';
+import { RegisterAppDialog } from '../pages/register-app.dialog';
 import { SampleAppPage } from '../pages/sample-app.page';
+import { SettingsPage } from '../pages/settings.page';
 import { approveThroughApi, SAMPLE_APP_CLIENT_ID } from '../support/apps';
-import { signInAsNewPerson } from '../support/session';
+import { signInAsAdministrator, signInAsNewPerson } from '../support/session';
 
 test.describe('Approve what an app can see', () => {
   test.skip(!!process.env['E2E_FAKE_API'], 'Needs the real API and the sample app.');
@@ -113,5 +115,32 @@ test.describe('Approve what an app can see', () => {
     await consent.allow.click();
     await sample.waitUntilShown();
     await expect(sample.greeting).toHaveText(`Hello, ${email}`);
+  });
+
+  // Acceptance Test
+  // Traces to: L2-126
+  // Description: An administrator registers an app as first-party; the edit dialog shows it, and unticking it saves.
+  test('an administrator marks an app first-party', async ({ page }) => {
+    const settings = new SettingsPage(page);
+    const register = new RegisterAppDialog(page);
+    await signInAsAdministrator(page);
+    await settings.open();
+    const name = `Ledger ${Date.now().toString(36)}`;
+
+    await settings.registerApp.click();
+    await register.fill({ name, redirectUris: ['https://ledger.example.com/signin-oidc'] });
+    await expect(register.firstParty).not.toBeChecked();
+    await register.firstParty.check();
+    await register.register.click();
+    await expect(register.dialog).toBeHidden();
+
+    await settings.chooseAction(name, 'Edit');
+    const edit = new RegisterAppDialog(page, `Edit ${name}`);
+    await expect(edit.firstParty).toBeChecked();
+    await edit.firstParty.uncheck();
+    await edit.save.click();
+    await expect(edit.dialog).toBeHidden();
+    await settings.chooseAction(name, 'Edit');
+    await expect(edit.firstParty).not.toBeChecked();
   });
 });

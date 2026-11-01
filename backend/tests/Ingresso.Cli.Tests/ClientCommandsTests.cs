@@ -79,6 +79,26 @@ public sealed partial class ClientCommandsTests : IDisposable
     }
 
     // Acceptance Test
+    // Traces to: L2-126
+    // Description: clients add --first-party registers an app that skips consent, and clients list says so; without it the app asks.
+    [Fact]
+    public async Task Add_with_first_party_skips_consent()
+    {
+        var (code, output) = await Run("clients", "add", "--name", "Budget", "--redirect-uri", Redirect, "--first-party");
+        var (_, plain) = await Run("clients", "add", "--name", "Notes", "--redirect-uri", Redirect);
+        var (_, list) = await Run("clients", "list");
+
+        Assert.Equal(0, code);
+        await WithApplications(async manager =>
+        {
+            Assert.Equal(ConsentTypes.Implicit, await manager.GetConsentTypeAsync((await manager.FindByClientIdAsync(ClientIdIn(output)))!));
+            Assert.Equal(ConsentTypes.Explicit, await manager.GetConsentTypeAsync((await manager.FindByClientIdAsync(ClientIdIn(plain)))!));
+        });
+        Assert.Contains("Budget\n  Client ID: " + ClientIdIn(output) + "\n  First-party: skips the consent page", list.Replace("\r\n", "\n"));
+        Assert.DoesNotContain("Notes\n  Client ID: " + ClientIdIn(plain) + "\n  First-party", list.Replace("\r\n", "\n"));
+    }
+
+    // Acceptance Test
     // Traces to: L2-087
     // Description: Sign-out return addresses given to clients add are stored with the app.
     [Fact]

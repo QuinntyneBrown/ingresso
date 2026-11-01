@@ -14,4 +14,5 @@ const meta: Meta<FieldSet> = {
 export default meta;
 
 export { Default } from './FieldSetDefault.stories';
+export { WithHint } from './FieldSetWithHint.stories';
 export { Invalid } from './FieldSetInvalid.stories';

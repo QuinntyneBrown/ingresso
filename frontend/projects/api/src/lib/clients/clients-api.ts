@@ -17,6 +17,8 @@ export interface RegisteredApp {
   offlineAccess?: boolean;
   /** A disabled app signs no one in and renews no tokens (L2-114). */
   disabled?: boolean;
+  /** A first-party app skips the consent page (L2-126). */
+  firstParty?: boolean;
 }
 
 /** What the register-app dialog sends (L2-105). */
@@ -29,6 +31,8 @@ export interface AppRegistration {
   confidential: boolean;
   /** Lets the app ask for refresh tokens (L2-107). */
   offlineAccess: boolean;
+  /** Skips the consent page; only for apps the administrator runs (L2-126). */
+  firstParty: boolean;
 }
 
 /** What the edit dialog sends: everything but the type, which can't change after registration (L2-112). */
