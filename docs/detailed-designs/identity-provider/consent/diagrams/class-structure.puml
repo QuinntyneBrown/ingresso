@@ -1,0 +1,46 @@
+@startuml
+title Class structure — Consent
+hide empty members
+class GetConsentQuery <<record>> {
+  UserId : Guid
+  ClientId : string
+  Scopes : string[]
+}
+class ConsentDto <<record>> {
+  AppName : string
+  Email : string
+  Ask : ConsentScope[]
+  Approved : ConsentScope[]
+}
+class ConsentScope <<record>> {
+  Scope : string
+  Title : string
+}
+class ApproveConsentCommand <<record>> {
+  UserId : Guid
+  ClientId : string
+  Scopes : string[]
+}
+interface IConsentStore {
+  FindAppAsync(clientId)
+  ApprovedScopesAsync(userId, clientId)
+  FindApprovalAsync(userId, clientId, scopes)
+  ApproveAsync(userId, clientId, scopes)
+  ApiNamesAsync(scopes)
+}
+class ConsentApp <<record>> {
+  Name : string
+  FirstParty : bool
+  AllowedScopes : string[]
+}
+class OpenIddictConsentStore
+class ClientDto <<record>> {
+  FirstParty : bool
+}
+GetConsentQuery ..> ConsentDto : returns
+ConsentDto o-- ConsentScope
+GetConsentQuery ..> IConsentStore
+ApproveConsentCommand ..> IConsentStore
+IConsentStore ..> ConsentApp
+OpenIddictConsentStore ..|> IConsentStore
+@enduml

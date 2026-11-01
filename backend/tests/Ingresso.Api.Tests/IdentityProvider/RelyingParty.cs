@@ -46,7 +46,20 @@ public sealed class RelyingParty
         using var scope = factory.Services.CreateScope();
         var registry = scope.ServiceProvider.GetRequiredService<IClientRegistry>();
         var clientId = await registry.RegisterAsync(
-            new NewClient($"{name} {Guid.NewGuid():N}", [RedirectUri], [], Scopes: scopes), CancellationToken.None);
+            new NewClient($"{name} {Guid.NewGuid():N}", [RedirectUri], [], Scopes: scopes, FirstParty: true), CancellationToken.None);
+        return new RelyingParty(factory, clientId);
+    }
+
+    /// <summary>
+    /// Registers an app that is not first-party, so the person is asked before it gets more than sign-in (journey 23).
+    /// </summary>
+    public static async Task<RelyingParty> RegisterAskingConsentAsync(ApiFactory factory, bool offlineAccess = false, params string[] scopes)
+    {
+        factory.CreateHttpsClient().Dispose();
+        using var scope = factory.Services.CreateScope();
+        var clientId = await scope.ServiceProvider.GetRequiredService<IClientRegistry>().RegisterAsync(
+            new NewClient($"Sample app {Guid.NewGuid():N}", [RedirectUri], [], Scopes: scopes, OfflineAccess: offlineAccess),
+            CancellationToken.None);
         return new RelyingParty(factory, clientId);
     }
 
@@ -56,7 +69,7 @@ public sealed class RelyingParty
         factory.CreateHttpsClient().Dispose();
         using var scope = factory.Services.CreateScope();
         var clientId = await scope.ServiceProvider.GetRequiredService<IClientRegistry>().RegisterAsync(
-            new NewClient($"Sample app {Guid.NewGuid():N}", [RedirectUri], [], OfflineAccess: true), CancellationToken.None);
+            new NewClient($"Sample app {Guid.NewGuid():N}", [RedirectUri], [], OfflineAccess: true, FirstParty: true), CancellationToken.None);
         return new RelyingParty(factory, clientId);
     }
 
@@ -102,7 +115,7 @@ public sealed class RelyingParty
         factory.CreateHttpsClient().Dispose();
         using var scope = factory.Services.CreateScope();
         var clientId = await scope.ServiceProvider.GetRequiredService<IClientRegistry>().RegisterAsync(
-            new NewClient($"Sample app {Guid.NewGuid():N}", [RedirectUri], [SignOutReturnUri], FrontChannelLogoutUri: FrontChannelLogoutUri),
+            new NewClient($"Sample app {Guid.NewGuid():N}", [RedirectUri], [SignOutReturnUri], FrontChannelLogoutUri: FrontChannelLogoutUri, FirstParty: true),
             CancellationToken.None);
         return new RelyingParty(factory, clientId);
     }

@@ -13,7 +13,7 @@ test.describe('Sign out everywhere', () => {
   async function signInToTheSampleApp(app: SampleAppPage): Promise<void> {
     await app.open();
     await app.signInWithIngresso.click();
-    await app.waitUntilShown();
+    await app.waitUntilSignedIn();
     await expect(app.signedInAs).toBeVisible();
   }
 

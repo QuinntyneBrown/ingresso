@@ -32,3 +32,19 @@ export async function registerAppThroughApi(
   const body = (await response.json()) as { client: { clientId: string }; clientSecret: string | null };
   return { clientId: body.client.clientId, name, clientSecret: body.clientSecret };
 }
+
+/** The seeded sample app's client ID (journey 16). */
+export const SAMPLE_APP_CLIENT_ID = 'ingresso-sample-app';
+
+/**
+ * Approves these scopes for an app as the page's signed-in person, as Allow on the consent page would, so a test can
+ * start from an earlier approval (journey 23).
+ */
+export async function approveThroughApi(page: Page, clientId: string, scope: string): Promise<void> {
+  const xsrf = (await page.context().cookies()).find((c) => c.name === 'XSRF-TOKEN')?.value ?? '';
+  const response = await page.request.post('/api/consent', {
+    headers: { 'X-XSRF-TOKEN': xsrf },
+    data: { clientId, scope },
+  });
+  if (!response.ok()) throw new Error(`Approving ${scope} for ${clientId} failed: ${response.status()}`);
+}

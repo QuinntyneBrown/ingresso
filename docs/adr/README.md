@@ -18,3 +18,4 @@ them point at that stack's history and are revised as ingresso writes its own.
 | [0015](0015-front-channel-logout.md) | Apps are signed out by front-channel logout, from the signed-out page |
 | [0016](0016-administrators-are-a-role-on-the-account.md) | Administrators are a role on the account, granted from the CLI and checked against the database |
 | [0017](0017-profile-is-edited-in-a-dialog.md) | The profile is shown in Settings and edited in a dialog |
+| [0018](0018-consent-page-resumes-the-authorize-request.md) | The consent page is a web app page that resumes the authorize request |

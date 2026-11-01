@@ -7,20 +7,23 @@ using static Ingresso.Cli.CliOptions;
 
 namespace Ingresso.Cli;
 
-/// <summary>Registers, lists and removes the apps that sign in with ingresso (L2-087 to L2-089, L2-096).</summary>
+/// <summary>Registers, lists and removes the apps that sign in with ingresso (L2-087 to L2-089, L2-096, L2-126).</summary>
 public static class ClientCommands
 {
     public const string Usage =
         "Usage: ingresso clients <add --name <name> --redirect-uri <address> [--redirect-uri <address>] [--post-logout-redirect-uri <address>]"
-        + " [--front-channel-logout-uri <address>] [--scope <scope>] [--offline-access] | list | remove --client-id <id>>";
+        + " [--front-channel-logout-uri <address>] [--scope <scope>] [--offline-access] [--first-party] | list | remove --client-id <id>>";
 
     private const string OfflineAccessFlag = "--offline-access";
+    private const string FirstPartyFlag = "--first-party";
 
     public static async Task<int> RunAsync(string[] args, IServiceProvider services, TextWriter output, CancellationToken cancellationToken)
     {
-        // --offline-access is the one option without a value (L2-107).
+        // --offline-access (L2-107) and --first-party (L2-126) are the options without a value.
         var rest = args.Skip(1).ToList();
         var offlineAccess = rest.RemoveAll(a => a.Equals(OfflineAccessFlag, StringComparison.OrdinalIgnoreCase)) > 0;
+        var firstParty = rest.RemoveAll(a => a.Equals(FirstPartyFlag, StringComparison.OrdinalIgnoreCase)) > 0;
+        var flagged = offlineAccess || firstParty;
         var options = Parse(rest.ToArray());
         if (args.Length == 0 || options is null)
         {
@@ -39,15 +42,15 @@ public static class ClientCommands
                     var (client, _) = await sender.Send(
                         new RegisterClientCommand(
                             name, All(options, "--redirect-uri"), All(options, "--post-logout-redirect-uri"), All(options, "--scope"),
-                            All(options, "--front-channel-logout-uri").SingleOrDefault(), OfflineAccess: offlineAccess),
+                            All(options, "--front-channel-logout-uri").SingleOrDefault(), OfflineAccess: offlineAccess, FirstParty: firstParty),
                         cancellationToken);
                     await output.WriteLineAsync($"Registered {client.Name}.");
                     await output.WriteLineAsync($"Client ID: {client.ClientId}");
                     return 0;
-                case "list" when options.Count == 0 && !offlineAccess:
+                case "list" when options.Count == 0 && !flagged:
                     await PrintAsync(await sender.Send(new GetClientsQuery(), cancellationToken), output);
                     return 0;
-                case "remove" when Single(options, "--client-id", out var clientId) && options.Count == 1 && !offlineAccess:
+                case "remove" when Single(options, "--client-id", out var clientId) && options.Count == 1 && !flagged:
                     var removed = await sender.Send(new RemoveClientCommand(clientId), cancellationToken);
                     await output.WriteLineAsync($"Removed {removed.Name}.");
                     return 0;
@@ -84,6 +87,11 @@ public static class ClientCommands
         {
             await output.WriteLineAsync(client.Name);
             await output.WriteLineAsync($"  Client ID: {client.ClientId}");
+            if (client.FirstParty)
+            {
+                await output.WriteLineAsync("  First-party: skips the consent page");
+            }
+
             foreach (var address in client.RedirectUris)
             {
                 await output.WriteLineAsync($"  Redirect: {address}");

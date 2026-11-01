@@ -217,6 +217,22 @@
       }
     },
     {
+      "id": "consent",
+      "kind": "page",
+      "title": "Approve an app",
+      "states": [
+        "default",
+        "loading",
+        "busy",
+        "error",
+        "new-scopes"
+      ],
+      "route": "/consent",
+      "not_applicable": {
+        "empty": "People only reach it when an app asks for more than sign-in."
+      }
+    },
+    {
       "id": "signed-out",
       "kind": "page",
       "title": "Signed out",

@@ -13,7 +13,7 @@ test.describe('Stay signed in to an app', () => {
     await signInAs(page);
     await app.open();
     await app.signInWithIngresso.click();
-    await app.waitUntilShown();
+    await app.waitUntilSignedIn();
     await expect(app.apiResult).toContainText(`hello, ${MAYA}`);
 
     await app.reopenUntilTheAccessTokenExpires();
@@ -31,7 +31,7 @@ test.describe('Stay signed in to an app', () => {
     await signInAs(page);
     await app.open();
     await app.signInWithIngresso.click();
-    await app.waitUntilShown();
+    await app.waitUntilSignedIn();
     await expect(app.apiResult).toContainText(`hello, ${MAYA}`);
 
     await endIngressoSessionQuietly(page);

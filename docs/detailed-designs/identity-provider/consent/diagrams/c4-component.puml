@@ -1,0 +1,24 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Consent
+Container_Boundary(api, "Ingresso.Api") {
+  Component(authz, "AuthorizationController", "Controller", "Consent step; access_denied on consent=deny")
+  Component(consent, "ConsentController", "Controller", "GET/POST api/consent")
+}
+Container_Boundary(appl, "Ingresso.Application") {
+  Component(get, "GetConsentQueryHandler", "MediatR handler", "Scopes to ask and approved, with titles")
+  Component(approve, "ApproveConsentCommandHandler", "MediatR handler", "Checks scopes, records the approval")
+  Component(store, "IConsentStore", "Interface", "Apps, approvals, API names")
+}
+Container_Boundary(infra, "Ingresso.Infrastructure") {
+  Component(oi, "OpenIddictConsentStore", "IConsentStore", "Application, authorization and scope managers")
+  Component(registry, "OpenIddictClientRegistry", "IClientRegistry", "First-party as the consent type")
+}
+Rel(authz, get, "Sends")
+Rel(consent, get, "Sends")
+Rel(consent, approve, "Sends")
+Rel(get, store, "Uses")
+Rel(approve, store, "Uses")
+Rel(oi, store, "Implements")
+@enduml

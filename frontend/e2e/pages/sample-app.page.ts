@@ -15,6 +15,8 @@ export class SampleAppPage {
   readonly renewals: Locator;
   /** Shown when the app's renewal was refused and the person must sign in again (L2-110). */
   readonly sessionEnded: Locator;
+  /** What the app says when the person chose Deny on ingresso's consent page (L2-124). */
+  readonly denied: Locator;
 
   constructor(private readonly page: Page) {
     this.heading = page.getByRole('heading', { level: 1 });
@@ -25,15 +27,34 @@ export class SampleAppPage {
     this.signOut = page.getByRole('link', { name: 'Sign out' });
     this.renewals = page.locator('[data-token-renewals]');
     this.sessionEnded = page.getByText('Your ingresso session has ended. Sign in again.');
+    this.denied = page.getByText('You chose not to let Sample app use your ingresso account.');
   }
 
   async open(): Promise<void> {
     await this.page.goto(SAMPLE_APP_URL);
   }
 
-  /** Waits until the browser is back on the sample app. */
+  /** Waits until the browser is back on the sample app, failing if ingresso shows anything on the way. */
   async waitUntilShown(): Promise<void> {
     await this.page.waitForURL((url) => url.origin === new URL(SAMPLE_APP_URL).origin);
+  }
+
+  /**
+   * Waits until the browser is back on the sample app signed in, choosing Allow on the way when ingresso asks what
+   * the app may see (journey 23). For tests whose subject is not consent.
+   */
+  async waitUntilSignedIn(): Promise<void> {
+    const sample = new URL(SAMPLE_APP_URL).origin;
+    await this.page.waitForURL((url) => url.origin === sample || url.pathname === '/consent');
+    if (new URL(this.page.url()).origin !== sample) {
+      await this.page.getByRole('button', { name: 'Allow' }).click();
+      await this.waitUntilShown();
+    }
+  }
+
+  /** Forgets the sample app's own session, keeping ingresso's, as signing out of the app alone would. */
+  async forgetItsSession(): Promise<void> {
+    await this.page.context().clearCookies({ name: 'sample-app.session' });
   }
 
   /**

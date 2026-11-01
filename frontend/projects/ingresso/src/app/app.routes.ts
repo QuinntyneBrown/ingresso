@@ -19,6 +19,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/status/authorize-error-page').then((m) => m.AuthorizeErrorPage),
   },
   {
+    // Outside the shell, like signing in for an app: it is part of an app's sign-in request (L2-121, ADR 0018).
+    path: 'consent',
+    title: 'Approve an app · ingresso',
+    loadComponent: () => import('./pages/consent/consent-page').then((m) => m.ConsentPage),
+  },
+  {
     // Outside the shell: the session has already ended (L2-100, L2-101).
     path: 'signed-out',
     title: 'Signed out · ingresso',

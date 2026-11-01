@@ -34,7 +34,7 @@ public sealed class ClientsController(ISender sender) : ControllerBase
         await sender.Send(
             new UpdateClientCommand(
                 clientId, changes.Name, changes.RedirectUris, changes.PostLogoutRedirectUris, changes.Scopes, changes.FrontChannelLogoutUri,
-                changes.OfflineAccess),
+                changes.OfflineAccess, changes.FirstParty),
             cancellationToken);
 
     /// <summary>Gives a confidential app a new secret, returned this once; 400 for a public app (L2-113).</summary>
@@ -64,4 +64,4 @@ public sealed class ClientsController(ISender sender) : ControllerBase
 /// <summary>What the edit dialog sends: the registration fields an app may change (L2-112).</summary>
 public sealed record ClientChanges(
     string? Name, IReadOnlyList<string>? RedirectUris, IReadOnlyList<string>? PostLogoutRedirectUris, IReadOnlyList<string>? Scopes,
-    string? FrontChannelLogoutUri, bool OfflineAccess);
+    string? FrontChannelLogoutUri, bool OfflineAccess, bool FirstParty = false);

@@ -143,7 +143,11 @@ public sealed class ProfileClaimsTests(ApiFactory factory) : IClassFixture<ApiFa
         var clientId = $"older-app-{Guid.NewGuid():N}";
         using (var scope = factory.Services.CreateScope())
         {
-            var descriptor = new OpenIddictApplicationDescriptor { ClientId = clientId, DisplayName = "Older app", ClientType = ClientTypes.Public };
+            // Apps registered before consent (journey 23) were all implicit.
+            var descriptor = new OpenIddictApplicationDescriptor
+            {
+                ClientId = clientId, DisplayName = "Older app", ClientType = ClientTypes.Public, ConsentType = ConsentTypes.Implicit,
+            };
             descriptor.RedirectUris.Add(new Uri(RelyingParty.RedirectUri));
             descriptor.Permissions.UnionWith([
                 Permissions.Endpoints.Authorization, Permissions.Endpoints.Token, Permissions.GrantTypes.AuthorizationCode,

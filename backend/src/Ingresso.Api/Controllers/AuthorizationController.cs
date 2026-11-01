@@ -12,6 +12,7 @@ using OpenIddict.Server.AspNetCore;
 using Ingresso.Api.Auth;
 using Ingresso.Application.Clients;
 using Ingresso.Application.Common.Interfaces;
+using Ingresso.Application.Consent;
 using Ingresso.Application.Identity;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -27,6 +28,9 @@ namespace Ingresso.Api.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 public sealed class AuthorizationController(ISender sender, IOpenIddictScopeManager scopes, IClock clock, IConfiguration configuration) : ControllerBase
 {
+    /// <summary>The parameter the consent page adds to the authorize request when the person chooses Deny (ADR 0018).</summary>
+    public const string ConsentParameter = "consent";
+
     [HttpGet("connect/authorize")]
     [HttpPost("connect/authorize")]
     public async Task<IActionResult> Authorize(CancellationToken cancellationToken)
@@ -57,6 +61,25 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
             return Redirect("/verify-email");
         }
 
+        // Deny on the consent page: OpenIddict returns access_denied to the checked redirect address (L2-124).
+        if ((string?)request[ConsentParameter] == "deny")
+        {
+            return Forbid(
+                new AuthenticationProperties(new Dictionary<string, string?>
+                {
+                    [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.AccessDenied,
+                    [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = "The person chose not to let the app sign them in.",
+                }),
+                OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        }
+
+        // Ask before the app gets more than sign-in; the consent page resumes this request (L2-121, ADR 0018).
+        var consent = await sender.Send(new GetConsentQuery(person.UserId, request.ClientId!, [.. request.GetScopes()]), cancellationToken);
+        if (consent.Ask.Count > 0)
+        {
+            return Redirect("/consent" + Request.QueryString);
+        }
+
         // Record the app against this session so signing out can notify it, and tell the app its session (L2-099).
         var sessionId = session.Principal.FindFirstValue(SessionSignIn.SessionIdClaim);
         if (Guid.TryParse(sessionId, out var sid))
@@ -69,6 +92,12 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
         identity.SetClaim("sid", sessionId);
         identity.SetClaim(IdentityProviderSetup.ChainStartedClaim, clock.UtcNow.ToString("O", CultureInfo.InvariantCulture));
         identity.SetScopes(request.GetScopes());
+        // The tokens belong to the approval that covers these scopes, so revoking it revokes them (L2-123).
+        if (await sender.Send(new FindApprovalQuery(person.UserId, request.ClientId!, [.. request.GetScopes()]), cancellationToken) is { } approval)
+        {
+            identity.SetAuthorizationId(approval);
+        }
+
         SetProfileClaims(identity, person);
         // The access token's audience is each API whose scopes were granted (L2-097).
         var resources = new List<string>();

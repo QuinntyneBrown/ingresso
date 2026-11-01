@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Consent
+Person(person, "Person")
+System_Ext(app, "Published app", "Relying party")
+System_Boundary(ingresso, "ingresso") {
+  Container(web, "Web app", "Angular", "Consent page; register and edit app dialogs")
+  Container(api, "Ingresso.Api", "ASP.NET Core + OpenIddict", "/connect/authorize, GET/POST /api/consent, /api/clients")
+  ContainerDb(db, "Database", "SQL Server / SQLite", "OpenIddict applications, authorizations and tokens")
+}
+Rel(person, web, "Uses")
+Rel(web, api, "JSON over HTTPS, cookie session, anti-forgery header")
+Rel(app, api, "OpenID Connect")
+Rel(api, db, "EF Core")
+@enduml

@@ -1,0 +1,27 @@
+@startuml
+title UML sequence behaviour — Approve, then sign in again
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Person" as person
+participant "Sample app" as app
+participant "AuthorizationController" as authz
+participant "Consent page" as web
+participant "ConsentController" as consent
+person -> app : Sign in with ingresso
+app -> authz : /connect/authorize scope=openid profile email
+authz -> authz : GetConsentQuery: profile, email to ask
+authz --> web : redirect /consent?<authorize query>
+web -> consent : GET /api/consent?client_id&scope
+consent --> web : app name, email, scopes to ask
+person -> web : Allow
+web -> consent : POST /api/consent (X-XSRF-TOKEN)
+consent --> web : 204, approval recorded
+web -> authz : /connect/authorize?<same query>
+authz -> authz : nothing to ask; SetAuthorizationId
+authz --> app : code
+== Later ==
+app -> authz : /connect/authorize scope=openid profile email
+authz --> app : code, no consent page
+@enduml
