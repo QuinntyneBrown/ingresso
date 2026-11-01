@@ -63,12 +63,25 @@ if (app.Configuration.GetValue("Swagger:Enabled", app.Environment.IsDevelopment(
     app.UseSwaggerUI();
 }
 
+// The built web app is served from the API's own origin when it is present in the web root (ADR 0023).
+var webAppPresent = File.Exists(Path.Combine(app.Environment.WebRootPath ?? "", "index.html"));
+if (webAppPresent)
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+}
+
 app.UseRouting();
 app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
 app.UseMiddleware<CsrfProtectionMiddleware>();
 app.MapControllers();
+if (webAppPresent)
+{
+    // Client-side routes answer with the shell; API, identity provider and health paths never do.
+    app.MapFallbackToFile("{*path:regex(^(?!api/|connect/|\\.well-known/|health/).*$)}", "index.html").AllowAnonymous();
+}
 app.MapHealthChecks("/health/live", new() { Predicate = _ => false }).AllowAnonymous();
 app.MapHealthChecks("/health/ready", new() { Predicate = check => check.Tags.Contains("ready") }).AllowAnonymous();
 
