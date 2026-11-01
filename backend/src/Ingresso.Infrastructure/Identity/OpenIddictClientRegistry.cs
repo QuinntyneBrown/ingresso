@@ -52,6 +52,11 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
             descriptor.PostLogoutRedirectUris.Add(new Uri(address));
         }
 
+        foreach (var scope in client.Scopes ?? [])
+        {
+            descriptor.Permissions.Add(Permissions.Prefixes.Scope + scope);
+        }
+
         if (client.PostLogoutRedirectUris.Count > 0)
         {
             descriptor.Permissions.Add(Permissions.Endpoints.EndSession);
@@ -77,5 +82,9 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
         (await applications.GetClientIdAsync(app, cancellationToken))!,
         (await applications.GetDisplayNameAsync(app, cancellationToken)) ?? "",
         (await applications.GetRedirectUrisAsync(app, cancellationToken)).ToList(),
-        (await applications.GetPostLogoutRedirectUrisAsync(app, cancellationToken)).ToList());
+        (await applications.GetPostLogoutRedirectUrisAsync(app, cancellationToken)).ToList(),
+        (await applications.GetPermissionsAsync(app, cancellationToken))
+            .Where(p => p.StartsWith(Permissions.Prefixes.Scope, StringComparison.Ordinal) && p != Permissions.Scopes.Email)
+            .Select(p => p[Permissions.Prefixes.Scope.Length..])
+            .ToList());
 }
