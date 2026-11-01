@@ -41,7 +41,7 @@ async function publishedKids(page: Page, baseURL: string): Promise<string[]> {
 }
 
 /** Rotate signing keys: list the keys, rotate, see both published, and the signed-in app keeps working. */
-const journey: Journey = async ({ page, context, shot, baseURL }) => {
+const journey: Journey = async ({ page, shot, baseURL }) => {
   // Sign in to the sample app before the rotation; it calls its API with ingresso access tokens.
   const signedIn = await page.request.post(`${baseURL}/api/test/sign-in`, {
     data: { email: 'dev@ingresso.dev' },
@@ -49,6 +49,9 @@ const journey: Journey = async ({ page, context, shot, baseURL }) => {
   if (!signedIn.ok()) throw new Error(`Demo sign-in failed: ${signedIn.status()}`);
   await page.goto(SAMPLE_APP_URL);
   await page.getByRole('link', { name: 'Sign in with ingresso' }).click();
+  const allow = page.getByRole('button', { name: 'Allow' });
+  await page.locator('[data-api-result]').or(allow).waitFor();
+  if (await allow.isVisible()) await allow.click();
   await page.locator('[data-api-result]').waitFor();
 
   // 1. The keys ingresso signs tokens with.
@@ -76,7 +79,6 @@ const journey: Journey = async ({ page, context, shot, baseURL }) => {
   await page.goto(SAMPLE_APP_URL);
   await page.locator('[data-api-result]').waitFor();
   await shot('the-app-keeps-working');
-  void context;
 };
 
 export default journey;
