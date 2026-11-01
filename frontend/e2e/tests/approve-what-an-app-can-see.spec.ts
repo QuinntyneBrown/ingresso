@@ -110,7 +110,7 @@ test.describe('Approve what an app can see', () => {
       'Stay signed in when you’re not using it',
     ]);
     await expect(consent.approvedBefore).toHaveText(
-      'You already let it see your display name and see your email address.',
+      'You already let it see your display name and email address.',
     );
     await consent.allow.click();
     await sample.waitUntilShown();

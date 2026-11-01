@@ -60,7 +60,7 @@ import { AuthLayout } from '../../shared/auth-layout';
       <div class="consent__actions">
         <button
           ig-button
-          variant="primary"
+          appearance="primary"
           type="button"
           [busy]="busy()"
           [disabled]="!consent() || busy()"
@@ -124,11 +124,16 @@ export class ConsentPage {
   protected readonly busy = signal(false);
   protected readonly failed = signal(false);
 
-  /** "see your display name and email address": the approved scopes' titles, lower-cased after the verb (L2-125). */
+  /**
+   * "see your display name and email address": the approved scopes' titles, lower-cased, with a repeated "see your"
+   * said once (L2-125).
+   */
   protected readonly approvedBefore = computed(() => {
-    const titles = (this.consent()?.approved ?? []).map(
-      (s) => s.title.charAt(0).toLowerCase() + s.title.slice(1),
-    );
+    const titles = (this.consent()?.approved ?? [])
+      .map((s) => s.title.charAt(0).toLowerCase() + s.title.slice(1))
+      .map((title, i, all) =>
+        i > 0 && title.startsWith('see your ') && all[i - 1].startsWith('see your ') ? title.slice(9) : title,
+      );
     if (!titles.length) return null;
     return titles.length === 1 ? titles[0] : `${titles.slice(0, -1).join(', ')} and ${titles.at(-1)}`;
   });

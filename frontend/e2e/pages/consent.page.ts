@@ -1,5 +1,14 @@
 import { Locator, Page } from '@playwright/test';
 
+/** The sample app's authorize request as ingresso hands it to the consent page. */
+const CONSENT_QUERY = new URLSearchParams({
+  client_id: 'ingresso-sample-app',
+  redirect_uri: 'http://localhost:5299/signin-oidc',
+  response_type: 'code',
+  scope: 'openid profile email sample-api.read offline_access',
+  state: 'mock',
+}).toString();
+
 /** "Approve an app": what an app asks to see, with Allow and Deny (L2-121 to L2-125). */
 export class ConsentPage {
   readonly heading: Locator;
@@ -25,6 +34,47 @@ export class ConsentPage {
   async waitUntilShown(): Promise<void> {
     await this.page.waitForURL(/\/consent\?/);
     await this.allow.waitFor();
+  }
+
+  /**
+   * Opens the page for the sample app's request with the mocks' answer, so screenshots don't depend on the database:
+   * Maya at maya@northwind.com, and either every scope or only the new ones after approving profile and email.
+   */
+  async openMock(options: { newScopes?: boolean } = {}): Promise<void> {
+    const titles: Record<string, string> = {
+      profile: 'See your display name',
+      email: 'See your email address',
+      'sample-api.read': 'Use Sample API for you',
+      offline_access: 'Stay signed in when you’re not using it',
+    };
+    const scopes = (names: string[]) => names.map((scope) => ({ scope, title: titles[scope] }));
+    await this.page.route('**/api/consent?*', (route) =>
+      route.request().method() !== 'GET'
+        ? route.fallback()
+        : route.fulfill({
+            json: {
+              appName: 'Sample app',
+              email: 'maya@northwind.com',
+              ask: scopes(options.newScopes ? ['sample-api.read', 'offline_access'] : Object.keys(titles)),
+              approved: scopes(options.newScopes ? ['profile', 'email'] : []),
+            },
+          }),
+    );
+    await this.page.goto(`/consent?${CONSENT_QUERY}`);
+    await this.allow.waitFor();
+  }
+
+  /** Opens the page while what the app asks for never arrives, to show the loading state. */
+  async openLoading(): Promise<void> {
+    await this.page.route('**/api/consent?*', () => undefined);
+    await this.page.goto(`/consent?${CONSENT_QUERY}`);
+  }
+
+  /** Keeps the next Allow waiting, to show the busy state. */
+  async holdAllow(): Promise<void> {
+    await this.page.route('**/api/consent', (route) =>
+      route.request().method() === 'POST' ? undefined : route.fallback(),
+    );
   }
 
   /** Fails the next Allow with a server error. */
