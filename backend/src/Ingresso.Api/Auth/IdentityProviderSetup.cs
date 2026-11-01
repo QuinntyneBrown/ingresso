@@ -36,6 +36,8 @@ public static class IdentityProviderSetup
             options.AllowRefreshTokenFlow();
             options.SetRefreshTokenLifetime(
                 configuration.GetValue<TimeSpan?>("IdentityProvider:RefreshTokenSlidingLifetime") ?? TimeSpan.FromDays(14));
+            // No grace period: a redeemed refresh token presented again revokes its whole chain at once (L2-108).
+            options.SetRefreshTokenReuseLeeway(TimeSpan.Zero);
             options.Configure(o =>
             {
                 o.CodeChallengeMethods.Clear();

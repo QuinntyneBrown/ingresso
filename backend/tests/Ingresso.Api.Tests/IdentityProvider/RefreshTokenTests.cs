@@ -69,4 +69,40 @@ public sealed class RefreshTokenTests(ApiFactory factory) : IClassFixture<ApiFac
 
         Assert.False(tokens.TryGetProperty("refresh_token", out _));
     }
+
+    private static string RefreshTokenIn(System.Text.Json.JsonElement tokens) => tokens.GetProperty("refresh_token").GetString()!;
+
+    private static async Task AssertInvalidGrantAsync(HttpResponseMessage response)
+    {
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("invalid_grant", (await RelyingParty.JsonAsync(response)).GetProperty("error").GetString());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-108
+    // Description: A refresh token that has been exchanged is refused when it is sent again.
+    [Fact]
+    public async Task A_refresh_token_works_once()
+    {
+        var app = await RelyingParty.RegisterWithOfflineAccessAsync(factory);
+        var first = RefreshTokenIn(await app.SignInOfflineAsync());
+        (await app.RefreshAsync(first)).EnsureSuccessStatusCode();
+
+        await AssertInvalidGrantAsync(await app.RefreshAsync(first));
+    }
+
+    // Acceptance Test
+    // Traces to: L2-108
+    // Description: After a refresh token is reused, the newest refresh token from the same sign-in is refused too.
+    [Fact]
+    public async Task Reusing_a_refresh_token_revokes_the_chain()
+    {
+        var app = await RelyingParty.RegisterWithOfflineAccessAsync(factory);
+        var first = RefreshTokenIn(await app.SignInOfflineAsync());
+        var newest = RefreshTokenIn(await RelyingParty.JsonAsync(await app.RefreshAsync(first)));
+
+        await app.RefreshAsync(first);
+
+        await AssertInvalidGrantAsync(await app.RefreshAsync(newest));
+    }
 }
