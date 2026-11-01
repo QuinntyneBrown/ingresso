@@ -145,6 +145,67 @@ public sealed class SigningKeyTests(ApiFactory factory) : IClassFixture<ApiFacto
         return key.Kid;
     }
 
+    private static async Task<string> AgeActiveKeyAsync(ApiFactory api, int days)
+    {
+        return await api.WithDbAsync(async db =>
+        {
+            var active = await db.SigningKeys.SingleAsync(k => k.RetiredAtUtc == null);
+            active.CreatedAtUtc = ApiFactory.Today.AddDays(-days);
+            await db.SaveChangesAsync();
+            return active.Kid;
+        });
+    }
+
+    private static Task<string> ActiveKidAsync(ApiFactory api) =>
+        api.WithDbAsync(db => db.SigningKeys.Where(k => k.RetiredAtUtc == null).Select(k => k.Kid).SingleAsync());
+
+    // Acceptance Test
+    // Traces to: L2-140
+    // Description: With no rotation interval configured, however old the active key gets, nothing rotates it.
+    [Fact]
+    public async Task Without_a_rotation_interval_the_key_never_rotates_on_its_own()
+    {
+        await IdTokenAsync();
+        var old = await AgeActiveKeyAsync(factory, days: 400);
+
+        await factory.Services.GetRequiredService<SigningKeyMaintenance>().RunOnceAsync(CancellationToken.None);
+
+        Assert.Equal(old, await ActiveKidAsync(factory));
+    }
+
+    // Acceptance Test
+    // Traces to: L2-140
+    // Description: With a rotation interval, the API's next key check rotates an active key older than the interval and signs with the new one.
+    [Fact]
+    public async Task With_a_rotation_interval_an_old_key_is_rotated_on_the_next_check()
+    {
+        using var scheduled = new ScheduledRotation();
+        scheduled.CreateClient();
+        var maintenance = scheduled.Services.GetRequiredService<SigningKeyMaintenance>();
+        await maintenance.RunOnceAsync(CancellationToken.None);
+        var young = await ActiveKidAsync(scheduled);
+        await maintenance.RunOnceAsync(CancellationToken.None);
+        Assert.Equal(young, await ActiveKidAsync(scheduled));
+
+        var old = await AgeActiveKeyAsync(scheduled, days: 31);
+        await maintenance.RunOnceAsync(CancellationToken.None);
+
+        var active = await ActiveKidAsync(scheduled);
+        Assert.NotEqual(old, active);
+        var kids = (await scheduled.CreateHttpsClient().GetFromJsonAsync<JsonElement>("/.well-known/jwks")).GetProperty("keys").EnumerateArray()
+            .Select(k => k.GetProperty("kid").GetString()).ToList();
+        Assert.Equal([active, old], kids);
+    }
+
+    private sealed class ScheduledRotation : ApiFactory
+    {
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            base.ConfigureWebHost(builder);
+            builder.UseSetting("IdentityProvider:SigningKeys:RotationInterval", "30.00:00:00");
+        }
+    }
+
     // Acceptance Test
     // Traces to: L2-139
     // Description: Outside Development and Testing the API refuses to start unless a certificate protects the Data Protection key ring.
