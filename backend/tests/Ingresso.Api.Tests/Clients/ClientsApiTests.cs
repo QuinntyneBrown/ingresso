@@ -170,6 +170,7 @@ public sealed class ClientsApiTests(ApiFactory factory) : IClassFixture<ApiFacto
             name = $"Budget {Guid.NewGuid():N}"[..15],
             redirectUris = new[] { RelyingParty.RedirectUri },
             confidential = true,
+            firstParty = true,
         });
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();

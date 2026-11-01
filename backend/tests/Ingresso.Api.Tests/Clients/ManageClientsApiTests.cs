@@ -29,7 +29,7 @@ public sealed class ManageClientsApiTests(ApiFactory factory) : IClassFixture<Ap
     private static async Task<(string ClientId, string Name, string? Secret)> RegisterWithSecretAsync(HttpClient admin, bool confidential)
     {
         var name = $"Notes {Guid.NewGuid():N}"[..14];
-        var response = await admin.PostAsJsonAsync("/api/clients", new { name, redirectUris = new[] { Redirect }, confidential, offlineAccess = true });
+        var response = await admin.PostAsJsonAsync("/api/clients", new { name, redirectUris = new[] { Redirect }, confidential, offlineAccess = true, firstParty = true });
         response.EnsureSuccessStatusCode();
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
         var secret = body.GetProperty("clientSecret").ValueKind == JsonValueKind.Null ? null : body.GetProperty("clientSecret").GetString();
@@ -54,6 +54,7 @@ public sealed class ManageClientsApiTests(ApiFactory factory) : IClassFixture<Ap
         frontChannelLogoutUri = "https://app.example.com/frontchannel-logout",
         scopes = Array.Empty<string>(),
         offlineAccess,
+        firstParty = true,
     };
 
     // Acceptance Test

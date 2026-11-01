@@ -40,7 +40,6 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
             ClientType = client.ClientSecret is null ? ClientTypes.Public : ClientTypes.Confidential,
             // OpenIddict hashes the secret before it stores it (L2-106).
             ClientSecret = client.ClientSecret,
-            ConsentType = ConsentTypes.Implicit,
             Requirements = { Requirements.Features.ProofKeyForCodeExchange },
         };
         Apply(descriptor, client);
@@ -134,6 +133,8 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
     private static void Apply(OpenIddictApplicationDescriptor descriptor, NewClient client)
     {
         descriptor.DisplayName = client.Name;
+        // A first-party app skips the consent page; others ask (L2-126, ADR 0018).
+        descriptor.ConsentType = client.FirstParty ? ConsentTypes.Implicit : ConsentTypes.Explicit;
         foreach (var permission in new[]
                  {
                      Permissions.Endpoints.Authorization, Permissions.Endpoints.Token, Permissions.Endpoints.Revocation,
@@ -202,5 +203,6 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
             : null,
         await applications.HasClientTypeAsync(app, ClientTypes.Confidential, cancellationToken),
         await applications.HasPermissionAsync(app, Permissions.GrantTypes.RefreshToken, cancellationToken),
-        (await applications.GetPropertiesAsync(app, cancellationToken)).ContainsKey(DisabledProperty));
+        (await applications.GetPropertiesAsync(app, cancellationToken)).ContainsKey(DisabledProperty),
+        await applications.GetConsentTypeAsync(app, cancellationToken) == ConsentTypes.Implicit);
 }

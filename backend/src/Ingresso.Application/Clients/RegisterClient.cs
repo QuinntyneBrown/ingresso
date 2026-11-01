@@ -9,11 +9,11 @@ namespace Ingresso.Application.Clients;
 /// <summary>
 /// Registers an app as an OpenID Connect client that must use PKCE (L2-087), from the CLI or Settings (L2-105). A
 /// <paramref name="Confidential"/> app also gets a generated secret (L2-106); <paramref name="OfflineAccess"/> lets it ask for
-/// refresh tokens (L2-107).
+/// refresh tokens (L2-107); a <paramref name="FirstParty"/> app skips the consent page (L2-126).
 /// </summary>
 public sealed record RegisterClientCommand(
     string? Name, IReadOnlyList<string>? RedirectUris, IReadOnlyList<string>? PostLogoutRedirectUris, IReadOnlyList<string>? Scopes = null,
-    string? FrontChannelLogoutUri = null, bool Confidential = false, bool OfflineAccess = false)
+    string? FrontChannelLogoutUri = null, bool Confidential = false, bool OfflineAccess = false, bool FirstParty = false)
     : IRequest<RegisteredClientDto>, IClientFields;
 
 /// <summary>The app just registered, and its secret when it is confidential: the only time the secret leaves ingresso (L2-106).</summary>
@@ -85,11 +85,12 @@ public sealed class RegisterClientCommandHandler(IClientRegistry clients, IResou
         var secret = request.Confidential ? NewSecret() : null;
         var client = new NewClient(
             name, Distinct(request.RedirectUris!), Distinct(request.PostLogoutRedirectUris ?? []), Scopes: scopes, FrontChannelLogoutUri: frontChannel,
-            ClientSecret: secret, OfflineAccess: request.OfflineAccess);
+            ClientSecret: secret, OfflineAccess: request.OfflineAccess, FirstParty: request.FirstParty);
         var clientId = await clients.RegisterAsync(client, cancellationToken);
         return new RegisteredClientDto(
             new ClientDto(
-                clientId, client.Name, client.RedirectUris, client.PostLogoutRedirectUris, scopes, frontChannel, request.Confidential, request.OfflineAccess),
+                clientId, client.Name, client.RedirectUris, client.PostLogoutRedirectUris, scopes, frontChannel, request.Confidential, request.OfflineAccess,
+                FirstParty: request.FirstParty),
             secret);
     }
 

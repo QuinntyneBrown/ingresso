@@ -5,12 +5,13 @@ using Ingresso.Application.Common.Interfaces;
 namespace Ingresso.Application.Clients;
 
 /// <summary>
-/// Changes an app's name, addresses, scopes and offline access with the registration rules (L2-112). Its client type
+/// Changes an app's name, addresses, scopes, offline access and first-party option with the registration rules
+/// (L2-112, L2-126). Its client type
 /// and secret never change here.
 /// </summary>
 public sealed record UpdateClientCommand(
     string ClientId, string? Name, IReadOnlyList<string>? RedirectUris, IReadOnlyList<string>? PostLogoutRedirectUris,
-    IReadOnlyList<string>? Scopes = null, string? FrontChannelLogoutUri = null, bool OfflineAccess = false)
+    IReadOnlyList<string>? Scopes = null, string? FrontChannelLogoutUri = null, bool OfflineAccess = false, bool FirstParty = false)
     : IRequest<ClientDto>, IClientFields;
 
 public sealed class UpdateClientCommandValidator : ClientFieldsValidator<UpdateClientCommand>;
@@ -40,7 +41,8 @@ public sealed class UpdateClientCommandHandler(IClientRegistry clients, IResourc
 
         var changes = new NewClient(
             name, RegisterClientCommandHandler.Distinct(request.RedirectUris!), RegisterClientCommandHandler.Distinct(request.PostLogoutRedirectUris ?? []),
-            Scopes: scopes, FrontChannelLogoutUri: request.FrontChannelLogoutUri?.Trim(), OfflineAccess: request.OfflineAccess);
+            Scopes: scopes, FrontChannelLogoutUri: request.FrontChannelLogoutUri?.Trim(), OfflineAccess: request.OfflineAccess,
+            FirstParty: request.FirstParty);
         return (await clients.UpdateAsync(request.ClientId, changes, cancellationToken))!;
     }
 }
