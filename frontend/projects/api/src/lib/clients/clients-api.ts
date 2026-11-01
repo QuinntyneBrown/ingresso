@@ -13,6 +13,8 @@ export interface RegisteredApp {
   frontChannelLogoutUri: string | null;
   /** True for a server app that authenticates with a secret (L2-106). */
   confidential: boolean;
+  /** True when the app may ask for refresh tokens (L2-107). */
+  offlineAccess?: boolean;
 }
 
 /** What the register-app dialog sends (L2-105). */

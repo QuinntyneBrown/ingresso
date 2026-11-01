@@ -81,7 +81,7 @@ public sealed class DatabaseSeeder(
         await clients.RegisterAsync(
             new NewClient(
                 "Sample app", [$"{baseUrl}/signin-oidc"], [$"{baseUrl}/signout-callback-oidc"], SampleAppOptions.ClientId, [SampleAppOptions.Scope],
-                $"{baseUrl}/frontchannel-logout"),
+                $"{baseUrl}/frontchannel-logout", OfflineAccess: true),
             cancellationToken);
     }
 }

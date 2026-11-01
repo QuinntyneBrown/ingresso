@@ -8,11 +8,12 @@ namespace Ingresso.Application.Clients;
 
 /// <summary>
 /// Registers an app as an OpenID Connect client that must use PKCE (L2-087), from the CLI or Settings (L2-105). A
-/// <paramref name="Confidential"/> app also gets a generated secret (L2-106).
+/// <paramref name="Confidential"/> app also gets a generated secret (L2-106); <paramref name="OfflineAccess"/> lets it ask for
+/// refresh tokens (L2-107).
 /// </summary>
 public sealed record RegisterClientCommand(
     string? Name, IReadOnlyList<string>? RedirectUris, IReadOnlyList<string>? PostLogoutRedirectUris, IReadOnlyList<string>? Scopes = null,
-    string? FrontChannelLogoutUri = null, bool Confidential = false)
+    string? FrontChannelLogoutUri = null, bool Confidential = false, bool OfflineAccess = false)
     : IRequest<RegisteredClientDto>;
 
 /// <summary>The app just registered, and its secret when it is confidential: the only time the secret leaves ingresso (L2-106).</summary>
@@ -66,10 +67,12 @@ public sealed class RegisterClientCommandHandler(IClientRegistry clients, IResou
         var secret = request.Confidential ? Base64Url(RandomNumberGenerator.GetBytes(32)) : null;
         var client = new NewClient(
             name, Distinct(request.RedirectUris!), Distinct(request.PostLogoutRedirectUris ?? []), Scopes: scopes, FrontChannelLogoutUri: frontChannel,
-            ClientSecret: secret);
+            ClientSecret: secret, OfflineAccess: request.OfflineAccess);
         var clientId = await clients.RegisterAsync(client, cancellationToken);
         return new RegisteredClientDto(
-            new ClientDto(clientId, client.Name, client.RedirectUris, client.PostLogoutRedirectUris, scopes, frontChannel, request.Confidential), secret);
+            new ClientDto(
+                clientId, client.Name, client.RedirectUris, client.PostLogoutRedirectUris, scopes, frontChannel, request.Confidential, request.OfflineAccess),
+            secret);
     }
 
     private static string Base64Url(byte[] bytes) => Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');

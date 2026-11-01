@@ -32,12 +32,16 @@ public static class IdentityProviderSetup
                 .SetTokenEndpointUris("connect/token")
                 .SetJsonWebKeySetEndpointUris(".well-known/jwks");
             options.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
+            // Apps allowed offline access renew their tokens with rolling refresh tokens (L2-107).
+            options.AllowRefreshTokenFlow();
+            options.SetRefreshTokenLifetime(
+                configuration.GetValue<TimeSpan?>("IdentityProvider:RefreshTokenSlidingLifetime") ?? TimeSpan.FromDays(14));
             options.Configure(o =>
             {
                 o.CodeChallengeMethods.Clear();
                 o.CodeChallengeMethods.Add(CodeChallengeMethods.Sha256);
             });
-            options.RegisterScopes(Scopes.OpenId, Scopes.Email);
+            options.RegisterScopes(Scopes.OpenId, Scopes.Email, Scopes.OfflineAccess);
 
             // Access tokens are signed JWTs any app's API can validate with the published keys, and short-lived,
             // because APIs validate them locally without asking ingresso (L2-097).

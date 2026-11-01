@@ -50,6 +50,52 @@ public sealed class RelyingParty
         return new RelyingParty(factory, clientId);
     }
 
+    /// <summary>Registers an app allowed offline access, so it may ask for refresh tokens (journey 20).</summary>
+    public static async Task<RelyingParty> RegisterWithOfflineAccessAsync(ApiFactory factory)
+    {
+        factory.CreateHttpsClient().Dispose();
+        using var scope = factory.Services.CreateScope();
+        var clientId = await scope.ServiceProvider.GetRequiredService<IClientRegistry>().RegisterAsync(
+            new NewClient($"Sample app {Guid.NewGuid():N}", [RedirectUri], [], OfflineAccess: true), CancellationToken.None);
+        return new RelyingParty(factory, clientId);
+    }
+
+    /// <summary>
+    /// Asks for <c>offline_access</c> in a browser with an ingresso session (a new one, signed in as the seeded person,
+    /// when none is given) and returns the token response.
+    /// </summary>
+    public async Task<JsonElement> SignInOfflineAsync(HttpClient? browser = null)
+    {
+        if (browser is null)
+        {
+            browser = Factory.CreateHttpsClient();
+            await browser.SignInAsAsync(HttpClientExtensions.DevUser);
+        }
+
+        var authorized = await browser.GetAsync(AuthorizePath(new Dictionary<string, string?> { ["scope"] = "openid email offline_access" }));
+        var response = await ExchangeAsync(CallbackParameters(authorized)["code"]);
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        return await JsonAsync(response);
+    }
+
+    /// <summary>Sends a refresh token to the token endpoint (grant_type=refresh_token).</summary>
+    public async Task<HttpResponseMessage> RefreshAsync(string refreshToken) =>
+        await Factory.CreateHttpsClient().PostAsync("/connect/token", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["grant_type"] = "refresh_token",
+            ["client_id"] = ClientId,
+            ["refresh_token"] = refreshToken,
+        }));
+
+    /// <summary>Revokes a token at the revocation endpoint (RFC 7009).</summary>
+    public async Task<HttpResponseMessage> RevokeAsync(string token) =>
+        await Factory.CreateHttpsClient().PostAsync("/connect/revoke", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["client_id"] = ClientId,
+            ["token"] = token,
+            ["token_type_hint"] = "refresh_token",
+        }));
+
     /// <summary>Registers an app with a sign-out return address and a front-channel sign-out address (journey 18).</summary>
     public static async Task<RelyingParty> RegisterForSignOutAsync(ApiFactory factory)
     {
