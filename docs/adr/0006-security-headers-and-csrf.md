@@ -15,7 +15,9 @@ key storage and the web app's hosting open.
   `font-src 'self'`, `style-src 'self' 'unsafe-inline'`, `object-src 'none'`, `base-uri 'self'`,
   `form-action 'self'`, `frame-ancestors 'none'`. Angular injects component styles at runtime, so styles need
   `'unsafe-inline'` until a nonce is wired through `CSP_NONCE`. The map basemap's `img-src` host is added by
-  journey 16.
+  journey 16. Because `script-src 'self'` blocks inline scripts, the production build turns off critical CSS
+  inlining (`optimization.styles.inlineCritical: false`): it loads the global stylesheet as `media="print"` and
+  needs an inline script to switch it to `all`, so under this policy the global styles never apply.
 - CSRF uses ASP.NET Core Antiforgery: when a session starts, the API stores its cookie token (HttpOnly,
   `SameSite=Strict`) and issues the request token in the script-readable `XSRF-TOKEN` cookie. Angular copies it
   into `X-XSRF-TOKEN`. `CsrfProtectionMiddleware` validates unsafe, cookie-authenticated requests after
