@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Register an app for sign-in
+
+Person(owner, "Owner")
+System_Boundary(ingresso, "ingresso") {
+  Container(cli, "Ingresso.Cli", ".NET console", "migrate, seed, reset, clients")
+  Container(api, "Ingresso.Api", "ASP.NET Core", "OpenID Connect endpoints from journey 16")
+  ContainerDb(db, "ingresso database", "SQL Server (SQLite in tests)", "OpenIddictApplications and the rest of the schema")
+}
+Rel(owner, cli, "clients add | list | remove")
+Rel(cli, db, "Reads and writes clients", "EF Core")
+Rel(api, db, "Reads clients", "EF Core")
+@enduml

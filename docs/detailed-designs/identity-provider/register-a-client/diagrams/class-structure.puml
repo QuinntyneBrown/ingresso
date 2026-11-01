@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+title Class structure — Register an app for sign-in
+
+class RegisterClientCommand <<record>> {
+  +string? Name
+  +IReadOnlyList<string> RedirectUris
+  +IReadOnlyList<string> PostLogoutRedirectUris
+}
+class RegisterClientCommandValidator
+class ClientAddressRules {
+  +IsAllowed(address): bool
+}
+class RegisterClientCommandHandler
+class GetClientsQuery <<record>>
+class RemoveClientCommand <<record>> {
+  +string? ClientId
+}
+class ClientDto <<record>> {
+  +string ClientId
+  +string Name
+  +IReadOnlyList<string> RedirectUris
+  +IReadOnlyList<string> PostLogoutRedirectUris
+}
+interface IClientRegistry {
+  +ListAsync(): IReadOnlyList<ClientDto>
+  +RegisterAsync(NewClient): string
+  +RemoveAsync(clientId): ClientDto?
+}
+class OpenIddictClientRegistry
+RegisterClientCommandValidator ..> ClientAddressRules
+RegisterClientCommandHandler ..> RegisterClientCommand
+RegisterClientCommandHandler --> IClientRegistry
+RemoveClientCommand <.. IClientRegistry
+IClientRegistry ..> ClientDto
+OpenIddictClientRegistry ..|> IClientRegistry
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Register an app for sign-in
+
+Container_Boundary(cli, "Ingresso.Cli") {
+  Component(app, "CliApp", "Console entry", "Parses the command")
+  Component(cmds, "ClientCommands", "Console", "Parses options, prints results and errors")
+}
+Container_Boundary(appl, "Ingresso.Application") {
+  Component(reg, "RegisterClientCommandHandler", "MediatR handler", "Validates and registers")
+  Component(list, "GetClientsQueryHandler", "MediatR handler", "Lists by name")
+  Component(rem, "RemoveClientCommandHandler", "MediatR handler", "Removes by client ID")
+  Component(port, "IClientRegistry", "Interface", "Client store contract")
+}
+Container_Boundary(infra, "Ingresso.Infrastructure") {
+  Component(impl, "OpenIddictClientRegistry", "IClientRegistry", "Uses IOpenIddictApplicationManager")
+}
+ContainerDb(db, "ingresso database", "SQL Server", "OpenIddictApplications")
+Rel(app, cmds, "clients ...")
+Rel(cmds, reg, "Sends RegisterClientCommand")
+Rel(cmds, list, "Sends GetClientsQuery")
+Rel(cmds, rem, "Sends RemoveClientCommand")
+Rel(reg, port, "Uses")
+Rel(list, port, "Uses")
+Rel(rem, port, "Uses")
+Rel(impl, port, "Implements")
+Rel(impl, db, "Reads and writes", "EF Core stores")
+@enduml

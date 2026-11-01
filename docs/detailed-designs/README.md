@@ -40,3 +40,9 @@ Each folder holds one vertical feature slice. Its `README.md` traces to the L2 r
 | [Responsive and accessible UI](platform/responsive-accessible-ui/README.md) | `L2-042`, `L2-043`, `L2-044`, `L2-045`, `L2-046` |
 | [Log requests and report errors](platform/log-and-report-errors/README.md) | `L2-047`, `L2-048` |
 | [Manage the database](platform/manage-database/README.md) | `L2-049`, `L2-050` |
+
+## Identity provider
+
+| Feature | L2 requirements |
+|---------|-----------------|
+| [Register an app for sign-in](identity-provider/register-a-client/README.md) | `L2-087`, `L2-088`, `L2-089`, `L2-090` |
