@@ -1,0 +1,23 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Sign in to an app with ingresso
+
+Container_Boundary(api, "Ingresso.Api") {
+  Component(server, "OpenIddict server", "ASP.NET Core handler", "Discovery, JWKS, token endpoint, request validation")
+  Component(authz, "AuthorizationController", "Controller", "Authorize pass-through: session, verified email, claims")
+  Component(cookie, "Cookie session", "Authentication handler", "Server-side session (ADR 0009)")
+  Component(names, "AuthController.AppName", "Controller", "GET /api/auth/apps/{clientId}")
+}
+Container_Boundary(appl, "Ingresso.Application") {
+  Component(user, "GetSignInClaimsQuery", "MediatR handler", "Person id, email, verified")
+  Component(reg, "IClientRegistry", "Interface", "Find a client's name")
+}
+ContainerDb(db, "ingresso database", "SQL Server")
+Rel(server, authz, "Passes valid authorization requests")
+Rel(authz, cookie, "Authenticates")
+Rel(authz, user, "Sends")
+Rel(names, reg, "Uses")
+Rel(server, db, "Clients, tokens", "EF Core stores")
+Rel(user, db, "Users, VerifiedEmails", "EF Core")
+@enduml

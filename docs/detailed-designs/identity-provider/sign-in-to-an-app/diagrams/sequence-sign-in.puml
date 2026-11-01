@@ -1,0 +1,40 @@
+@startuml
+title UML sequence behaviour — Sign in to an app with ingresso
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Person" as person
+participant "Published app" as app
+box "ingresso" #ECFDF3
+  participant "Web app" as web
+  participant "OpenIddict server" as server
+  participant "AuthorizationController" as authz
+end box
+person -> app : Sign in with ingresso
+app -> person : 302 /connect/authorize?client_id, redirect_uri, code_challenge (S256), state, nonce
+person -> server : GET /connect/authorize
+alt unknown client or redirect address
+  server -> authz : error pass-through
+  authz --> person : 302 /authorize-error
+else valid request
+  server -> authz : pass-through
+  alt no session
+    authz --> person : 302 /sign-in?returnUrl=/connect/authorize?...
+    person -> web : request link, open it from email
+    web --> person : session started, 302 returnUrl
+    person -> server : GET /connect/authorize (again)
+    server -> authz : pass-through
+  end
+  alt email not verified
+    authz --> person : 302 /verify-email
+  else verified
+    authz -> server : SignIn(sub, email; destinations id_token)
+    server --> person : 302 redirect_uri?code&state
+    person -> app : code
+    app -> server : POST /connect/token (code, code_verifier)
+    server --> app : id_token
+  end
+end
+@enduml
