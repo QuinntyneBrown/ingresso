@@ -52,7 +52,14 @@ import { injectWideViewport } from '../../shared/wide-viewport';
         <p class="text-muted">{{ summary() }}</p>
         @if (session.user() && !session.user()!.displayName) {
           <p class="intro__action">
-            <button ig-button type="button" appearance="link" size="sm" aria-haspopup="dialog">
+            <button
+              ig-button
+              type="button"
+              appearance="link"
+              size="sm"
+              aria-haspopup="dialog"
+              (click)="addName($event)"
+            >
               Add your name
             </button>
           </p>
@@ -209,6 +216,24 @@ export class DashboardPage {
   });
 
   protected readonly reload = (): void => this.store.load();
+
+  /** Add your name: Edit your profile from the dashboard; the saved name greets the person at once (L2-146). */
+  protected addName(event: Event): void {
+    const user = this.session.user();
+    if (!user) return;
+    const profile = { displayName: user.displayName, email: user.email, emailVerified: user.emailVerified };
+    this.dialogs.openEditProfile(profile, event.currentTarget as HTMLElement).subscribe((saved) => {
+      if (!saved) return;
+      this.session.refresh();
+      this.toasts.show({
+        kind: 'success',
+        title: 'Profile saved',
+        text: saved.displayName
+          ? `Apps that ask for your profile now see ${saved.displayName}.`
+          : 'Apps that ask for your profile now see your email.',
+      });
+    });
+  }
 
   protected label(tile: Tile): string {
     return openedLabel(tile.lastOpenedAt);

@@ -89,6 +89,16 @@ export class DashboardPage {
     return () => saves;
   }
 
+  /** Marks the loaded document, so `wasReloaded` can tell whether the browser loaded the page again. */
+  async markPageLoad(): Promise<void> {
+    await this.page.evaluate(() => ((window as unknown as { igPageMark?: boolean }).igPageMark = true));
+  }
+
+  /** Whether the document marked by `markPageLoad` was replaced by a reload or a full navigation. */
+  async wasReloaded(): Promise<boolean> {
+    return this.page.evaluate(() => !(window as unknown as { igPageMark?: boolean }).igPageMark);
+  }
+
   /** Whether the page scrolls sideways. */
   async scrollsSideways(): Promise<boolean> {
     return this.page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
