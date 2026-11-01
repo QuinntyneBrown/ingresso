@@ -175,12 +175,19 @@ export class SettingsPage {
     });
   }
 
-  /** End another device's session once confirmed; a toast confirms it and the list reloads (L2-133). */
-  protected endSessions({ device, trigger }: DeviceAction): void {
-    if (device === 'others') return;
-    this.dialogs.openEndSession(device, trigger).subscribe((ended) => {
+  /** End another device's session, or all of them, once confirmed; a toast confirms it and the list reloads (L2-133, L2-134). */
+  protected endSessions({ device, others, trigger }: DeviceAction): void {
+    this.dialogs.openEndSession({ device, others }, trigger).subscribe((ended) => {
       if (!ended) return;
-      this.toasts.show({ kind: 'success', title: 'Session ended', text: `${device.device} is signed out.` });
+      this.toasts.show(
+        device === 'others'
+          ? {
+              kind: 'success',
+              title: 'Signed out of other devices',
+              text: 'Only this device is signed in now.',
+            }
+          : { kind: 'success', title: 'Session ended', text: `${device.device} is signed out.` },
+      );
       this.devicesCard()?.reload();
     });
   }

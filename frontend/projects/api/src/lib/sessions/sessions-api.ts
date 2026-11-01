@@ -19,6 +19,8 @@ export interface SessionsApi {
   list(): Observable<Device[]>;
   /** Ends the session on another of the person's devices (L2-133). */
   end(id: string): Observable<void>;
+  /** Ends every other session of the person; this device stays signed in (L2-134). */
+  endOthers(): Observable<void>;
 }
 
 export const SESSIONS_API = new InjectionToken<SessionsApi>('SESSIONS_API');
@@ -34,5 +36,9 @@ export class HttpSessionsApi implements SessionsApi {
 
   end(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/api/sessions/${encodeURIComponent(id)}`);
+  }
+
+  endOthers(): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/api/sessions/others`);
   }
 }

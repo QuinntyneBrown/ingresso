@@ -17,10 +17,29 @@ public sealed record GetDevicesQuery : IRequest<IReadOnlyList<DeviceDto>>;
 /// </summary>
 public sealed record EndSessionCommand(Guid SessionId) : IRequest;
 
+/// <summary>Ends every other active session of the person and returns how many; this device stays signed in (L2-134).</summary>
+public sealed record EndOtherSessionsCommand : IRequest<int>;
+
 public sealed class DevicesHandlers(IAppDbContext db, ICurrentUser currentUser, IClock clock) :
     IRequestHandler<GetDevicesQuery, IReadOnlyList<DeviceDto>>,
-    IRequestHandler<EndSessionCommand>
+    IRequestHandler<EndSessionCommand>,
+    IRequestHandler<EndOtherSessionsCommand, int>
 {
+    public async Task<int> Handle(EndOtherSessionsCommand request, CancellationToken cancellationToken)
+    {
+        var now = clock.UtcNow;
+        var others = await db.Sessions
+            .Where(s => s.UserId == currentUser.UserId && s.Id != currentUser.SessionId && s.RevokedAtUtc == null)
+            .ToListAsync(cancellationToken);
+        foreach (var session in others)
+        {
+            session.RevokedAtUtc = now;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        return others.Count;
+    }
+
     public async Task Handle(EndSessionCommand request, CancellationToken cancellationToken)
     {
         var now = clock.UtcNow;

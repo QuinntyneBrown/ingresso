@@ -16,6 +16,14 @@ public sealed class SessionsController(ISender sender) : ControllerBase
     public async Task<IReadOnlyList<DeviceDto>> List(CancellationToken cancellationToken) =>
         await sender.Send(new GetDevicesQuery(), cancellationToken);
 
+    /// <summary>Signs out of every other device; this one stays signed in (204).</summary>
+    [HttpDelete("others")]
+    public async Task<IActionResult> EndOthers(CancellationToken cancellationToken)
+    {
+        await sender.Send(new EndOtherSessionsCommand(), cancellationToken);
+        return NoContent();
+    }
+
     /// <summary>Ends the session on another of the person's devices: 204, or 404 when it isn't one.</summary>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> End(Guid id, CancellationToken cancellationToken)

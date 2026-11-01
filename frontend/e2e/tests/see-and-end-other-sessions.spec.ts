@@ -6,6 +6,8 @@ import { SettingsPage } from '../pages/settings.page';
 import { SignInPage } from '../pages/sign-in.page';
 import { signInAsNewPerson, signInOnAnotherDevice } from '../support/session';
 
+const WINDOWS_FIREFOX = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0';
+
 test.describe('See and end other sessions', () => {
   test.skip(!!process.env['E2E_FAKE_API'], 'Needs the real API.');
 
@@ -115,5 +117,35 @@ test.describe('See and end other sessions', () => {
     await end.cancel.click();
     await expect(settings.device('Safari on iPhone')).toBeVisible();
     await phone.context.close();
+  });
+
+  // Acceptance Test
+  // Traces to: L2-134
+  // Description: Sign out of all other devices names them, asks first, then keeps only this device and says so.
+  test('signing out of all other devices keeps only this one', async ({ page, browser, baseURL }) => {
+    const settings = new SettingsPage(page);
+    const end = new EndSessionDialog(page);
+    const shell = new AppShell(page);
+    const email = await signInAsNewPerson(page);
+    const phone = await signInOnAnotherDevice(browser, baseURL!, email);
+    const pc = await signInOnAnotherDevice(browser, baseURL!, email, WINDOWS_FIREFOX);
+    await settings.open();
+    await expect(settings.deviceRows).toHaveCount(3);
+
+    await settings.signOutOtherDevices.click();
+    await expect(end.dialog).toHaveAccessibleName('Sign out of all other devices?');
+    await expect(end.dialog).toContainText(
+      /(Safari on iPhone and Firefox on Windows|Firefox on Windows and Safari on iPhone) are signed out/,
+    );
+    await end.signOutOthers.click();
+
+    await expect(shell.toast('Signed out of other devices')).toContainText(
+      'Only this device is signed in now.',
+    );
+    await expect(settings.onlyThisDevice).toBeVisible();
+    await new DashboardPage(pc.page).openSignedIn();
+    await expect(new SignInPage(pc.page).heading).toHaveText('Sign in to ingresso');
+    await phone.context.close();
+    await pc.context.close();
   });
 });

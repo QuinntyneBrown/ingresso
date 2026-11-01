@@ -169,4 +169,54 @@ public sealed class DevicesTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Equal(HttpStatusCode.BadRequest, refreshed.StatusCode);
         Assert.Equal("invalid_grant", (await RelyingParty.JsonAsync(refreshed)).GetProperty("error").GetString());
     }
+
+    // Acceptance Test
+    // Traces to: L2-134
+    // Description: Signing out of all other devices ends every other session and keeps this one.
+    [Fact]
+    public async Task Signing_out_of_other_devices_keeps_only_this_one()
+    {
+        var email = NewEmail();
+        var phone = await DeviceAsync(email, IPhoneSafari);
+        var pc = await DeviceAsync(email, WindowsFirefox);
+        var mac = await DeviceAsync(email, MacChrome);
+
+        var ended = await mac.DeleteAsync("/api/sessions/others");
+
+        Assert.Equal(HttpStatusCode.NoContent, ended.StatusCode);
+        Assert.True(Assert.Single(await ListAsync(mac)).GetProperty("current").GetBoolean());
+        Assert.Equal(HttpStatusCode.Unauthorized, (await phone.GetAsync("/api/sessions")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await pc.GetAsync("/api/sessions")).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-134
+    // Description: Signing out of other devices leaves other people's sessions alone.
+    [Fact]
+    public async Task Signing_out_of_other_devices_leaves_other_people_signed_in()
+    {
+        var someoneElse = await DeviceAsync(NewEmail(), IPhoneSafari);
+        var mac = await DeviceAsync(NewEmail(), MacChrome);
+
+        await mac.DeleteAsync("/api/sessions/others");
+
+        Assert.Equal(HttpStatusCode.OK, (await someoneElse.GetAsync("/api/sessions")).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-135, L2-134
+    // Description: An app signed in on this device keeps renewing after the person signs out of other devices.
+    [Fact]
+    public async Task Signing_out_of_other_devices_keeps_this_devices_apps()
+    {
+        var app = await RelyingParty.RegisterWithOfflineAccessAsync(factory);
+        var email = NewEmail();
+        await DeviceAsync(email, IPhoneSafari);
+        var mac = await DeviceAsync(email, MacChrome);
+        var refreshToken = (await app.SignInOfflineAsync(mac)).GetProperty("refresh_token").GetString()!;
+
+        await mac.DeleteAsync("/api/sessions/others");
+
+        Assert.Equal(HttpStatusCode.OK, (await app.RefreshAsync(refreshToken)).StatusCode);
+    }
 }

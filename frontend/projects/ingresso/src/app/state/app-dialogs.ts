@@ -1,7 +1,7 @@
 import { Dialog } from '@angular/cdk/dialog';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AppRegistered, ConnectedApp, Device, Profile, RegisteredApp, Tile, TileInput } from 'api';
+import { AppRegistered, ConnectedApp, Profile, RegisteredApp, Tile, TileInput } from 'api';
 import { modalDialogConfig } from 'components';
 import { AddAppDialog, ADD_APP_TITLE_ID } from '../dialogs/add-app/add-app-dialog';
 import {
@@ -12,7 +12,11 @@ import {
 import { DeleteClientDialog, DELETE_CLIENT_TITLE_ID } from '../dialogs/delete-client/delete-client-dialog';
 import { RotateSecretDialog, ROTATE_SECRET_TITLE_ID } from '../dialogs/rotate-secret/rotate-secret-dialog';
 import { RevokeAccessDialog, REVOKE_ACCESS_TITLE_ID } from '../dialogs/revoke-access/revoke-access-dialog';
-import { EndSessionDialog, END_SESSION_TITLE_ID } from '../dialogs/end-session/end-session-dialog';
+import {
+  EndSessionData,
+  EndSessionDialog,
+  END_SESSION_TITLE_ID,
+} from '../dialogs/end-session/end-session-dialog';
 import { EditAppDialog, EDIT_APP_TITLE_ID } from '../dialogs/edit-app/edit-app-dialog';
 import { EditProfileDialog, EDIT_PROFILE_TITLE_ID } from '../dialogs/edit-profile/edit-profile-dialog';
 import {
@@ -128,15 +132,11 @@ export class AppDialogs {
     ).closed;
   }
 
-  /** Asks, then ends another device's session (L2-133); emits true when it ended. */
-  openEndSession(device: Device, trigger?: HTMLElement): Observable<boolean | undefined> {
+  /** Asks, then ends another device's session, or all of them (L2-133, L2-134); emits true when they ended. */
+  openEndSession(data: EndSessionData, trigger?: HTMLElement): Observable<boolean | undefined> {
     return this.dialog.open<boolean>(
       EndSessionDialog,
-      modalDialogConfig({
-        ariaLabelledBy: END_SESSION_TITLE_ID,
-        restoreFocus: trigger ?? true,
-        data: device,
-      }),
+      modalDialogConfig({ ariaLabelledBy: END_SESSION_TITLE_ID, restoreFocus: trigger ?? true, data }),
     ).closed;
   }
 }
