@@ -1,0 +1,33 @@
+@startuml
+title UML sequence behaviour — An app signs the person out
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Person" as person
+participant "Sample app" as app
+box "Ingresso.Api" #EFF8FF
+  participant "OpenIddict server" as oidc
+  participant "AuthorizationController" as authz
+  participant "AuthController" as auth
+end box
+participant "Signed-out page" as page
+person -> app : Sign out
+app -> oidc : GET /connect/endsession (id_token_hint, post_logout_redirect_uri, state)
+alt return address not registered, or no id_token_hint
+  oidc --> person : 302 /authorize-error?flow=sign-out (session kept)
+else valid
+  oidc -> authz : pass-through
+  authz -> authz : SignOutCommand(session, return address + state)
+  authz --> person : 302 /signed-out?ticket=…
+  person -> page : open
+  page -> auth : GET /api/auth/signed-out?ticket=…
+  auth --> page : apps (front-channel address + iss + sid), returnUrl
+  loop each app
+    page -> app : hidden frame /frontchannel-logout?iss&sid
+    app -> app : end cookie session if sid matches
+  end
+  page --> person : continue to the return address
+end
+@enduml

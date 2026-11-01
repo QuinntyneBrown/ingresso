@@ -1,0 +1,40 @@
+@startuml
+title Class structure — Sign out everywhere
+skinparam classAttributeIconSize 0
+class SessionApp {
+  +SessionId : Guid
+  +ClientId : string
+  +SignedInAtUtc : DateTimeOffset
+}
+class Session
+Session "1" -- "*" SessionApp
+class SignOutTicket <<record>> {
+  +SessionId : Guid
+  +ClientIds : IReadOnlyList<string>
+  +ReturnUrl : string?
+}
+interface ISignOutTickets {
+  +Protect(SignOutTicket) : string
+  +Read(string) : SignOutTicket?
+}
+class DataProtectionSignOutTickets
+DataProtectionSignOutTickets ..|> ISignOutTickets
+class SignOutCommand <<record>> {
+  +SessionId : Guid
+  +ReturnUrl : string?
+}
+class GetSignedOutAppsQuery <<record>> {
+  +Ticket : string
+}
+class SignedOutDto <<record>> {
+  +Apps : IReadOnlyList<SignedOutAppDto>
+  +ReturnUrl : string?
+}
+class ClientDto <<record>> {
+  +FrontChannelLogoutUri : string?
+}
+SignOutCommand ..> ISignOutTickets
+GetSignedOutAppsQuery ..> ISignOutTickets
+GetSignedOutAppsQuery ..> SignedOutDto
+GetSignedOutAppsQuery ..> ClientDto
+@enduml

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signed out · done — ingresso mocks</title>
+<meta name="mock:kind" content="page">
+<meta name="mock:screen" content="signed-out">
+<meta name="mock:state" content="done">
+<meta name="description" content="Signed out, done state: the apps signed out, and a way to sign in again.">
+<link rel="icon" href="../../assets/favicon.svg">
+<link rel="stylesheet" href="../../../design-system/tokens/tokens.css">
+<link rel="stylesheet" href="../../../design-system/assets/components.css">
+<link rel="stylesheet" href="../../assets/mock.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="auth-layout"><main id="main" class="auth-card card stack">
+  <div class="logo"><a class="brand-logo" href="../sign-in/default.html" aria-label="ingresso home"><img class="brand-logo__light" src="../../assets/ingresso-logo.svg" alt="ingresso" height="32"><img class="brand-logo__dark" src="../../assets/ingresso-logo-dark.svg" alt="" height="32"></a></div>
+  <div><h1 style="font:var(--text-h2);letter-spacing:var(--letter-spacing-tight)">You’re signed out</h1><p class="text-muted" style="margin-top:var(--space-1)">You’re signed out of ingresso and these apps on this device:</p></div>
+  <ul class="list card card--flush" aria-label="Apps signed out">
+    <li class="list__item"><div class="list__body"><div class="list__title">Sample app</div></div></li>
+    <li class="list__item"><div class="list__body"><div class="list__title">Budget</div></div></li>
+  </ul>
+  <a class="btn btn--primary btn--block" href="../sign-in/default.html">Sign in again</a>
+</main></div>
+<nav class="mock-bar" aria-label="Mock navigation">
+  <a class="mock-bar__home" href="../../index.html" aria-label="All mocks">⌂</a>
+  <span class="mock-bar__screen">Signed out</span>
+  <ul class="mock-bar__states"><li><a href="signing-out.html">signing-out</a></li><li><a href="done.html" aria-current="page">done</a></li></ul>
+  <button type="button" data-theme-toggle aria-pressed="false">☾ Dark</button>
+  <button type="button" data-chrome-toggle aria-label="Hide mock chrome">×</button>
+</nav>
+<script src="../../assets/mock.js"></script>
+</body>
+</html>

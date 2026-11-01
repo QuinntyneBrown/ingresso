@@ -15,3 +15,4 @@ them point at that stack's history and are revised as ingresso writes its own.
 | [0012](0012-tiles-do-not-show-a-category.md) | Tiles show name, host, description and colour; category stays out of the tile |
 | [0013](0013-theme-choice-is-kept-in-the-browser.md) | The theme choice is kept in this browser |
 | [0014](0014-openiddict-is-the-openid-connect-server.md) | OpenIddict is the OpenID Connect server, with its stores in AppDbContext |
+| [0015](0015-front-channel-logout.md) | Apps are signed out by front-channel logout, from the signed-out page |

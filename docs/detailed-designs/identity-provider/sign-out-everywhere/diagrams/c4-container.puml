@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Sign out everywhere
+Person(person, "Person")
+System_Boundary(ing, "ingresso") {
+  Container(web, "ingresso web app", "Angular", "Sign-out dialog, signed-out page with hidden frames")
+  Container(api, "Ingresso.Api", "ASP.NET Core, OpenIddict", "Sign-out, signed-out ticket, end-session endpoint")
+  ContainerDb(db, "ingresso database", "SQL Server", "Sessions, SessionApps, OpenIddict applications")
+}
+System_Ext(app, "Sample app", "Cookie + OpenID Connect, /frontchannel-logout")
+Rel(person, web, "Signs out")
+Rel(web, api, "POST /api/auth/sign-out, GET /api/auth/signed-out", "JSON")
+Rel(app, api, "GET /connect/endsession", "Browser redirect")
+Rel(api, db, "Revokes session, reads session apps")
+Rel(web, app, "Loads /frontchannel-logout?iss&sid", "Hidden frame")
+@enduml

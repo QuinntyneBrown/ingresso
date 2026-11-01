@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Sign out everywhere
+Person(person, "Person", "Signs out of ingresso or of an app")
+System(ingresso, "ingresso", "Ends the session and notifies the apps signed in under it")
+System_Ext(app, "Owner's apps", "End their own session when notified")
+Rel(person, ingresso, "Signs out", "Browser")
+Rel(person, app, "Signs out", "Browser")
+Rel(app, ingresso, "End-session request", "OpenID Connect")
+Rel(ingresso, app, "Front-channel sign-out in hidden frames", "Browser, iss + sid")
+@enduml
