@@ -65,12 +65,22 @@ export class SettingsPage {
       frontChannelLogoutUri: null,
       confidential,
     });
+    // Notes is filled in and disabled, as in docs/mocks (settings/apps, register-app/edit).
+    const notes = {
+      ...app('3f9c2b17e6a54d08', 'Notes', false),
+      redirectUris: ['https://notes.example.com/signin-oidc'],
+      postLogoutRedirectUris: ['https://notes.example.com/signout-callback-oidc'],
+      frontChannelLogoutUri: 'https://notes.example.com/frontchannel-logout',
+      scopes: ['notes.read'],
+      offlineAccess: true,
+      disabled: true,
+    };
     await this.page.route('**/api/clients', (route) =>
       route.request().method() === 'GET'
         ? route.fulfill({
             json: [
               app('7c1e9a40d2b84f3a', 'Budget', true),
-              app('3f9c2b17e6a54d08', 'Notes', false),
+              notes,
               app('ingresso-sample-app', 'Sample app', false),
             ],
           })

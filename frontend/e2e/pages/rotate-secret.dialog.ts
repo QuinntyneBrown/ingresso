@@ -23,6 +23,29 @@ export class RotateSecretDialog {
     });
   }
 
+  /** Answers the next rotation with this secret, so a screenshot shows the same one every time. */
+  async rotateTo(clientId: string, name: string, clientSecret: string): Promise<void> {
+    await this.page.route(
+      '**/api/clients/*/secret',
+      (route) =>
+        route.fulfill({
+          json: {
+            client: {
+              clientId,
+              name,
+              redirectUris: [],
+              postLogoutRedirectUris: [],
+              scopes: [],
+              frontChannelLogoutUri: null,
+              confidential: true,
+            },
+            clientSecret,
+          },
+        }),
+      { times: 1 },
+    );
+  }
+
   /** Holds the next rotation until the test ends, to look at the busy state. */
   async holdRotation(): Promise<void> {
     await this.page.route('**/api/clients/*/secret', () => new Promise(() => undefined));
