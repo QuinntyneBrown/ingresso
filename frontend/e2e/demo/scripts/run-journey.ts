@@ -70,8 +70,8 @@ export async function runJourney(journey: string): Promise<string[]> {
   let baseURL = process.env['DEMO_BASE_URL'];
   if (!baseURL) {
     processes.push(await startApi('demo'));
-    processes.push(await startSampleApp());
     const webPort = process.env['PW_WEB_PORT'] ?? '4210';
+    processes.push(await startSampleApp(`http://localhost:${webPort}`));
     processes.push(
       spawn('npx', ['ng', 'serve', 'ingresso', '--port', webPort], { cwd: FRONTEND, stdio: 'ignore' }),
     );

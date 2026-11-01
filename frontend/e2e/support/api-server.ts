@@ -64,7 +64,9 @@ export async function startApi(databaseName = 'e2e'): Promise<ChildProcess> {
 }
 
 /** Starts the sample relying party, which signs people in with ingresso through the web app's origin. */
-export async function startSampleApp(): Promise<ChildProcess> {
+export async function startSampleApp(
+  webUrl = `http://localhost:${process.env['PW_WEB_PORT'] ?? '4200'}`,
+): Promise<ChildProcess> {
   const app = spawn(
     'dotnet',
     ['run', '--no-build', '--no-launch-profile', '--project', 'backend/samples/Ingresso.SampleApp'],
@@ -74,7 +76,7 @@ export async function startSampleApp(): Promise<ChildProcess> {
         ...process.env,
         ASPNETCORE_ENVIRONMENT: 'Development',
         ASPNETCORE_URLS: SAMPLE_APP_URL,
-        SampleApp__Authority: `http://localhost:${process.env['PW_WEB_PORT'] ?? '4200'}`,
+        SampleApp__Authority: webUrl,
         DOTNET_CLI_TELEMETRY_OPTOUT: '1',
       },
       stdio: process.env['E2E_API_LOGS'] ? 'inherit' : 'ignore',
