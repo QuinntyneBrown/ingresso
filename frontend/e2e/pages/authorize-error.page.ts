@@ -13,9 +13,14 @@ export class AuthorizeErrorPage {
 
   /** Sends an authorization request from a client ingresso does not know. */
   async openForUnknownApp(): Promise<void> {
+    await this.openForApp('not-a-registered-app', `${SAMPLE_APP_URL}/signin-oidc`);
+  }
+
+  /** Sends an authorization request from this app and waits for the error page, as for a disabled app (L2-114). */
+  async openForApp(clientId: string, redirectUri: string): Promise<void> {
     const query = new URLSearchParams({
-      client_id: 'not-a-registered-app',
-      redirect_uri: `${SAMPLE_APP_URL}/signin-oidc`,
+      client_id: clientId,
+      redirect_uri: redirectUri,
       response_type: 'code',
       scope: 'openid',
       code_challenge: 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',

@@ -4,7 +4,7 @@ import { Card, Check, Choice, FieldSet, Link, ToastService } from 'components';
 import { AppDialogs } from '../../state/app-dialogs';
 import { SessionStore } from '../../state/session-store';
 import { ThemePreference, ThemeStore } from '../../state/theme-store';
-import { AppsCard } from './apps-card';
+import { AppAction, AppsCard } from './apps-card';
 
 const CHOICES: { value: ThemePreference; label: string }[] = [
   { value: 'system', label: 'Match my system' },
@@ -48,7 +48,12 @@ const CHOICES: { value: ThemePreference; label: string }[] = [
           </ig-field-set>
         </ig-card>
         @if (administrator()) {
-          <ig-apps-card (register)="register($event)" />
+          <ig-apps-card
+            (register)="register($event)"
+            (edit)="edit($event)"
+            (rotateSecret)="rotateSecret($event)"
+            (delete)="delete($event)"
+          />
         }
       </div>
     </div>
@@ -78,6 +83,42 @@ export class SettingsPage {
         kind: 'success',
         title: 'App registered',
         text: `${registered.client.name} can sign people in with ingresso.`,
+      });
+      this.appsCard()?.reload();
+    });
+  }
+
+  /** Edit an app; the saved app is announced and the list reloads (L2-112). */
+  protected edit({ app, trigger }: AppAction): void {
+    this.dialogs.openEditApp(app, trigger).subscribe((saved) => {
+      if (!saved) return;
+      this.toasts.show({ kind: 'success', title: 'App saved', text: `${saved.client.name} was saved.` });
+      this.appsCard()?.reload();
+    });
+  }
+
+  /** Rotate a confidential app's secret: the new one is shown once, then a toast confirms it (L2-113). */
+  protected rotateSecret({ app, trigger }: AppAction): void {
+    this.dialogs.openRotateSecret(app, trigger).subscribe((rotated) => {
+      if (!rotated) return;
+      this.dialogs.openClientSecret(rotated, trigger, true).subscribe(() =>
+        this.toasts.show({
+          kind: 'success',
+          title: 'Secret rotated',
+          text: `${app.name}’s old secret no longer works.`,
+        }),
+      );
+    });
+  }
+
+  /** Delete an app once its name is typed; a toast confirms it and the list reloads (L2-115). */
+  protected delete({ app, trigger }: AppAction): void {
+    this.dialogs.openDeleteClient(app, trigger).subscribe((deleted) => {
+      if (!deleted) return;
+      this.toasts.show({
+        kind: 'success',
+        title: 'App deleted',
+        text: `${app.name} can no longer sign anyone in.`,
       });
       this.appsCard()?.reload();
     });

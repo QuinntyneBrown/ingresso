@@ -34,13 +34,38 @@ class ClientDto <<record>> {
   Scopes : string[]
   FrontChannelLogoutUri : string?
   Confidential : bool
+  OfflineAccess : bool
+  Disabled : bool
 }
 class NewClient <<record>> {
   ClientSecret : string?
+  OfflineAccess : bool
 }
+class UpdateClientCommand <<record>> {
+  ClientId : string
+  Name : string?
+  RedirectUris : string[]
+  OfflineAccess : bool
+}
+class RotateClientSecretCommand <<record>> {
+  ClientId : string
+}
+class SetClientDisabledCommand <<record>> {
+  ClientId : string
+  Disabled : bool
+}
+class IsClientDisabledQuery <<record>> {
+  ClientId : string
+}
+class AuthorizationController
 interface IClientRegistry {
   ListAsync()
   RegisterAsync(NewClient)
+  UpdateAsync(clientId, NewClient)
+  ReplaceSecretAsync(clientId, secret)
+  SetDisabledAsync(clientId, disabled)
+  IsDisabledAsync(clientId)
+  RemoveAsync(clientId)
 }
 class AdministratorHandler
 class ClientsController
@@ -49,6 +74,11 @@ RegisteredClientDto *-- ClientDto
 RegisterClientCommand ..> NewClient : builds
 IClientRegistry ..> NewClient
 ClientsController ..> RegisterClientCommand
+ClientsController ..> UpdateClientCommand
+ClientsController ..> RotateClientSecretCommand
+ClientsController ..> SetClientDisabledCommand
+AuthorizationController ..> IsClientDisabledQuery
+RotateClientSecretCommand ..> RegisteredClientDto : returns
 AdministratorHandler ..> User : reads Role
 GrantAdministratorCommand ..> User : sets Role
 @enduml

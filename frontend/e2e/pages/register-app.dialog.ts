@@ -9,7 +9,10 @@ export interface AppEntries {
   confidential?: boolean;
 }
 
-/** "Register an app": registers an app that signs in with ingresso, from Settings → Apps (L2-105). */
+/**
+ * "Register an app": registers an app that signs in with ingresso, from Settings → Apps (L2-105). In edit mode it is
+ * titled "Edit <name>" and saves the app's changes (L2-112).
+ */
 export class RegisterAppDialog {
   readonly dialog: Locator;
   readonly name: Locator;
@@ -23,9 +26,18 @@ export class RegisterAppDialog {
   readonly cancel: Locator;
   readonly summary: Locator;
   readonly failed: Locator;
+  /** Lets the app ask for refresh tokens (L2-107, L2-112). */
+  readonly staySignedIn: Locator;
+  readonly save: Locator;
+  readonly saving: Locator;
+  /** In edit mode, the type is text that can't be changed. */
+  readonly fixedType: Locator;
 
-  constructor(private readonly page: Page) {
-    this.dialog = page.getByRole('dialog', { name: 'Register an app' });
+  constructor(
+    private readonly page: Page,
+    title = 'Register an app',
+  ) {
+    this.dialog = page.getByRole('dialog', { name: title });
     this.name = this.dialog.getByLabel('Name', { exact: true });
     this.redirectUris = this.dialog.getByLabel('Redirect addresses');
     this.postLogoutRedirectUris = this.dialog.getByLabel('Sign-out return addresses');
@@ -36,7 +48,13 @@ export class RegisterAppDialog {
     this.registering = this.dialog.getByRole('button', { name: 'Registering…' });
     this.cancel = this.dialog.getByRole('button', { name: 'Cancel' });
     this.summary = this.dialog.getByRole('alert').filter({ hasText: /^Fix/ });
-    this.failed = this.dialog.getByRole('alert').filter({ hasText: 'We couldn’t register the app' });
+    this.failed = this.dialog.getByRole('alert').filter({ hasText: /We couldn’t (register|save) the app/ });
+    this.staySignedIn = this.dialog.getByRole('checkbox', {
+      name: 'Let it stay signed in with refresh tokens',
+    });
+    this.save = this.dialog.getByRole('button', { name: 'Save changes' });
+    this.saving = this.dialog.getByRole('button', { name: 'Saving…' });
+    this.fixedType = this.dialog.getByText(/An app’s type can’t change after it’s registered\./);
   }
 
   /** The checkbox allowing an API scope, by its label such as "Sample API · sample-api.read". */

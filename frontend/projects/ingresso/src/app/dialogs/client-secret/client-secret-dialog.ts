@@ -8,6 +8,9 @@ export const CLIENT_SECRET_TITLE_ID = 'ig-client-secret-title';
 
 type Copyable = 'client ID' | 'client secret';
 
+/** The dialog's data: the app and its secret, and whether the secret replaced an old one (L2-113). */
+export type ClientSecretData = AppRegistered & { rotated?: boolean };
+
 /**
  * A new confidential app's client ID and secret, each with a Copy button (L2-106). The secret exists only in this
  * dialog's data: once it closes, ingresso can never show it again.
@@ -16,8 +19,17 @@ type Copyable = 'client ID' | 'client secret';
   selector: 'ig-client-secret-dialog',
   imports: [Alert, Button, DialogShell, FormField, Input],
   template: `
-    <ig-dialog-shell [title]="data.client.name + ' is registered'" [titleId]="titleId">
-      <p slot="description" class="description">Copy its client ID and secret into the app.</p>
+    <ig-dialog-shell
+      [title]="data.client.name + (data.rotated ? ' has a new secret' : ' is registered')"
+      [titleId]="titleId"
+    >
+      <p slot="description" class="description">
+        {{
+          data.rotated
+            ? 'Its old secret no longer works. Copy the new one into the app.'
+            : 'Copy its client ID and secret into the app.'
+        }}
+      </p>
       <div class="body">
         <ig-alert kind="warning" title="You won’t see this secret again">
           Store it in the app’s settings now. If it’s lost, the app will need a new one.
@@ -90,7 +102,7 @@ type Copyable = 'client ID' | 'client secret';
 })
 export class ClientSecretDialog {
   protected readonly ref = inject(DialogRef);
-  protected readonly data = inject<AppRegistered>(DIALOG_DATA);
+  protected readonly data = inject<ClientSecretData>(DIALOG_DATA);
   private readonly clipboard = inject(Clipboard);
 
   protected readonly titleId = CLIENT_SECRET_TITLE_ID;

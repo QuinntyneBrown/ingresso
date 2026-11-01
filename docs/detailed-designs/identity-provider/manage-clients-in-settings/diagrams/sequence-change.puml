@@ -1,0 +1,27 @@
+@startuml
+title UML sequence behaviour — Disable and delete an app
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Administrator" as admin
+participant "Apps card" as card
+participant "ClientsController" as api
+participant "OpenIddictClientRegistry" as reg
+participant "AuthorizationController" as authz
+participant "Sample app" as app
+admin -> card : Disable (actions menu)
+card -> api : POST /api/clients/{id}/disable
+api -> reg : SetDisabledAsync(id, true)
+api --> card : 200 client (disabled)
+card --> admin : toast, Disabled badge
+app -> authz : /connect/authorize or /connect/token
+authz -> reg : disabled?
+authz --> app : /authorize-error or invalid_grant
+admin -> card : Delete, types the name
+card -> api : DELETE /api/clients/{id}
+api -> reg : RemoveAsync(id)
+reg -> reg : delete app, its authorizations and tokens
+api --> card : 204
+card --> admin : toast, row removed
+@enduml

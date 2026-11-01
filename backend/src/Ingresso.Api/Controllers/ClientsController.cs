@@ -27,4 +27,41 @@ public sealed class ClientsController(ISender sender) : ControllerBase
         var registered = await sender.Send(command, cancellationToken);
         return StatusCode(StatusCodes.Status201Created, registered);
     }
+
+    /// <summary>Changes an app with the registration rules: 400, 409 and 404 as for registering (L2-112).</summary>
+    [HttpPut("{clientId}")]
+    public async Task<ClientDto> Update(string clientId, ClientChanges changes, CancellationToken cancellationToken) =>
+        await sender.Send(
+            new UpdateClientCommand(
+                clientId, changes.Name, changes.RedirectUris, changes.PostLogoutRedirectUris, changes.Scopes, changes.FrontChannelLogoutUri,
+                changes.OfflineAccess),
+            cancellationToken);
+
+    /// <summary>Gives a confidential app a new secret, returned this once; 400 for a public app (L2-113).</summary>
+    [HttpPost("{clientId}/secret")]
+    public async Task<RegisteredClientDto> RotateSecret(string clientId, CancellationToken cancellationToken) =>
+        await sender.Send(new RotateClientSecretCommand(clientId), cancellationToken);
+
+    /// <summary>Disables an app: it signs no one in and renews no tokens until enabled (L2-114).</summary>
+    [HttpPost("{clientId}/disable")]
+    public async Task<ClientDto> Disable(string clientId, CancellationToken cancellationToken) =>
+        await sender.Send(new SetClientDisabledCommand(clientId, Disabled: true), cancellationToken);
+
+    /// <summary>Enables a disabled app again (L2-114).</summary>
+    [HttpPost("{clientId}/enable")]
+    public async Task<ClientDto> Enable(string clientId, CancellationToken cancellationToken) =>
+        await sender.Send(new SetClientDisabledCommand(clientId, Disabled: false), cancellationToken);
+
+    /// <summary>Deletes an app with its authorizations and tokens (L2-115).</summary>
+    [HttpDelete("{clientId}")]
+    public async Task<IActionResult> Delete(string clientId, CancellationToken cancellationToken)
+    {
+        await sender.Send(new RemoveClientCommand(clientId), cancellationToken);
+        return NoContent();
+    }
 }
+
+/// <summary>What the edit dialog sends: the registration fields an app may change (L2-112).</summary>
+public sealed record ClientChanges(
+    string? Name, IReadOnlyList<string>? RedirectUris, IReadOnlyList<string>? PostLogoutRedirectUris, IReadOnlyList<string>? Scopes,
+    string? FrontChannelLogoutUri, bool OfflineAccess);

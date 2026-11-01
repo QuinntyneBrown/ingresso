@@ -1,13 +1,48 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, output, signal } from '@angular/core';
 import { CLIENTS_API, RegisteredApp } from 'api';
-import { Alert, Button, Card, EmptyState, Icon, List, ListItem, Skeleton } from 'components';
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Icon,
+  List,
+  ListItem,
+  Menu,
+  MenuDivider,
+  MenuItem,
+  MenuTrigger,
+  Skeleton,
+  ToastService,
+} from 'components';
 
 type Load = 'loading' | 'ready' | 'failed';
 
-/** Settings → Apps: the apps that sign in with ingresso, for administrators (L2-104). */
+/** An app's action that opens a dialog, with the control focus returns to when it closes. */
+export interface AppAction {
+  app: RegisteredApp;
+  trigger: HTMLElement;
+}
+
+/** Settings → Apps: the apps that sign in with ingresso, for administrators (L2-104), with each app's actions (L2-112 to L2-115). */
 @Component({
   selector: 'ig-apps-card',
-  imports: [Alert, Button, Card, EmptyState, Icon, List, ListItem, Skeleton],
+  imports: [
+    Alert,
+    Badge,
+    Button,
+    Card,
+    EmptyState,
+    Icon,
+    List,
+    ListItem,
+    Menu,
+    MenuDivider,
+    MenuItem,
+    MenuTrigger,
+    Skeleton,
+  ],
   template: `
     <section ig-card title="Apps">
       @if (load() !== 'ready' || apps().length) {
@@ -31,7 +66,56 @@ type Load = 'loading' | 'ready' | 'failed';
           @if (apps().length) {
             <ul ig-list surface aria-label="Registered apps">
               @for (app of apps(); track app.clientId) {
-                <li ig-list-item [title]="app.name" [meta]="meta(app)"></li>
+                <li ig-list-item [title]="app.name" [meta]="meta(app)">
+                  <span #actions slot="action" class="actions">
+                    @if (app.disabled) {
+                      <ig-badge>Disabled</ig-badge>
+                    }
+                    <button
+                      ig-button
+                      type="button"
+                      appearance="ghost"
+                      size="sm"
+                      iconOnly
+                      [attr.aria-label]="'Actions for ' + app.name"
+                      [igMenuTriggerFor]="menu"
+                    >
+                      <ig-icon name="more" />
+                    </button>
+                    <ng-template #menu>
+                      <ig-menu [attr.aria-label]="app.name">
+                        <button
+                          ig-menu-item
+                          type="button"
+                          (triggered)="edit.emit({ app, trigger: menuButton(actions) })"
+                        >
+                          <ig-icon name="edit" size="sm" />Edit
+                        </button>
+                        @if (app.confidential) {
+                          <button
+                            ig-menu-item
+                            type="button"
+                            (triggered)="rotateSecret.emit({ app, trigger: menuButton(actions) })"
+                          >
+                            <ig-icon name="refresh" size="sm" />Rotate secret
+                          </button>
+                        }
+                        <button ig-menu-item type="button" (triggered)="setDisabled(app, !app.disabled)">
+                          <ig-icon name="lock" size="sm" />{{ app.disabled ? 'Enable' : 'Disable' }}
+                        </button>
+                        <ig-menu-divider />
+                        <button
+                          ig-menu-item
+                          kind="danger"
+                          type="button"
+                          (triggered)="delete.emit({ app, trigger: menuButton(actions) })"
+                        >
+                          <ig-icon name="trash" size="sm" />Delete
+                        </button>
+                      </ig-menu>
+                    </ng-template>
+                  </span>
+                </li>
               }
             </ul>
           } @else {
@@ -57,6 +141,11 @@ type Load = 'loading' | 'ready' | 'failed';
       color: var(--colorNeutralForeground2);
       margin-bottom: var(--spacingVerticalL);
     }
+    .actions {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacingHorizontalS);
+    }
     .loading {
       display: grid;
       gap: var(--spacingVerticalS);
@@ -66,9 +155,16 @@ type Load = 'loading' | 'ready' | 'failed';
 })
 export class AppsCard implements OnInit {
   private readonly clients = inject(CLIENTS_API);
+  private readonly toasts = inject(ToastService);
 
   /** Register an app was chosen; the page opens the dialog and calls `reload` after. */
   readonly register = output<Event>();
+  /** Edit was chosen in an app's actions; the page opens the edit dialog. */
+  readonly edit = output<AppAction>();
+  /** Rotate secret was chosen for a confidential app; the page asks and shows the new secret. */
+  readonly rotateSecret = output<AppAction>();
+  /** Delete was chosen; the page asks for the name and deletes the app. */
+  readonly delete = output<AppAction>();
 
   protected readonly load = signal<Load>('loading');
   protected readonly apps = signal<RegisteredApp[]>([]);
@@ -87,6 +183,35 @@ export class AppsCard implements OnInit {
       },
       error: () => this.load.set('failed'),
     });
+  }
+
+  /** Disables or enables an app at once and confirms it with a toast (L2-114). */
+  protected setDisabled(app: RegisteredApp, disabled: boolean): void {
+    this.clients.setDisabled(app.clientId, disabled).subscribe({
+      next: (changed) => {
+        this.apps.update((apps) => apps.map((a) => (a.clientId === changed.clientId ? changed : a)));
+        this.toasts.show(
+          disabled
+            ? {
+                kind: 'success',
+                title: 'App disabled',
+                text: `${app.name} can’t sign anyone in until you enable it.`,
+              }
+            : { kind: 'success', title: 'App enabled', text: `${app.name} can sign people in again.` },
+        );
+      },
+      error: () =>
+        this.toasts.show({
+          kind: 'danger',
+          title: disabled ? 'We couldn’t disable the app' : 'We couldn’t enable the app',
+          text: 'Try again in a moment.',
+        }),
+    });
+  }
+
+  /** The actions button in a row, where focus returns after a dialog it opened. */
+  protected menuButton(actions: HTMLElement): HTMLElement {
+    return actions.querySelector('button') ?? actions;
   }
 
   protected meta(app: RegisteredApp): string {

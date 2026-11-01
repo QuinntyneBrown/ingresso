@@ -6,7 +6,7 @@ namespace Ingresso.Application.Clients;
 /// </summary>
 public sealed record ClientDto(
     string ClientId, string Name, IReadOnlyList<string> RedirectUris, IReadOnlyList<string> PostLogoutRedirectUris, IReadOnlyList<string> Scopes,
-    string? FrontChannelLogoutUri = null, bool Confidential = false, bool OfflineAccess = false);
+    string? FrontChannelLogoutUri = null, bool Confidential = false, bool OfflineAccess = false, bool Disabled = false);
 
 /// <summary>
 /// A validated app to register. <paramref name="ClientId"/> is generated unless given (seeded apps use a fixed one);

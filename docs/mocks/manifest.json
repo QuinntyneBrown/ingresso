@@ -121,6 +121,7 @@
         "invalid",
         "success",
         "apps",
+        "apps-menu",
         "apps-empty",
         "apps-loading",
         "apps-error"
@@ -306,7 +307,9 @@
         "default",
         "invalid",
         "busy",
-        "error"
+        "error",
+        "edit",
+        "edit-busy"
       ],
       "opens_from": "settings",
       "requirements": []
@@ -317,7 +320,8 @@
       "title": "Client secret",
       "states": [
         "default",
-        "copied"
+        "copied",
+        "rotated"
       ],
       "opens_from": "register-app",
       "requirements": [],
@@ -325,6 +329,36 @@
         "busy": "Nothing is saved from this dialog; it only shows the new secret.",
         "invalid": "It has no input.",
         "error": "It opens only after the app was registered."
+      }
+    },
+    {
+      "id": "rotate-secret",
+      "kind": "dialog",
+      "title": "Rotate secret",
+      "states": [
+        "default",
+        "busy",
+        "error"
+      ],
+      "opens_from": "settings",
+      "requirements": [],
+      "not_applicable": {
+        "invalid": "It has no input; it only confirms."
+      }
+    },
+    {
+      "id": "delete-client",
+      "kind": "dialog",
+      "title": "Delete app",
+      "states": [
+        "default",
+        "busy",
+        "error"
+      ],
+      "opens_from": "settings",
+      "requirements": [],
+      "not_applicable": {
+        "invalid": "Delete app stays disabled until the name matches, so nothing invalid can be sent."
       }
     },
     {
