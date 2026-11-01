@@ -51,9 +51,11 @@ public static class AuthenticationSetup
         services.AddScoped<SessionSignIn>();
 
         services.AddScoped<IAuthorizationHandler, VerifiedEmailHandler>();
+        services.AddScoped<IAuthorizationHandler, AdministratorHandler>();
         services.AddAuthorizationBuilder()
             .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())
-            .AddPolicy(AuthPolicies.VerifiedEmail, policy => policy.RequireAuthenticatedUser().AddRequirements(new VerifiedEmailRequirement()));
+            .AddPolicy(AuthPolicies.VerifiedEmail, policy => policy.RequireAuthenticatedUser().AddRequirements(new VerifiedEmailRequirement()))
+            .AddPolicy(AuthPolicies.Administrator, policy => policy.RequireAuthenticatedUser().AddRequirements(new AdministratorRequirement()));
         return services;
     }
 }
