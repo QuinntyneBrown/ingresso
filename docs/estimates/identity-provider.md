@@ -2,4 +2,4 @@
 
 | Design | Effort | Complete |
 |---|---|---|
-| register-a-client | 1.5 days | 0% |
+| register-a-client | 1.5 days | 100% |
