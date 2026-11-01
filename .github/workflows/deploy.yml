@@ -52,6 +52,7 @@ jobs:
           az group create --name "$RESOURCE_GROUP" --location "${{ vars.AZURE_LOCATION || 'canadacentral' }}" --output none
           az deployment group create --resource-group "$RESOURCE_GROUP" --template-file infra/main.bicep \
             --parameters sqlAdminPassword='${{ secrets.SQL_ADMIN_PASSWORD }}' certificatePassword='${{ secrets.IDP_CERT_PASSWORD }}' \
+              emailDomainLinked=${{ vars.EMAIL_DOMAIN_LINKED || 'false' }} \
             --query properties.outputs --output json > outputs.json
           echo "site=$(jq -r .siteName.value outputs.json)" >> "$GITHUB_OUTPUT"
           echo "url=$(jq -r .siteUrl.value outputs.json)" >> "$GITHUB_OUTPUT"

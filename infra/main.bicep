@@ -15,10 +15,18 @@ param certificatePath string = '/home/site/wwwroot/certs/ingresso.pfx'
 @secure()
 param certificatePassword string
 
+@description('Domain the sign-in emails are sent from; its DNS must carry the verification, SPF and DKIM records Azure Communication Services asks for.')
+param emailDomain string = 'ingresso.ca'
+param emailSenderUsername string = 'noreply'
+@description('Set once the email domain shows as Verified: links it to the Communication Services resource and switches the API to send real mail.')
+param emailDomainLinked bool = false
+
 var suffix = uniqueString(resourceGroup().id)
 var siteName = '${name}-${suffix}'
 var sqlName = '${name}-sql-${suffix}'
 var dbName = 'Ingresso'
+var emailServiceName = '${name}-email-${suffix}'
+var communicationName = '${name}-comm-${suffix}'
 
 resource sql 'Microsoft.Sql/servers@2023-08-01-preview' = {
   name: sqlName
@@ -55,6 +63,41 @@ resource plan 'Microsoft.Web/serverfarms@2023-12-01' = {
 
 var connectionString = 'Server=tcp:${sql.properties.fullyQualifiedDomainName},1433;Database=${dbName};User ID=${sqlAdminLogin};Password=${sqlAdminPassword};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
 
+// Outbound email: Azure Communication Services with a customer-managed sender domain (ADR 0023).
+resource emailService 'Microsoft.Communication/emailServices@2023-04-01' = {
+  name: emailServiceName
+  location: 'global'
+  properties: { dataLocation: 'Canada' }
+}
+
+resource emailSenderDomain 'Microsoft.Communication/emailServices/domains@2023-04-01' = {
+  parent: emailService
+  name: emailDomain
+  location: 'global'
+  properties: {
+    domainManagement: 'CustomerManaged'
+    userEngagementTracking: 'Disabled'
+  }
+}
+
+resource emailSender 'Microsoft.Communication/emailServices/domains/senderUsernames@2023-04-01' = {
+  parent: emailSenderDomain
+  name: emailSenderUsername
+  properties: {
+    username: emailSenderUsername
+    displayName: 'ingresso'
+  }
+}
+
+resource communication 'Microsoft.Communication/communicationServices@2023-04-01' = {
+  name: communicationName
+  location: 'global'
+  properties: {
+    dataLocation: 'Canada'
+    linkedDomains: emailDomainLinked ? [emailSenderDomain.id] : []
+  }
+}
+
 resource site 'Microsoft.Web/sites@2023-12-01' = {
   name: siteName
   location: location
@@ -76,6 +119,9 @@ resource site 'Microsoft.Web/sites@2023-12-01' = {
         { name: 'IdentityProvider__SigningCertificate__Password', value: certificatePassword }
         { name: 'DataProtection__Certificate__Path', value: certificatePath }
         { name: 'DataProtection__Certificate__Password', value: certificatePassword }
+        { name: 'Email__Provider', value: emailDomainLinked ? 'AzureCommunicationServices' : 'DevMailbox' }
+        { name: 'Email__From', value: '${emailSenderUsername}@${emailDomain}' }
+        { name: 'Email__AzureCommunicationServices__ConnectionString', value: communication.listKeys().primaryConnectionString }
       ]
       connectionStrings: [
         { name: 'Default', type: 'SQLAzure', connectionString: connectionString }
@@ -89,4 +135,6 @@ output siteUrl string = 'https://${site.properties.defaultHostName}'
 output sqlServerName string = sql.name
 output sqlServerFqdn string = sql.properties.fullyQualifiedDomainName
 output databaseName string = dbName
+output emailServiceName string = emailService.name
+output emailDomainVerification object = emailSenderDomain.properties.verificationRecords
 

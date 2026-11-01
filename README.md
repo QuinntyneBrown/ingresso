@@ -274,3 +274,9 @@ month (ADR 0023). One-time setup: create an Entra app registration with a federa
 GitHub environment and Contributor on the subscription, then set secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`,
 `AZURE_SUBSCRIPTION_ID`, `SQL_ADMIN_PASSWORD`, `IDP_CERT_PFX_BASE64`, `IDP_CERT_PASSWORD` and variable
 `AZURE_RESOURCE_GROUP` (optional `AZURE_LOCATION`, `PUBLIC_BASE_URL`).
+
+Sign-in emails are sent through Azure Communication Services from `noreply@ingresso.ca`. The first deploy creates the
+email service and the `ingresso.ca` sender domain; add the verification TXT, SPF and DKIM records it reports (the
+`emailDomainVerification` deployment output) to the domain's DNS and start verification in the Azure portal. Once
+the domain shows as Verified, set the repository variable `EMAIL_DOMAIN_LINKED` to `true` and redeploy; until then
+production keeps mail in the dev mailbox and sends nothing.
