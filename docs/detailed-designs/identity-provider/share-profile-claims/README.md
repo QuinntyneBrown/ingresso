@@ -24,7 +24,8 @@ The profile is shown in a card and edited in a dialog ([ADR 0017](../../../adr/0
   - `GET /api/profile` returns `{ displayName, email, emailVerified }`. `displayName` is null when it isn't set.
   - `PUT /api/profile` takes `{ displayName }` and returns the profile. It answers 400 with field errors and 401
     without a session.
-  - `GetProfileQuery` and `UpdateProfileCommand` live in `Ingresso.Application/Identity`. The validator trims the
+  - `GetProfileQuery` and `UpdateProfileCommand` live in `Ingresso.Application/Identity/Profile.cs`, handled by
+    `ProfileHandlers`. The validator trims the
     name, then checks it is at most 100 characters with no control characters (Unicode category `Cc`, which
     includes line breaks). Empty or whitespace clears the name (`null`).
 - **Claims at sign-in** — `AuthorizationController.Authorize` adds claims by the granted scopes:
@@ -40,9 +41,10 @@ The profile is shown in a card and edited in a dialog ([ADR 0017](../../../adr/0
 - **Scopes** — `IdentityProviderSetup` registers `openid`, `profile`, `email` and `offline_access`, and lists the
   claims `sub`, `name`, `email` and `email_verified` in discovery. `OpenIddictClientRegistry` gives every app
   `Permissions.Scopes.Profile` and `Permissions.Scopes.Email`, and hides both in the app's scope list as it
-  already hides `email`. The CLI `seed` command grants both to apps registered before, idempotently; the API
-  changes no data on startup.
-- **Userinfo** — `connect/userinfo` with pass-through to `UserinfoController`. OpenIddict validates the access
+  already hides `email`. The CLI `seed` command grants both to apps registered before through
+  `IClientRegistry.AllowIdentityScopesAsync`, idempotently; the API changes no data on startup.
+- **Userinfo** — `connect/userinfo` with pass-through to `UserinfoController`, which is `[AllowAnonymous]` because
+  the bearer access token, not the cookie, authenticates it. OpenIddict validates the access
   token and answers 401 with `WWW-Authenticate` when it is missing, invalid or expired. The controller loads the
   account and returns `sub`, plus `name` with `profile`, and `email` and `email_verified` with `email`.
 - **Web app**:
@@ -51,8 +53,8 @@ The profile is shown in a card and edited in a dialog ([ADR 0017](../../../adr/0
     `Skeleton` and `Alert`. It emits `edit` with the loaded profile.
   - `EditProfileDialog` (`dialogs/edit-profile`): `DialogShell`, `ErrorSummary`, `FormField`, `Input` and
     `Alert`. It closes with the saved profile.
-  - On save, `SettingsPage` shows the "Profile saved" toast, reloads the card and refreshes the session, so the
-    header greeting and initials update.
+  - On save, `SettingsPage` shows the "Profile saved" toast, shows the saved profile in the card and calls
+    `SessionStore.refresh()`, so the header greeting and initials update.
 - **Sample app** — asks for `openid profile email sample-api.read offline_access` and greets the person with
   "Hello, <name>" when the ID token carries `name`, and with their email otherwise.
 
