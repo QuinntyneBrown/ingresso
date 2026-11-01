@@ -163,4 +163,21 @@ public sealed class ConnectedAppsTests(ApiFactory factory) : IClassFixture<ApiFa
         Assert.Equal(HttpStatusCode.BadRequest, revoked.StatusCode);
         Assert.Single(await ListAsync(browser));
     }
+
+    // Acceptance Test
+    // Traces to: L2-131
+    // Description: After revoking, the next sign-in to the app goes to the consent page again.
+    [Fact]
+    public async Task After_revoking_the_next_sign_in_asks_again()
+    {
+        var app = await RelyingParty.RegisterAskingConsentAsync(factory, offlineAccess: true);
+        var browser = await PersonAsync();
+        await ConnectAsync(browser, app);
+
+        await browser.DeleteAsync($"/api/connected-apps/{app.ClientId}");
+        var authorized = await browser.GetAsync(app.AuthorizePath(new Dictionary<string, string?> { ["scope"] = Scopes }));
+
+        Assert.Equal(HttpStatusCode.Redirect, authorized.StatusCode);
+        Assert.StartsWith("/consent?", authorized.Headers.Location!.OriginalString);
+    }
 }

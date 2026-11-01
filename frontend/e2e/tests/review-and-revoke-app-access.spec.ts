@@ -1,5 +1,7 @@
 import { expect, test } from '../fixtures';
 import { AppShell } from '../pages/app-shell';
+import { ConsentPage } from '../pages/consent.page';
+import { SampleAppPage } from '../pages/sample-app.page';
 import { RevokeAccessDialog } from '../pages/revoke-access.dialog';
 import { SettingsPage } from '../pages/settings.page';
 import { approveThroughApi, SAMPLE_APP_CLIENT_ID } from '../support/apps';
@@ -112,5 +114,32 @@ test.describe('Review and revoke app access', () => {
     await expect(revoke.dialog).toBeVisible();
     await revoke.cancel.click();
     await expect(settings.connectedApp('Sample app')).toBeVisible();
+  });
+
+  // Acceptance Test
+  // Traces to: L2-131, L2-128
+  // Description: An app the person signed in to shows as used; after revoking it, signing in to it asks again.
+  test('after revoking, the app asks again', async ({ page }) => {
+    const sample = new SampleAppPage(page);
+    const consent = new ConsentPage(page);
+    const settings = new SettingsPage(page);
+    const revoke = new RevokeAccessDialog(page);
+    await signInAsNewPerson(page);
+    await sample.open();
+    await sample.signInWithIngresso.click();
+    await sample.waitUntilSignedIn();
+
+    await settings.open();
+    await expect(settings.connectedApp('Sample app')).toContainText(/· Last used /);
+    await settings.revokeAccessFor('Sample app').click();
+    await revoke.revoke.click();
+    await expect(settings.noConnectedApps).toBeVisible();
+
+    await sample.forgetItsSession();
+    await sample.open();
+    await sample.signInWithIngresso.click();
+
+    await consent.waitUntilShown();
+    await expect(consent.heading).toHaveText('Sample app wants to use your ingresso account');
   });
 });
