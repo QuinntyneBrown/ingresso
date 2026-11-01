@@ -81,6 +81,8 @@ export async function startSampleApp(
         ASPNETCORE_ENVIRONMENT: 'Development',
         ASPNETCORE_URLS: SAMPLE_APP_URL,
         SampleApp__Authority: webUrl,
+        // The suite rotates signing keys more than once a run (journey 26).
+        SampleApp__KeysRefreshInterval: '00:00:01',
         DOTNET_CLI_TELEMETRY_OPTOUT: '1',
       },
       stdio: process.env['E2E_API_LOGS'] ? 'inherit' : 'ignore',

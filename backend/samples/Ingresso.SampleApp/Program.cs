@@ -19,6 +19,10 @@ var audience = builder.Configuration["SampleApp:Audience"] ?? "ingresso-sample-a
 var apiScope = builder.Configuration["SampleApp:Scope"] ?? "sample-api.read";
 var localAuthority = authority.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase);
 
+// How soon after one refetch of ingresso's keys a token with an unknown key may trigger another (ASP.NET's default
+// is 5 minutes). Playwright rotates keys more than once a run, so it shortens this.
+var keysRefreshInterval = builder.Configuration.GetValue<TimeSpan?>("SampleApp:KeysRefreshInterval");
+
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -46,6 +50,7 @@ builder.Services.AddAuthentication(options =>
         options.MapInboundClaims = false;
         options.GetClaimsFromUserInfoEndpoint = false;
         options.RequireHttpsMetadata = !localAuthority;
+        options.RefreshInterval = keysRefreshInterval ?? options.RefreshInterval;
         // Local runs are plain http; the correlation and nonce cookies must still round-trip.
         options.CorrelationCookie.SameSite = SameSiteMode.Lax;
         options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
@@ -81,6 +86,7 @@ builder.Services.AddAuthentication(options =>
         // An expired token is refused at once, not five minutes later; the app renews it instead.
         options.TokenValidationParameters.ClockSkew = TimeSpan.Zero;
         options.RequireHttpsMetadata = !localAuthority;
+        options.RefreshInterval = keysRefreshInterval ?? options.RefreshInterval;
     });
 builder.Services.AddAuthorization();
 builder.Services.AddHttpClient();
