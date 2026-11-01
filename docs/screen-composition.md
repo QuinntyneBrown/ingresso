@@ -44,12 +44,14 @@ behind their backdrop; only the dialog is mapped.
   it does not compete with the header's `/`. `EmptyState` is the no-matches state. The Add app dialog's
   "Browse directory" is a `Button` (`ghost`) that closes the dialog and routes here.
 
-### Sign in — `/sign-in` (`pages/sign-in`: default, invalid, submitting, error, sent, expired, used, link-invalid, rate-limited)
+### Sign in — `/sign-in` (`pages/sign-in`: default, invalid, submitting, error, sent, expired, used, link-invalid, rate-limited, for-app, for-app-sent)
 
 - Library: `Card`, `Logo`, `FormField`, `Input`, `ErrorSummary` (invalid), `Button` (`busy` while submitting;
   "Use a different email" in sent), `Alert` (`success` for sent; `warning` for expired, used and rate-limited;
   `danger` for link-invalid and error), `SkipLink`.
 - Local: auth layout (`shared/auth-layout`). The screen sits outside the shell: no header, footer or session load.
+- `for-app` and `for-app-sent` (journey 16): the same components; the heading and lead name the app the person is
+  signing in to, looked up from the `returnUrl`'s `client_id`.
 
 ### Verify your email — `/verify-email` (`pages/verify-email`: default, sending, sent, rate-limited, error, link-invalid)
 
@@ -79,6 +81,11 @@ behind their backdrop; only the dialog is mapped.
 
 - Library: `StatusPage`, `Button`, `Cluster`.
 - Local: none.
+
+### Can’t sign in to this app — `/authorize-error` (`pages/authorize-error`: default)
+
+- Library: `SiteHeader` (brand slot only, with `Logo`), `StatusPage`, `Button`.
+- Local: none. The screen sits outside the shell, because the person may be signed out.
 
 ## Dialogs
 
