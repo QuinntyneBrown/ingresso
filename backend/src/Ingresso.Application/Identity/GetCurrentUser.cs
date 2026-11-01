@@ -4,8 +4,11 @@ using Ingresso.Application.Common.Interfaces;
 
 namespace Ingresso.Application.Identity;
 
-/// <summary>What the signed-in header needs (L2-050), and whether the address is verified (L2-029). Unread notifications arrive with journey 21.</summary>
-public sealed record CurrentUserDto(string Name, string Email, string Initials, string Role, int UnreadNotificationCount, bool EmailVerified);
+/// <summary>
+/// What the signed-in header and greeting need, and whether the address is verified (L2-029). <c>DisplayName</c> is
+/// null when the person has not set one; it is never the email (L2-146, ADR 0024). Unread notifications arrive with journey 21.
+/// </summary>
+public sealed record CurrentUserDto(string? DisplayName, string Email, string Initials, string Role, int UnreadNotificationCount, bool EmailVerified);
 
 public sealed record GetCurrentUserQuery : IRequest<CurrentUserDto?>;
 
@@ -26,6 +29,6 @@ public sealed class GetCurrentUserQueryHandler(IAppDbContext db, ICurrentUser cu
 
         var email = user.Email.Trim().ToLowerInvariant();
         var verified = await db.VerifiedEmails.AnyAsync(v => v.NormalizedEmail == email, cancellationToken);
-        return new CurrentUserDto(user.Name ?? user.Email, user.Email, user.Initials, user.Role.ToString().ToLowerInvariant(), 0, verified);
+        return new CurrentUserDto(user.Name, user.Email, user.Initials, user.Role.ToString().ToLowerInvariant(), 0, verified);
     }
 }

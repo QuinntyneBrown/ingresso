@@ -37,7 +37,7 @@ test.describe('Sign in with an email link', () => {
   });
 
   // Acceptance Test
-  // Traces to: L2-027, L2-028, L2-030
+  // Traces to: L2-027, L2-028, L2-030, L2-146
   // Description: Asking for a link shows check-your-inbox; opening the emailed link signs the person in on their own dashboard.
   test('the emailed link signs the person in', async ({ page }) => {
     const signIn = new SignInPage(page);
@@ -52,7 +52,7 @@ test.describe('Sign in with an email link', () => {
     await expect(signIn.sentMessage).toContainText('15 minutes');
     await signIn.followLink(await signIn.linkFromMailbox(email));
     await expect(dashboard.heading).toBeVisible();
-    await expect(dashboard.heading).toContainText('Good afternoon');
+    await expect(dashboard.heading).toHaveText('Hi there');
     expect(new URL(page.url()).pathname).toBe('/');
   });
 

@@ -48,13 +48,13 @@ public sealed class ProfileApiTests(ApiFactory factory) : IClassFixture<ApiFacto
         Assert.Equal("Maya Reyes", (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("displayName").GetString());
         Assert.Equal("Maya Reyes", (await ProfileOf(client)).GetProperty("displayName").GetString());
         var me = await client.GetFromJsonAsync<JsonElement>("/api/auth/me");
-        Assert.Equal("Maya Reyes", me.GetProperty("name").GetString());
+        Assert.Equal("Maya Reyes", me.GetProperty("displayName").GetString());
         Assert.Equal("MR", me.GetProperty("initials").GetString());
     }
 
     // Acceptance Test
     // Traces to: L2-117
-    // Description: An empty name clears it, and the email is used again.
+    // Description: An empty name clears it; the current user has no display name and keeps the email (L2-146).
     [Fact]
     public async Task An_empty_name_clears_it()
     {
@@ -65,7 +65,9 @@ public sealed class ProfileApiTests(ApiFactory factory) : IClassFixture<ApiFacto
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(JsonValueKind.Null, (await ProfileOf(client)).GetProperty("displayName").ValueKind);
-        Assert.Equal(email, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("name").GetString());
+        var me = await client.GetFromJsonAsync<JsonElement>("/api/auth/me");
+        Assert.Equal(JsonValueKind.Null, me.GetProperty("displayName").ValueKind);
+        Assert.Equal(email, me.GetProperty("email").GetString());
     }
 
     // Acceptance Test

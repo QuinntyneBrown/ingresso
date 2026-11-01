@@ -1,7 +1,7 @@
 import { test as base, expect } from '@playwright/test';
 import { installFakeApi } from './support/stub-api';
 
-/** "Today" in every test is Monday, November 2, 2026, 2:00 PM UTC, so the greeting is "Good afternoon". */
+/** "Today" in every test is Monday, November 2, 2026, 2:00 PM UTC. */
 export const TODAY = new Date('2026-11-02T14:00:00Z');
 
 export const test = base.extend({

@@ -5,7 +5,8 @@ import { API_BASE_URL } from '../core/api-config';
 
 /** The signed-in user, as the header and greeting show them. */
 export interface CurrentUser {
-  name: string;
+  /** The display name the person saved, or null when they have none; never the email (L2-146, ADR 0024). */
+  displayName: string | null;
   email: string;
   initials: string;
   /** The workspace the person signed in to, such as "Northwind". */

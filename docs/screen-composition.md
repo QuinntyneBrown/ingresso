@@ -27,7 +27,7 @@ behind their backdrop; only the dialog is mapped.
 
 ## Pages
 
-### Dashboard — `/` (`pages/dashboard`: default, loading, empty, error, no-results, search-results, editing, editing-refused, editing-narrow, offline)
+### Dashboard — `/` (`pages/dashboard`: default, loading, empty, error, no-results, search-results, editing, editing-refused, editing-narrow, offline, account-menu, name-unset, name-long, edit-profile)
 
 - Library: `TileGrid` + `TileGridTile` (tiles; collapse below 1024px; `ResizeObserver`-measured columns), `AppTile`
   (one per cell; large when a tile spans at least 4 by 3; `highlighted` for the quick-jump match), `LayoutBar` (editing; actions are `Button`s), `Skeleton`
@@ -35,6 +35,10 @@ behind their backdrop; only the dialog is mapped.
   `banner`), `Button`, `Icon`.
 - Local: page intro; mapping tiles to `TileGridItem` with the L2-051 limits; tile chrome turned off on the grid
   (`--ig-tile-grid-tile-*` knobs) because `AppTile` draws the card.
+- Greeting (journey 28, L2-146): the intro's `h1` reads "Hi, {display name}" or "Hi there", and wraps with
+  `overflow-wrap: anywhere` (name-long). In name-unset, "Add your name" is a `Button` (`appearance="link"`, `size="sm"`)
+  under the summary that opens the existing `EditProfileDialog` in a CDK `Dialog` with `DialogShell` (edit-profile);
+  the "Profile saved" toast goes through `ToastService`.
 
 ### Directory — `/directory` (`pages/directory`: default, loading, empty (no matches), search-results, error)
 

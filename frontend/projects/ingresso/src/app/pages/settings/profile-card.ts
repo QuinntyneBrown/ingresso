@@ -44,7 +44,7 @@ export interface ProfileEdit {
               <li
                 ig-list-item
                 title="Display name"
-                [meta]="current.displayName ?? 'Not set. Your greeting and apps use your email.'"
+                [meta]="current.displayName ?? 'Not set. Add one to be greeted by name.'"
               ></li>
               <li ig-list-item title="Email" [meta]="current.email"></li>
             </ul>

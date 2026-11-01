@@ -35,7 +35,10 @@
         "offline",
         "editing-refused",
         "editing-narrow",
-        "account-menu"
+        "account-menu",
+        "name-unset",
+        "name-long",
+        "edit-profile"
       ],
       "route": "/"
     },

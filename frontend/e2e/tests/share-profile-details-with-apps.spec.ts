@@ -18,9 +18,7 @@ test.describe('Share profile details with apps', () => {
     const email = await signInAsNewPerson(page);
     await settings.open();
     await expect(settings.profileValue('Email')).toHaveText(email);
-    await expect(settings.profileValue('Display name')).toHaveText(
-      'Not set. Your greeting and apps use your email.',
-    );
+    await expect(settings.profileValue('Display name')).toHaveText('Not set. Add one to be greeted by name.');
 
     await settings.editProfile.click();
     await expect(edit.email).toContainText(email);
@@ -51,9 +49,7 @@ test.describe('Share profile details with apps', () => {
     await edit.displayName.fill('');
     await edit.save.click();
 
-    await expect(settings.profileValue('Display name')).toHaveText(
-      'Not set. Your greeting and apps use your email.',
-    );
+    await expect(settings.profileValue('Display name')).toHaveText('Not set. Add one to be greeted by name.');
   });
 
   // Acceptance Test

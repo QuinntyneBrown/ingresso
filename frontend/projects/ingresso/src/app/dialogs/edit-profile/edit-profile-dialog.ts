@@ -50,7 +50,7 @@ const NAME_ID = 'profile-display-name';
           label="Display name"
           optional
           [controlId]="nameId"
-          hint="Shown in your greeting, and to apps that ask for your profile. Leave it empty to use your email."
+          hint="Shown in your greeting, and to apps that ask for your profile."
           [error]="error()"
         >
           <input

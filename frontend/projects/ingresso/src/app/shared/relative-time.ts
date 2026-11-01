@@ -60,13 +60,6 @@ export function openedTitle(lastOpenedAt: string | null | undefined): string | n
   return new Date(lastOpenedAt).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' });
 }
 
-/** "Good morning", "Good afternoon" or "Good evening" for a local hour. */
-export function greetingFor(hour: number): string {
-  if (hour < 12) return 'Good morning';
-  if (hour < 18) return 'Good afternoon';
-  return 'Good evening';
-}
-
 const TITLES: Record<string, (subject: string) => string> = {
   'signed-in': () => 'Signed in to ingresso',
   'signed-in-to-app': (s) => `Signed in to ${s}`,

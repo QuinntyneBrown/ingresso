@@ -13,6 +13,7 @@ export class AppShell {
   readonly avatar: Locator;
   readonly accountMenu: Locator;
   readonly signOutItem: Locator;
+  readonly settingsItem: Locator;
   readonly footerNote: Locator;
   readonly brandGuide: Locator;
   readonly skipLink: Locator;
@@ -33,6 +34,7 @@ export class AppShell {
     this.avatar = header.locator('ig-avatar');
     this.accountMenu = header.getByRole('button', { name: 'Account menu' });
     this.signOutItem = page.getByRole('menuitem', { name: 'Sign out' });
+    this.settingsItem = page.getByRole('menuitem', { name: 'Settings' });
     const footer = page.getByRole('contentinfo');
     this.footerNote = footer.getByText('Apps open in a new tab.');
     this.brandGuide = footer.getByRole('link', { name: 'Brand guide' });

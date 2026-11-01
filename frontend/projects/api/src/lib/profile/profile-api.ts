@@ -5,7 +5,7 @@ import { API_BASE_URL } from '../core/api-config';
 
 /** The signed-in person's profile, for Settings → Profile (L2-117). */
 export interface Profile {
-  /** Null when not set; the email is used instead. */
+  /** Null when not set: the dashboard says "Hi there" and apps that ask for `profile` get no name (L2-146). */
   displayName: string | null;
   email: string;
   emailVerified: boolean;

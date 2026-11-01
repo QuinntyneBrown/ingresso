@@ -24,7 +24,7 @@ import {
   ToastService,
 } from 'components';
 import { packMatches } from '../../shared/pack-matches';
-import { greetingFor, openedLabel, openedTitle } from '../../shared/relative-time';
+import { openedLabel, openedTitle } from '../../shared/relative-time';
 import { AppDialogs } from '../../state/app-dialogs';
 import { SessionStore } from '../../state/session-store';
 import { TilesStore } from '../../state/tiles-store';
@@ -48,8 +48,22 @@ import { injectWideViewport } from '../../shared/wide-viewport';
   template: `
     <div class="page">
       <section class="intro">
-        <h1>{{ greeting() }}{{ firstName() ? ', ' + firstName() : '' }}</h1>
+        <h1>{{ greeting() }}</h1>
         <p class="text-muted">{{ summary() }}</p>
+        @if (session.user() && !session.user()!.displayName) {
+          <p class="intro__action">
+            <button
+              ig-button
+              type="button"
+              appearance="link"
+              size="sm"
+              aria-haspopup="dialog"
+              (click)="addName($event)"
+            >
+              Add your name
+            </button>
+          </p>
+        }
         <p class="visually-hidden" role="status">{{ store.matchSummary() }}</p>
       </section>
 
@@ -138,7 +152,7 @@ import { injectWideViewport } from '../../shared/wide-viewport';
 export class DashboardPage {
   protected readonly store = inject(TilesStore);
   protected readonly dialogs = inject(AppDialogs);
-  private readonly session = inject(SessionStore);
+  protected readonly session = inject(SessionStore);
   private readonly toasts = inject(ToastService);
   private readonly router = inject(Router);
 
@@ -185,8 +199,11 @@ export class DashboardPage {
     // Edit mode holds no unsaved work, and the dashboard always opens in normal mode (L2-020).
     inject(DestroyRef).onDestroy(() => this.store.editing.set(false));
   }
-  protected readonly greeting = computed(() => greetingFor(new Date().getHours()));
-  protected readonly firstName = computed(() => this.session.user()?.name.split(' ')[0] ?? '');
+  /** "Hi, {display name}" with the whole saved name, or "Hi there"; never the email (L2-146, ADR 0024). */
+  protected readonly greeting = computed(() => {
+    const name = this.session.user()?.displayName;
+    return name ? `Hi, ${name}` : 'Hi there';
+  });
   protected readonly summary = computed(() => {
     if (this.store.status() === 'loading') return 'Loading your apps…';
     const count = this.store.tiles().length;
@@ -199,6 +216,24 @@ export class DashboardPage {
   });
 
   protected readonly reload = (): void => this.store.load();
+
+  /** Add your name: Edit your profile from the dashboard; the saved name greets the person at once (L2-146). */
+  protected addName(event: Event): void {
+    const user = this.session.user();
+    if (!user) return;
+    const profile = { displayName: user.displayName, email: user.email, emailVerified: user.emailVerified };
+    this.dialogs.openEditProfile(profile, event.currentTarget as HTMLElement).subscribe((saved) => {
+      if (!saved) return;
+      this.session.refresh();
+      this.toasts.show({
+        kind: 'success',
+        title: 'Profile saved',
+        text: saved.displayName
+          ? `Apps that ask for your profile now see ${saved.displayName}.`
+          : 'Apps that ask for your profile now see your email.',
+      });
+    });
+  }
 
   protected label(tile: Tile): string {
     return openedLabel(tile.lastOpenedAt);

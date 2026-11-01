@@ -8,6 +8,8 @@ import { EditAppDialog } from './edit-app.dialog';
 export class DashboardPage {
   readonly shell: AppShell;
   readonly heading: Locator;
+  /** The intro's link to Edit your profile, shown while no display name is set (L2-146). */
+  readonly addYourName: Locator;
   readonly summary: Locator;
   readonly tiles: Locator;
   readonly emptyTitle: Locator;
@@ -29,6 +31,7 @@ export class DashboardPage {
   constructor(private readonly page: Page) {
     this.shell = new AppShell(page);
     this.heading = page.getByRole('heading', { level: 1 });
+    this.addYourName = page.locator('.intro').getByRole('button', { name: 'Add your name' });
     this.summary = page.locator('.intro p.text-muted');
     this.tiles = page.locator('ig-app-tile');
     this.emptyTitle = page.getByRole('heading', { name: 'No apps behind this door yet' });
@@ -84,6 +87,37 @@ export class DashboardPage {
       if (request.method() === 'PUT' && request.url().includes('/api/tiles/layout')) saves++;
     });
     return () => saves;
+  }
+
+  /** Shows the signed-in person with this display name (null: none), keeping the rest of the real current user. */
+  async showMockDisplayName(displayName: string | null): Promise<void> {
+    await this.page.route('**/api/auth/me', async (route) => {
+      const response = await route.fetch();
+      const me = await response.json();
+      const words = (displayName ?? '').split(' ').filter(Boolean);
+      const initials = words.length
+        ? words
+            .slice(0, 2)
+            .map((w) => w[0].toUpperCase())
+            .join('')
+        : me.email[0].toUpperCase();
+      await route.fulfill({ response, json: { ...me, displayName, initials } });
+    });
+  }
+
+  /** Whether the heading shows any markup from the display name as elements rather than text. */
+  async headingHasElements(): Promise<boolean> {
+    return this.heading.evaluate((h1) => h1.children.length > 0);
+  }
+
+  /** Marks the loaded document, so `wasReloaded` can tell whether the browser loaded the page again. */
+  async markPageLoad(): Promise<void> {
+    await this.page.evaluate(() => ((window as unknown as { igPageMark?: boolean }).igPageMark = true));
+  }
+
+  /** Whether the document marked by `markPageLoad` was replaced by a reload or a full navigation. */
+  async wasReloaded(): Promise<boolean> {
+    return this.page.evaluate(() => !(window as unknown as { igPageMark?: boolean }).igPageMark);
   }
 
   /** Whether the page scrolls sideways. */
