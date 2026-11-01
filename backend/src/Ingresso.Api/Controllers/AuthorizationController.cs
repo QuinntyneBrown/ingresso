@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using Ingresso.Api.Auth;
+using Ingresso.Application.Common.Interfaces;
 using Ingresso.Application.Identity;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -22,7 +24,7 @@ namespace Ingresso.Api.Controllers;
 [AllowAnonymous]
 [IgnoreAntiforgeryToken]
 [ApiExplorerSettings(IgnoreApi = true)]
-public sealed class AuthorizationController(ISender sender, IOpenIddictScopeManager scopes) : ControllerBase
+public sealed class AuthorizationController(ISender sender, IOpenIddictScopeManager scopes, IClock clock, IConfiguration configuration) : ControllerBase
 {
     [HttpGet("connect/authorize")]
     [HttpPost("connect/authorize")]
@@ -59,6 +61,7 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
         identity.SetClaim(Claims.Subject, person.UserId.ToString());
         identity.SetClaim("sid", sessionId);
         identity.SetClaim(Claims.Email, person.Email);
+        identity.SetClaim(IdentityProviderSetup.ChainStartedClaim, clock.UtcNow.ToString("O", CultureInfo.InvariantCulture));
         identity.SetScopes(request.GetScopes());
         // The access token's audience is each API whose scopes were granted (L2-097).
         var resources = new List<string>();
@@ -68,9 +71,13 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
         }
 
         identity.SetResources(resources.Distinct(StringComparer.Ordinal));
-        identity.SetDestinations(claim => claim.Type == "sid"
-            ? [Destinations.IdentityToken]
-            : [Destinations.IdentityToken, Destinations.AccessToken]);
+        // The chain start stays inside code and refresh tokens; no app ever sees it.
+        identity.SetDestinations(claim => claim.Type switch
+        {
+            "sid" => [Destinations.IdentityToken],
+            IdentityProviderSetup.ChainStartedClaim => [],
+            _ => [Destinations.IdentityToken, Destinations.AccessToken],
+        });
         return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
@@ -94,6 +101,18 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
             {
                 return Refuse("The ingresso session this token came from has ended.");
             }
+
+            // No token in the chain outlives its absolute lifetime (L2-109).
+            var left = DateTimeOffset.TryParse(principal.GetClaim(IdentityProviderSetup.ChainStartedClaim), CultureInfo.InvariantCulture, DateTimeStyles.None, out var started)
+                ? started + IdentityProviderSetup.RefreshTokenAbsoluteLifetime(configuration) - clock.UtcNow
+                : TimeSpan.Zero;
+            if (left <= TimeSpan.Zero)
+            {
+                return Refuse("This sign-in is too old to renew. Sign in again.");
+            }
+
+            var sliding = IdentityProviderSetup.RefreshTokenSlidingLifetime(configuration);
+            principal.SetRefreshTokenLifetime(left < sliding ? left : sliding);
         }
 
         return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);

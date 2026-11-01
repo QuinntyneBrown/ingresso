@@ -15,6 +15,17 @@ public static class IdentityProviderSetup
     /// <summary>Where an end-session request ingresso cannot trust sends the browser (L2-102).</summary>
     public const string SignOutErrorPath = "/authorize-error?flow=sign-out";
 
+    /// <summary>The claim inside code and refresh tokens holding when the chain's sign-in happened (L2-109).</summary>
+    public const string ChainStartedClaim = "ingresso_chain_started";
+
+    /// <summary>How long a refresh token lasts after it is issued; each renewal starts it again (L2-109).</summary>
+    public static TimeSpan RefreshTokenSlidingLifetime(IConfiguration configuration) =>
+        configuration.GetValue<TimeSpan?>("IdentityProvider:RefreshTokenSlidingLifetime") ?? TimeSpan.FromDays(14);
+
+    /// <summary>How long a chain of refresh tokens lasts after its sign-in, however often it renews (L2-109).</summary>
+    public static TimeSpan RefreshTokenAbsoluteLifetime(IConfiguration configuration) =>
+        configuration.GetValue<TimeSpan?>("IdentityProvider:RefreshTokenAbsoluteLifetime") ?? TimeSpan.FromDays(90);
+
     private static readonly Lazy<RsaSecurityKey> DevelopmentSigningKey = new(() => new RsaSecurityKey(RSA.Create(2048)));
     private static readonly Lazy<RsaSecurityKey> DevelopmentEncryptionKey = new(() => new RsaSecurityKey(RSA.Create(2048)));
 
@@ -35,8 +46,7 @@ public static class IdentityProviderSetup
             options.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
             // Apps allowed offline access renew their tokens with rolling refresh tokens (L2-107).
             options.AllowRefreshTokenFlow();
-            options.SetRefreshTokenLifetime(
-                configuration.GetValue<TimeSpan?>("IdentityProvider:RefreshTokenSlidingLifetime") ?? TimeSpan.FromDays(14));
+            options.SetRefreshTokenLifetime(RefreshTokenSlidingLifetime(configuration));
             // No grace period: a redeemed refresh token presented again revokes its whole chain at once (L2-108).
             options.SetRefreshTokenReuseLeeway(TimeSpan.Zero);
             options.Configure(o =>

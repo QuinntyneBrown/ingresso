@@ -34,6 +34,11 @@ if (builder.Configuration.GetValue("Outbox:Enabled", true))
     builder.Services.AddHostedService<OutboxProcessor>();
 }
 
+if (builder.Configuration.GetValue("IdentityProvider:Pruning:Enabled", true))
+{
+    builder.Services.AddHostedService<TokenPruningService>();
+}
+
 var app = builder.Build();
 await app.WarnIfPendingAsync();
 

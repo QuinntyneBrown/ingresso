@@ -161,4 +161,20 @@ public sealed class RefreshTokenTests(ApiFactory factory) : IClassFixture<ApiFac
         Assert.EndsWith("/connect/revoke", discovery.GetProperty("revocation_endpoint").GetString());
         Assert.Contains("refresh_token", discovery.GetProperty("grant_types_supported").EnumerateArray().Select(g => g.GetString()));
     }
+
+    // Acceptance Test
+    // Traces to: L2-109
+    // Description: The chain's start stays inside ingresso: neither the access token nor the ID token carries it.
+    [Fact]
+    public async Task The_chain_start_never_reaches_the_app()
+    {
+        var app = await RelyingParty.RegisterWithOfflineAccessAsync(factory);
+        var tokens = await app.SignInOfflineAsync();
+
+        foreach (var name in new[] { "access_token", "id_token" })
+        {
+            var payload = new Microsoft.IdentityModel.JsonWebTokens.JsonWebToken(tokens.GetProperty(name).GetString()!);
+            Assert.DoesNotContain(payload.Claims, c => c.Type == Ingresso.Api.Auth.IdentityProviderSetup.ChainStartedClaim);
+        }
+    }
 }

@@ -28,6 +28,7 @@ public class ApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Clock:FixedUtcNow", Today.ToString("O"));
         builder.UseSetting("Auth:TestSignIn:Enabled", "true");
         builder.UseSetting("Outbox:Enabled", "false");
+        builder.UseSetting("IdentityProvider:Pruning:Enabled", "false");
         builder.UseSetting("Swagger:Enabled", "true");
         builder.UseSetting("DevMailbox:Expose", "true");
         builder.ConfigureServices(ConfigureTestServices);
