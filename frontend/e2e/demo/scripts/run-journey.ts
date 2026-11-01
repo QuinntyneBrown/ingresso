@@ -9,7 +9,7 @@ import { ChildProcess, spawn } from 'node:child_process';
 import { mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Browser, BrowserContext, chromium, Page } from '@playwright/test';
-import { startApi } from '../../support/api-server';
+import { startApi, startSampleApp } from '../../support/api-server';
 import { demoPaths, FRONTEND } from './paths';
 
 export const TODAY = new Date('2026-11-02T14:00:00Z');
@@ -71,6 +71,7 @@ export async function runJourney(journey: string): Promise<string[]> {
   if (!baseURL) {
     processes.push(await startApi('demo'));
     const webPort = process.env['PW_WEB_PORT'] ?? '4210';
+    processes.push(await startSampleApp(`http://localhost:${webPort}`));
     processes.push(
       spawn('npx', ['ng', 'serve', 'ingresso', '--port', webPort], { cwd: FRONTEND, stdio: 'ignore' }),
     );

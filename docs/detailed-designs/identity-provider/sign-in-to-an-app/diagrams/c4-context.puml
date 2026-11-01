@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Sign in to an app with ingresso
+
+Person(person, "Person", "Has an ingresso account")
+System(ingresso, "ingresso", "Identity provider")
+System_Ext(app, "Published app", "OpenID Connect relying party")
+System_Ext(mail, "Email provider", "Delivers sign-in links")
+Rel(person, app, "Chooses Sign in with ingresso")
+Rel(app, ingresso, "Authorization request, token request", "OpenID Connect")
+Rel(person, ingresso, "Signs in by email link when needed")
+Rel(ingresso, mail, "Sends sign-in link")
+@enduml

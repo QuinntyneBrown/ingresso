@@ -1,0 +1,40 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+  BorderColor #344054
+  FontColor #101828
+  BackgroundColor #F9FAFB
+}
+title Class structure — Sign in to an app with ingresso
+
+class AuthorizationController {
+  +Authorize(): IActionResult
+}
+class IdentityProviderSetup {
+  +AddIngressoIdentityProvider(config, env)
+}
+class GetSignInClaimsQuery <<record>> {
+  +Guid UserId
+}
+class SignInClaims <<record>> {
+  +Guid UserId
+  +string Email
+  +bool EmailVerified
+}
+interface IClientRegistry {
+  +FindNameAsync(clientId): string?
+}
+class SignInPage <<Angular>> {
+  +returnUrl: input<string>
+  +appName: signal<string|null>
+}
+class AuthorizeErrorPage <<Angular>>
+AuthorizationController ..> GetSignInClaimsQuery
+GetSignInClaimsQuery ..> SignInClaims
+SignInPage ..> IClientRegistry : GET /api/auth/apps/{clientId}
+IdentityProviderSetup ..> AuthorizationController : pass-through
+@enduml

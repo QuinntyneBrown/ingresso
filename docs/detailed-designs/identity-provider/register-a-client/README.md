@@ -28,7 +28,8 @@ The slice runs from the CLI to the ingresso database. It adds no HTTP endpoint.
 - **`OpenIddictClientRegistry`** (`Ingresso.Infrastructure/Identity`) — implements it with
   `IOpenIddictApplicationManager`: client type `public`, consent type `implicit` (journey 23 adds consent),
   permissions for the authorization, token and (with sign-out addresses) end-session endpoints, the
-  authorization-code grant and the `code` response type, and the PKCE requirement.
+  authorization-code grant, the `code` response type and the `email` scope (added by journey 16), and the PKCE
+  requirement.
 - **`AppDbContext`** — `modelBuilder.UseOpenIddict()` maps the OpenIddict entities; migration
   `AddOpenIddict` creates their tables.
 

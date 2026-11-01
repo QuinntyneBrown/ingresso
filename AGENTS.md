@@ -16,6 +16,8 @@ backend/                      .NET backend (Ingresso.sln, global.json and Direct
     Ingresso.Cli/             migrate, seed, reset, and clients (app registration) commands
   tests/
     Ingresso.<Layer>.Tests/   one test project per backend/src project, same name + .Tests
+  samples/
+    Ingresso.SampleApp/       sample OpenID Connect relying party for Playwright and demos (journey 16)
 frontend/                     Angular workspace (package.json, angular.json, lint/format config)
   projects/
     ingresso/                 the app; pages under src/app/, dialogs under src/app/dialogs/

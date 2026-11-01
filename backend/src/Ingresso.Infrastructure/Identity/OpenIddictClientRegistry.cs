@@ -19,11 +19,16 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
         return clients.OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
+    public async Task<string?> FindNameAsync(string clientId, CancellationToken cancellationToken) =>
+        await applications.FindByClientIdAsync(clientId, cancellationToken) is { } app
+            ? await applications.GetDisplayNameAsync(app, cancellationToken)
+            : null;
+
     public async Task<string> RegisterAsync(NewClient client, CancellationToken cancellationToken)
     {
         var descriptor = new OpenIddictApplicationDescriptor
         {
-            ClientId = Guid.NewGuid().ToString("N"),
+            ClientId = client.ClientId ?? Guid.NewGuid().ToString("N"),
             DisplayName = client.Name,
             ClientType = ClientTypes.Public,
             ConsentType = ConsentTypes.Implicit,
@@ -33,6 +38,7 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
                 Permissions.Endpoints.Token,
                 Permissions.GrantTypes.AuthorizationCode,
                 Permissions.ResponseTypes.Code,
+                Permissions.Scopes.Email,
             },
             Requirements = { Requirements.Features.ProofKeyForCodeExchange },
         };

@@ -65,7 +65,9 @@
         "expired",
         "used",
         "link-invalid",
-        "rate-limited"
+        "rate-limited",
+        "for-app",
+        "for-app-sent"
       ],
       "route": "/sign-in",
       "not_applicable": {
@@ -188,6 +190,20 @@
         "default"
       ],
       "route": "/offline",
+      "not_applicable": {
+        "loading": "A status page is static.",
+        "empty": "A status page has no collection.",
+        "error": "This page is itself the error."
+      }
+    },
+    {
+      "id": "authorize-error",
+      "kind": "page",
+      "title": "Can’t sign in to this app",
+      "states": [
+        "default"
+      ],
+      "route": "/authorize-error",
       "not_applicable": {
         "loading": "A status page is static.",
         "empty": "A status page has no collection.",

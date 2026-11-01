@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, InjectionToken } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { API_BASE_URL } from '../core/api-config';
 
 /** The signed-in user, as the header and greeting show them. */
@@ -19,8 +19,13 @@ export interface CurrentUser {
 export interface AuthApi {
   /** The signed-in user; fails with a 401 `ApiError` when anonymous. */
   me(): Observable<CurrentUser>;
-  /** Emails a single-use sign-in link. Succeeds the same way whether or not the address has an account. */
-  requestSignInLink(email: string): Observable<void>;
+  /**
+   * Emails a single-use sign-in link. Succeeds the same way whether or not the address has an account. Opening the
+   * link goes to `returnUrl`, a local path such as an app's authorization request (L2-093), or home.
+   */
+  requestSignInLink(email: string, returnUrl?: string | null): Observable<void>;
+  /** A registered app's name, for the sign-in page; fails with a not-found `ApiError` for an unknown client ID. */
+  appName(clientId: string): Observable<string>;
   /** Emails an unverified account another verification link; fails with a rate-limited `ApiError` when asked too often. */
   resendVerification(): Observable<void>;
   /** Ends this device's session on the server and clears its cookie. */
@@ -38,8 +43,17 @@ export class HttpAuthApi implements AuthApi {
     return this.http.get<CurrentUser>(`${this.baseUrl}/api/auth/me`);
   }
 
-  requestSignInLink(email: string): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/api/auth/sign-in-links`, { email });
+  requestSignInLink(email: string, returnUrl?: string | null): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/api/auth/sign-in-links`, {
+      email,
+      returnUrl: returnUrl ?? null,
+    });
+  }
+
+  appName(clientId: string): Observable<string> {
+    return this.http
+      .get<{ name: string }>(`${this.baseUrl}/api/auth/apps/${encodeURIComponent(clientId)}`)
+      .pipe(map((app) => app.name));
   }
 
   resendVerification(): Observable<void> {

@@ -27,9 +27,14 @@ public sealed class RequestSignInLinkCommandValidator : AbstractValidator<Reques
             .Must(IsLocalPath).WithMessage("The return address must be a page on ingresso.");
     }
 
-    /// <summary>Only a local path with a single leading slash, so the link cannot redirect off-site.</summary>
+    public const int ReturnUrlMaxLength = 4000;
+
+    /// <summary>
+    /// Only a local path with a single leading slash, so the link cannot redirect off-site. Up to 4000 characters, as an
+    /// app's authorization request with its state and nonce can be long (L2-093).
+    /// </summary>
     public static bool IsLocalPath(string? url) =>
-        url is null || (url.StartsWith('/') && !url.StartsWith("//", StringComparison.Ordinal) && !url.Contains('\\') && url.Length <= 500);
+        url is null || (url.StartsWith('/') && !url.StartsWith("//", StringComparison.Ordinal) && !url.Contains('\\') && url.Length <= ReturnUrlMaxLength);
 }
 
 /// <summary>

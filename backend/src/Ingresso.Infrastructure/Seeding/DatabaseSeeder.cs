@@ -1,4 +1,6 @@
+using Ingresso.Application.Clients;
 using Ingresso.Application.Tiles;
+using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using Ingresso.Application.Common.Interfaces;
 using Ingresso.Domain.Entities;
@@ -7,8 +9,11 @@ using Ingresso.Infrastructure.Persistence;
 
 namespace Ingresso.Infrastructure.Seeding;
 
-/// <summary>Adds a dev user and sample tiles. Rows that already exist (by email, or tile name per user) are left alone, so it is safe to re-run.</summary>
-public sealed class DatabaseSeeder(AppDbContext db, IClock clock)
+/// <summary>
+/// Adds a dev user and sample tiles, and the sample relying party when configured. Rows that already exist (by email,
+/// tile name per user, or client ID) are left alone, so it is safe to re-run.
+/// </summary>
+public sealed class DatabaseSeeder(AppDbContext db, IClock clock, IClientRegistry clients, IOptions<SampleAppOptions> sampleApp)
 {
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
@@ -46,5 +51,20 @@ public sealed class DatabaseSeeder(AppDbContext db, IClock clock)
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        await SeedSampleAppAsync(cancellationToken);
+    }
+
+    /// <summary>Registers the sample relying party (journey 16) under its fixed client ID, once.</summary>
+    private async Task SeedSampleAppAsync(CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(sampleApp.Value.BaseUrl) || await clients.FindNameAsync(SampleAppOptions.ClientId, cancellationToken) is not null)
+        {
+            return;
+        }
+
+        var baseUrl = sampleApp.Value.BaseUrl.TrimEnd('/');
+        await clients.RegisterAsync(
+            new NewClient("Sample app", [$"{baseUrl}/signin-oidc"], [$"{baseUrl}/signout-callback-oidc"], SampleAppOptions.ClientId),
+            cancellationToken);
     }
 }

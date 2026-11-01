@@ -46,3 +46,4 @@ Each folder holds one vertical feature slice. Its `README.md` traces to the L2 r
 | Feature | L2 requirements |
 |---------|-----------------|
 | [Register an app for sign-in](identity-provider/register-a-client/README.md) | `L2-087`, `L2-088`, `L2-089`, `L2-090` |
+| [Sign in to an app with ingresso](identity-provider/sign-in-to-an-app/README.md) | `L2-091`, `L2-092`, `L2-093`, `L2-094` |

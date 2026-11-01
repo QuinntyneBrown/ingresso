@@ -1,0 +1,79 @@
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore;
+using OpenIddict.Server;
+using OpenIddict.Server.AspNetCore;
+using Ingresso.Application.Common;
+using static OpenIddict.Abstractions.OpenIddictConstants;
+
+namespace Ingresso.Api.Auth;
+
+/// <summary>The OpenID Connect server (ADR 0014): authorization code with PKCE (S256) for registered apps (L2-091 to L2-094).</summary>
+public static class IdentityProviderSetup
+{
+    private static readonly Lazy<RsaSecurityKey> DevelopmentSigningKey = new(() => new RsaSecurityKey(RSA.Create(2048)));
+    private static readonly Lazy<RsaSecurityKey> DevelopmentEncryptionKey = new(() => new RsaSecurityKey(RSA.Create(2048)));
+
+    public static IServiceCollection AddIngressoIdentityProvider(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    {
+        var devOrTest = environment.IsDevelopment() || environment.IsEnvironment("Testing");
+        var issuer = (configuration.GetSection(SiteOptions.Section).Get<SiteOptions>() ?? new SiteOptions()).PublicBaseUrl;
+        var certificatePath = configuration["IdentityProvider:SigningCertificate:Path"];
+
+        services.AddOpenIddict().AddServer(options =>
+        {
+            options.SetIssuer(new Uri(issuer.TrimEnd('/') + "/"));
+            options.SetAuthorizationEndpointUris("connect/authorize")
+                .SetTokenEndpointUris("connect/token")
+                .SetJsonWebKeySetEndpointUris(".well-known/jwks");
+            options.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
+            options.Configure(o =>
+            {
+                o.CodeChallengeMethods.Clear();
+                o.CodeChallengeMethods.Add(CodeChallengeMethods.Sha256);
+            });
+            options.RegisterScopes(Scopes.OpenId, Scopes.Email);
+
+            if (!string.IsNullOrWhiteSpace(certificatePath))
+            {
+                var certificate = X509CertificateLoader.LoadPkcs12FromFile(certificatePath, configuration["IdentityProvider:SigningCertificate:Password"]);
+                options.AddSigningCertificate(certificate).AddEncryptionCertificate(certificate);
+            }
+            else if (devOrTest)
+            {
+                // Keys change on restart; journey 26 moves them to the database with rotation. They are made once per
+                // process, so test hosts don't each pay for new RSA keys.
+                options.AddSigningKey(DevelopmentSigningKey.Value).AddEncryptionKey(DevelopmentEncryptionKey.Value);
+            }
+            else
+            {
+                throw new InvalidOperationException("IdentityProvider:SigningCertificate:Path is required outside Development.");
+            }
+
+            // An error that cannot go back to the app (unknown client or redirect address) never redirects to the
+            // address it gave: the browser goes to the authorize error page instead (L2-094).
+            options.AddEventHandler<OpenIddictServerEvents.ApplyAuthorizationResponseContext>(handler => handler
+                .UseInlineHandler(context =>
+                {
+                    if (context.Error is not null && string.IsNullOrEmpty(context.RedirectUri))
+                    {
+                        context.Transaction.GetHttpRequest()!.HttpContext.Response.Redirect("/authorize-error");
+                        context.HandleRequest();
+                    }
+
+                    return default;
+                })
+                .SetOrder(int.MinValue + 100_000)
+                .SetType(OpenIddictServerHandlerType.Custom));
+
+            var aspNetCore = options.UseAspNetCore().EnableAuthorizationEndpointPassthrough();
+            if (devOrTest)
+            {
+                // Development, Playwright and demos run on http://localhost.
+                aspNetCore.DisableTransportSecurityRequirement();
+            }
+        });
+        return services;
+    }
+}

@@ -20,6 +20,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddIngressoAuth(builder.Environment);
+builder.Services.AddIngressoIdentityProvider(builder.Configuration, builder.Environment);
 builder.Services.AddSignInRateLimit(builder.Configuration);
 builder.Services.AddHsts(options =>
 {

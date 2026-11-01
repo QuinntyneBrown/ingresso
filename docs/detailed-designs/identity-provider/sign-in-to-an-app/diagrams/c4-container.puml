@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Sign in to an app with ingresso
+
+Person(person, "Person")
+System_Ext(app, "Published app", "e.g. Ingresso.SampleApp")
+System_Boundary(ingresso, "ingresso") {
+  Container(web, "ingresso web app", "Angular", "Sign-in (for-app), authorize error")
+  Container(api, "Ingresso.Api", "ASP.NET Core + OpenIddict", "/.well-known, /connect/authorize, /connect/token")
+  ContainerDb(db, "ingresso database", "SQL Server", "Sessions, OpenIddict clients, authorizations, tokens")
+}
+Rel(person, app, "Uses")
+Rel(app, api, "Discovery, token request", "HTTPS")
+Rel(person, api, "Authorization request (browser redirect)", "HTTPS")
+Rel(person, web, "Signs in")
+Rel(web, api, "Sign-in link, app name", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+@enduml
