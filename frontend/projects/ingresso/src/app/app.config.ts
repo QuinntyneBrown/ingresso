@@ -8,6 +8,8 @@ import {
   CLIENTS_API,
   HttpAuthApi,
   HttpClientsApi,
+  HttpProfileApi,
+  PROFILE_API,
   HttpTilesApi,
   TILES_API,
 } from 'api';
@@ -31,5 +33,6 @@ export const appConfig: ApplicationConfig = {
     { provide: AUTH_API, useClass: HttpAuthApi },
     { provide: TILES_API, useClass: HttpTilesApi },
     { provide: CLIENTS_API, useClass: HttpClientsApi },
+    { provide: PROFILE_API, useClass: HttpProfileApi },
   ],
 };

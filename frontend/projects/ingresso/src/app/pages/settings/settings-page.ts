@@ -5,6 +5,7 @@ import { AppDialogs } from '../../state/app-dialogs';
 import { SessionStore } from '../../state/session-store';
 import { ThemePreference, ThemeStore } from '../../state/theme-store';
 import { AppAction, AppsCard } from './apps-card';
+import { ProfileCard, ProfileEdit } from './profile-card';
 
 const CHOICES: { value: ThemePreference; label: string }[] = [
   { value: 'system', label: 'Match my system' },
@@ -13,12 +14,12 @@ const CHOICES: { value: ThemePreference; label: string }[] = [
 ];
 
 /**
- * Settings: how ingresso looks, applied at once and kept on this device (L2-044), and for administrators the apps
- * that sign in with ingresso (L2-104).
+ * Settings: the person's profile (L2-117), how ingresso looks, applied at once and kept on this device (L2-044), and
+ * for administrators the apps that sign in with ingresso (L2-104).
  */
 @Component({
   selector: 'ig-settings-page',
-  imports: [AppsCard, Card, Check, Choice, FieldSet, Link, RouterLink],
+  imports: [AppsCard, Card, Check, Choice, FieldSet, Link, ProfileCard, RouterLink],
   template: `
     <div class="page">
       <a ig-link variant="back" routerLink="/">Back to your apps</a>
@@ -26,11 +27,14 @@ const CHOICES: { value: ThemePreference; label: string }[] = [
         <h1>Settings</h1>
         <p class="text-muted">
           {{
-            administrator() ? 'How ingresso looks, and the apps that sign in with it.' : 'How ingresso looks.'
+            administrator()
+              ? 'Your profile, how ingresso looks, and the apps that sign in with it.'
+              : 'Your profile and how ingresso looks.'
           }}
         </p>
       </section>
       <div class="stack">
+        <ig-profile-card (edit)="editProfile($event)" />
         <ig-card>
           <ig-field-set legend="Appearance" controlId="theme">
             @for (choice of choices; track choice.value) {
@@ -68,6 +72,23 @@ export class SettingsPage {
   private readonly dialogs = inject(AppDialogs);
   private readonly toasts = inject(ToastService);
   private readonly appsCard = viewChild(AppsCard);
+  private readonly profileCard = viewChild(ProfileCard);
+
+  /** Edit the profile; the saved name is announced and shown in the card and the header (L2-117). */
+  protected editProfile({ profile, trigger }: ProfileEdit): void {
+    this.dialogs.openEditProfile(profile, trigger).subscribe((saved) => {
+      if (!saved) return;
+      this.profileCard()?.show(saved);
+      this.session.refresh();
+      this.toasts.show({
+        kind: 'success',
+        title: 'Profile saved',
+        text: saved.displayName
+          ? `Apps that ask for your profile now see ${saved.displayName}.`
+          : 'Apps that ask for your profile now see your email.',
+      });
+    });
+  }
 
   /** Register an app; a new app is announced and the list reloads (L2-105). */
   protected register(event: Event): void {

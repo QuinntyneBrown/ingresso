@@ -13,8 +13,10 @@ test.describe('Settings, visually', () => {
       const settings = new SettingsPage(page);
       await page.emulateMedia({ colorScheme: scheme });
       await new DashboardPage(page).open();
+      await settings.showMockProfile();
       await settings.open();
       await expect(settings.heading).toBeVisible();
+      await settings.profileShown();
       await expect(settings.choice('Match my system')).toBeChecked();
       await expect(page).toHaveScreenshot(`default-${scheme}.png`, { fullPage: true });
     });
