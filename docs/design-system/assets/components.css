@@ -418,7 +418,7 @@ legend { font: var(--text-label); padding: 0; margin-bottom: var(--space-2); }
 .kbd-hint { font: var(--text-caption); }
 .avatar--ink { background: var(--color-fg-default); color: var(--color-bg-canvas); }
 .intro { margin-block: var(--space-10) var(--space-6); }
-.intro h1 { letter-spacing: var(--letter-spacing-tight); }
+.intro h1 { letter-spacing: var(--letter-spacing-tight); overflow-wrap: anywhere; }
 .intro p { margin-top: var(--space-1); }
 .app-icon { display: inline-grid; place-items: center; flex: none; width: 2.5rem; height: 2.5rem; border-radius: var(--radius-md); color: var(--palette-white); background: var(--app-color, var(--app-color-custom)); font: var(--text-label); font-weight: var(--font-weight-semibold); }
 .app-icon--lg { width: 3.5rem; height: 3.5rem; border-radius: var(--radius-lg); font: var(--text-h4); }
