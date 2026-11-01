@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Signing keys
+Person(owner, "Owner", "Runs the ingresso CLI")
+System(ingresso, "ingresso", "Front door and identity provider")
+System_Ext(app, "Published app", "Validates ingresso tokens with the JWKS")
+Rel(owner, ingresso, "Rotates and lists signing keys")
+Rel(app, ingresso, "Fetches the JWKS")
+@enduml

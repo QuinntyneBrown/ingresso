@@ -1,0 +1,25 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Signing keys
+Container_Boundary(api, "Ingresso.Api") {
+  Component(setup, "SigningKeyOptionsSetup", "IConfigureOptions", "Adds the ring's keys to OpenIddict")
+  Component(token, "SigningKeyChangeTokenSource", "IOptionsChangeTokenSource", "Rebuilds OpenIddict options on change")
+  Component(maint, "SigningKeyMaintenance", "Hosted service", "Rotates when due; reloads the ring")
+}
+Container_Boundary(appl, "Ingresso.Application") {
+  Component(rotate, "RotateSigningKeyCommandHandler", "MediatR handler", "New active key; previous one retiring")
+  Component(list, "GetSigningKeysQueryHandler", "MediatR handler", "Keys with their states")
+  Component(factory, "ISigningKeyFactory", "Interface", "New protected key")
+}
+Container_Boundary(infra, "Ingresso.Infrastructure") {
+  Component(ring, "SigningKeyRing", "Singleton", "Decrypted active and retiring keys")
+  Component(dp, "DataProtectionSigningKeyFactory", "ISigningKeyFactory", "RSA key, protected with Data Protection")
+}
+Rel(setup, ring, "Reads")
+Rel(token, ring, "Watches")
+Rel(maint, rotate, "Sends when due")
+Rel(maint, ring, "Reloads")
+Rel(rotate, factory, "Uses")
+Rel(dp, factory, "Implements")
+@enduml

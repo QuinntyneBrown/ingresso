@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Signing keys
+Person(owner, "Owner")
+System_Ext(app, "Published app")
+System_Boundary(ingresso, "ingresso") {
+  Container(cli, "Ingresso.Cli", ".NET", "keys rotate, keys list")
+  Container(api, "Ingresso.Api", "ASP.NET Core + OpenIddict", "Signs tokens; publishes /.well-known/jwks")
+  ContainerDb(db, "Database", "SQL Server / SQLite", "SigningKeys (encrypted), DataProtectionKeys")
+}
+Rel(owner, cli, "Runs")
+Rel(cli, db, "Adds and retires keys")
+Rel(api, db, "Reloads keys every minute")
+Rel(app, api, "JWKS, tokens")
+@enduml

@@ -21,3 +21,4 @@ them point at that stack's history and are revised as ingresso writes its own.
 | [0018](0018-consent-page-resumes-the-authorize-request.md) | The consent page is a web app page that resumes the authorize request |
 | [0019](0019-last-used-is-the-latest-token-issued.md) | An app's "last used" is the latest token ingresso issued it |
 | [0020](0020-coarse-device-description.md) | Sessions keep a coarse device description, not the user agent |
+| [0021](0021-data-protection-keys-in-the-database.md) | Data Protection keys live in the database, protected by a certificate in production |
