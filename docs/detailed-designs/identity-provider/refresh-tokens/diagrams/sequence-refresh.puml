@@ -1,0 +1,28 @@
+@startuml
+title UML sequence behaviour — Renew a token
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+participant "Sample app" as app
+box "Ingresso.Api" #EFF8FF
+  participant "OpenIddict server" as oidc
+  participant "AuthorizationController" as authz
+end box
+database "Database" as db
+app -> oidc : POST /connect/token (refresh_token R1)
+alt R1 already redeemed
+  oidc -> db : revoke authorization and its tokens
+  oidc --> app : 400 invalid_grant
+else R1 valid
+  oidc -> authz : pass-through (principal with sid, chain start)
+  authz -> db : TouchSessionCommand(sid)
+  alt session ended, or chain older than 90 days
+    authz --> app : 400 invalid_grant
+  else
+    authz -> oidc : SignIn (refresh lifetime = min(14 days, time left))
+    oidc -> db : redeem R1, store R2
+    oidc --> app : access token, ID token, R2
+  end
+end
+@enduml

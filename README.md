@@ -156,6 +156,16 @@ dotnet run --project backend/src/Ingresso.Cli -- clients add --name "Notes" \
   --front-channel-logout-uri https://notes.example.com/frontchannel-logout
 ```
 
+An app that should stay signed in asks for the `offline_access` scope and renews its access tokens with a refresh
+token. Allow it with `--offline-access`. Refresh tokens rotate on every use and last 14 days from each renewal and
+90 days at most (`IdentityProvider:RefreshTokenSlidingLifetime` and `:RefreshTokenAbsoluteLifetime`). They stop when
+the ingresso session ends, and apps revoke them at `/connect/revoke`:
+
+```bash
+dotnet run --project backend/src/Ingresso.Cli -- clients add --name "Notes" \
+  --redirect-uri https://notes.example.com/signin-oidc --offline-access
+```
+
 ### Run the app
 
 ```bash

@@ -42,6 +42,7 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
             {
                 Permissions.Endpoints.Authorization,
                 Permissions.Endpoints.Token,
+                Permissions.Endpoints.Revocation,
                 Permissions.GrantTypes.AuthorizationCode,
                 Permissions.ResponseTypes.Code,
                 Permissions.Scopes.Email,
@@ -66,6 +67,12 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
         if (client.FrontChannelLogoutUri is { } frontChannel)
         {
             descriptor.Properties[FrontChannelLogoutUriProperty] = JsonSerializer.SerializeToElement(frontChannel);
+        }
+
+        // OpenIddict refuses offline_access from an app without the refresh token grant (L2-107).
+        if (client.OfflineAccess)
+        {
+            descriptor.Permissions.Add(Permissions.GrantTypes.RefreshToken);
         }
 
         if (client.PostLogoutRedirectUris.Count > 0)
@@ -101,5 +108,6 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
         (await applications.GetPropertiesAsync(app, cancellationToken)).TryGetValue(FrontChannelLogoutUriProperty, out var frontChannel)
             ? frontChannel.GetString()
             : null,
-        await applications.HasClientTypeAsync(app, ClientTypes.Confidential, cancellationToken));
+        await applications.HasClientTypeAsync(app, ClientTypes.Confidential, cancellationToken),
+        await applications.HasPermissionAsync(app, Permissions.GrantTypes.RefreshToken, cancellationToken));
 }

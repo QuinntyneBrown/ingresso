@@ -7,3 +7,4 @@
 | protect-an-api | 3 days | 100% |
 | sign-out-everywhere | 4 days | 100% |
 | manage-clients-in-settings | 3 days | 100% |
+| refresh-tokens | 3 days | 100% |

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using Ingresso.Api.Auth;
+using Ingresso.Application.Common.Interfaces;
 using Ingresso.Application.Identity;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -22,7 +24,7 @@ namespace Ingresso.Api.Controllers;
 [AllowAnonymous]
 [IgnoreAntiforgeryToken]
 [ApiExplorerSettings(IgnoreApi = true)]
-public sealed class AuthorizationController(ISender sender, IOpenIddictScopeManager scopes) : ControllerBase
+public sealed class AuthorizationController(ISender sender, IOpenIddictScopeManager scopes, IClock clock, IConfiguration configuration) : ControllerBase
 {
     [HttpGet("connect/authorize")]
     [HttpPost("connect/authorize")]
@@ -59,6 +61,7 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
         identity.SetClaim(Claims.Subject, person.UserId.ToString());
         identity.SetClaim("sid", sessionId);
         identity.SetClaim(Claims.Email, person.Email);
+        identity.SetClaim(IdentityProviderSetup.ChainStartedClaim, clock.UtcNow.ToString("O", CultureInfo.InvariantCulture));
         identity.SetScopes(request.GetScopes());
         // The access token's audience is each API whose scopes were granted (L2-097).
         var resources = new List<string>();
@@ -68,11 +71,60 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
         }
 
         identity.SetResources(resources.Distinct(StringComparer.Ordinal));
-        identity.SetDestinations(claim => claim.Type == "sid"
-            ? [Destinations.IdentityToken]
-            : [Destinations.IdentityToken, Destinations.AccessToken]);
+        // The chain start stays inside code and refresh tokens; no app ever sees it.
+        identity.SetDestinations(claim => claim.Type switch
+        {
+            "sid" => [Destinations.IdentityToken],
+            IdentityProviderSetup.ChainStartedClaim => [],
+            _ => [Destinations.IdentityToken, Destinations.AccessToken],
+        });
         return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
+
+    /// <summary>
+    /// The token endpoint, after OpenIddict has validated the grant. A code is exchanged as OpenIddict validated it. A
+    /// refresh token renews only while the ingresso session it came from is active, and renewing counts as using that
+    /// session (L2-110).
+    /// </summary>
+    [HttpPost("connect/token")]
+    public async Task<IActionResult> Exchange(CancellationToken cancellationToken)
+    {
+        var request = HttpContext.GetOpenIddictServerRequest()
+            ?? throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
+        var principal = (await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)).Principal
+            ?? throw new InvalidOperationException("The validated grant has no principal.");
+
+        if (request.IsRefreshTokenGrantType())
+        {
+            if (!Guid.TryParse(principal.GetClaim("sid"), out var sessionId)
+                || !await sender.Send(new TouchSessionCommand(sessionId), cancellationToken))
+            {
+                return Refuse("The ingresso session this token came from has ended.");
+            }
+
+            // No token in the chain outlives its absolute lifetime (L2-109).
+            var left = DateTimeOffset.TryParse(principal.GetClaim(IdentityProviderSetup.ChainStartedClaim), CultureInfo.InvariantCulture, DateTimeStyles.None, out var started)
+                ? started + IdentityProviderSetup.RefreshTokenAbsoluteLifetime(configuration) - clock.UtcNow
+                : TimeSpan.Zero;
+            if (left <= TimeSpan.Zero)
+            {
+                return Refuse("This sign-in is too old to renew. Sign in again.");
+            }
+
+            var sliding = IdentityProviderSetup.RefreshTokenSlidingLifetime(configuration);
+            principal.SetRefreshTokenLifetime(left < sliding ? left : sliding);
+        }
+
+        return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
+    private ForbidResult Refuse(string description) => Forbid(
+        new AuthenticationProperties(new Dictionary<string, string?>
+        {
+            [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.InvalidGrant,
+            [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = description,
+        }),
+        OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
     /// <summary>
     /// An app's sign-out (RP-initiated logout), after OpenIddict has checked the ID token hint and that the return address

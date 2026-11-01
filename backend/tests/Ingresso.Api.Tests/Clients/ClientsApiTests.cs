@@ -63,6 +63,29 @@ public sealed class ClientsApiTests(ApiFactory factory) : IClassFixture<ApiFacto
     };
 
     // Acceptance Test
+    // Traces to: L2-107
+    // Description: An app registered with offlineAccess is returned and listed as allowed offline access.
+    [Fact]
+    public async Task An_administrator_registers_an_app_allowed_offline_access()
+    {
+        var admin = await Administrator();
+        var name = $"Budget {Guid.NewGuid():N}"[..15];
+
+        var response = await admin.PostAsJsonAsync("/api/clients", new
+        {
+            name,
+            redirectUris = new[] { "https://budget.example.com/signin-oidc" },
+            offlineAccess = true,
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var client = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("client");
+        Assert.True(client.GetProperty("offlineAccess").GetBoolean());
+        var listed = await admin.GetFromJsonAsync<JsonElement>("/api/clients");
+        Assert.True(listed.EnumerateArray().Single(a => a.GetProperty("name").GetString() == name).GetProperty("offlineAccess").GetBoolean());
+    }
+
+    // Acceptance Test
     // Traces to: L2-105
     // Description: An administrator registers a public app; it is returned with no secret and then listed.
     [Fact]

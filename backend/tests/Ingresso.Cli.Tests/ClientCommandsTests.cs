@@ -62,6 +62,23 @@ public sealed partial class ClientCommandsTests : IDisposable
     }
 
     // Acceptance Test
+    // Traces to: L2-107
+    // Description: clients add --offline-access allows the app the refresh token grant; without it the app has none.
+    [Fact]
+    public async Task Add_with_offline_access_allows_refresh_tokens()
+    {
+        var (code, output) = await Run("clients", "add", "--name", "Budget", "--redirect-uri", Redirect, "--offline-access");
+        var (_, plain) = await Run("clients", "add", "--name", "Notes", "--redirect-uri", Redirect);
+
+        Assert.Equal(0, code);
+        await WithApplications(async manager =>
+        {
+            Assert.True(await manager.HasPermissionAsync((await manager.FindByClientIdAsync(ClientIdIn(output)))!, Permissions.GrantTypes.RefreshToken));
+            Assert.False(await manager.HasPermissionAsync((await manager.FindByClientIdAsync(ClientIdIn(plain)))!, Permissions.GrantTypes.RefreshToken));
+        });
+    }
+
+    // Acceptance Test
     // Traces to: L2-087
     // Description: Sign-out return addresses given to clients add are stored with the app.
     [Fact]

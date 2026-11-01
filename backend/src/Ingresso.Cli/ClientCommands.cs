@@ -12,11 +12,16 @@ public static class ClientCommands
 {
     public const string Usage =
         "Usage: ingresso clients <add --name <name> --redirect-uri <address> [--redirect-uri <address>] [--post-logout-redirect-uri <address>]"
-        + " [--front-channel-logout-uri <address>] [--scope <scope>] | list | remove --client-id <id>>";
+        + " [--front-channel-logout-uri <address>] [--scope <scope>] [--offline-access] | list | remove --client-id <id>>";
+
+    private const string OfflineAccessFlag = "--offline-access";
 
     public static async Task<int> RunAsync(string[] args, IServiceProvider services, TextWriter output, CancellationToken cancellationToken)
     {
-        var options = Parse(args.Skip(1).ToArray());
+        // --offline-access is the one option without a value (L2-107).
+        var rest = args.Skip(1).ToList();
+        var offlineAccess = rest.RemoveAll(a => a.Equals(OfflineAccessFlag, StringComparison.OrdinalIgnoreCase)) > 0;
+        var options = Parse(rest.ToArray());
         if (args.Length == 0 || options is null)
         {
             await output.WriteLineAsync(Usage);
@@ -34,15 +39,15 @@ public static class ClientCommands
                     var (client, _) = await sender.Send(
                         new RegisterClientCommand(
                             name, All(options, "--redirect-uri"), All(options, "--post-logout-redirect-uri"), All(options, "--scope"),
-                            All(options, "--front-channel-logout-uri").SingleOrDefault()),
+                            All(options, "--front-channel-logout-uri").SingleOrDefault(), OfflineAccess: offlineAccess),
                         cancellationToken);
                     await output.WriteLineAsync($"Registered {client.Name}.");
                     await output.WriteLineAsync($"Client ID: {client.ClientId}");
                     return 0;
-                case "list" when options.Count == 0:
+                case "list" when options.Count == 0 && !offlineAccess:
                     await PrintAsync(await sender.Send(new GetClientsQuery(), cancellationToken), output);
                     return 0;
-                case "remove" when Single(options, "--client-id", out var clientId) && options.Count == 1:
+                case "remove" when Single(options, "--client-id", out var clientId) && options.Count == 1 && !offlineAccess:
                     var removed = await sender.Send(new RemoveClientCommand(clientId), cancellationToken);
                     await output.WriteLineAsync($"Removed {removed.Name}.");
                     return 0;

@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Stay signed in to an app
+Person(person, "Person", "Uses an app signed in with ingresso")
+System(ingresso, "ingresso", "Issues, rotates and revokes refresh tokens")
+System_Ext(app, "Owner's apps", "Renew their tokens without sending the person back")
+Rel(person, app, "Uses", "Browser")
+Rel(app, ingresso, "Refresh token grant, revocation", "OAuth 2.0")
+@enduml
