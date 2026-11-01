@@ -30,6 +30,8 @@ export function apiEnvironment(databaseName = 'e2e'): NodeJS.ProcessEnv {
     Outbox__PollInterval: '00:00:00.5',
     // Short-lived access tokens, so a test can watch the sample app renew one (journey 20).
     IdentityProvider__AccessTokenLifetime: '00:00:05',
+    // Reload signing keys every second, so a rotation from the CLI shows at once (journey 26).
+    IdentityProvider__SigningKeys__RefreshInterval: '00:00:01',
     DOTNET_CLI_TELEMETRY_OPTOUT: '1',
   };
 }

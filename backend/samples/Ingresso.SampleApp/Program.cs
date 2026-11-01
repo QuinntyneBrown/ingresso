@@ -180,9 +180,24 @@ static async Task<int?> RenewIfExpiredAsync(HttpContext context, IHttpClientFact
 static async Task<string> CallApiAsync(HttpContext context, IHttpClientFactory http)
 {
     var accessToken = await context.GetTokenAsync("access_token");
-    using var request = new HttpRequestMessage(HttpMethod.Get, $"{context.Request.Scheme}://{context.Request.Host}/api/me");
-    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-    using var response = await http.CreateClient().SendAsync(request);
+    async Task<HttpResponseMessage> SendAsync()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"{context.Request.Scheme}://{context.Request.Host}/api/me");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        return await http.CreateClient().SendAsync(request);
+    }
+
+    var response = await SendAsync();
+    // After ingresso rotates its signing key (journey 26), the API refuses the first token signed with the new key
+    // while it fetches the new JWKS, so the app tries once more.
+    if (response.StatusCode == HttpStatusCode.Unauthorized
+        && response.Headers.WwwAuthenticate.ToString().Contains("signature key was not found", StringComparison.OrdinalIgnoreCase))
+    {
+        response.Dispose();
+        response = await SendAsync();
+    }
+
+    using var _ = response;
     if (!response.IsSuccessStatusCode)
     {
         return $"Your API refused the call ({(int)response.StatusCode}).";
