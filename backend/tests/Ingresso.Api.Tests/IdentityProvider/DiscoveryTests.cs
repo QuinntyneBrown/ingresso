@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
 using Ingresso.Api.Tests.Infrastructure;
 
 namespace Ingresso.Api.Tests.IdentityProvider;
@@ -44,6 +45,28 @@ public sealed class DiscoveryTests(ApiFactory factory) : IClassFixture<ApiFactor
             {
                 Assert.False(key.TryGetProperty(secret, out _), $"JWKS key exposes private member '{secret}'");
             }
+        }
+    }
+
+    // Acceptance Test
+    // Traces to: L2-091
+    // Description: Outside Development and Testing the API refuses to start without a signing certificate, rather than sign with throwaway keys.
+    [Fact]
+    public void Outside_development_the_api_needs_a_signing_certificate()
+    {
+        using var production = new ProductionWithoutCertificate();
+
+        var error = Assert.Throws<InvalidOperationException>(() => production.CreateClient());
+
+        Assert.Contains("IdentityProvider:SigningCertificate:Path", error.Message);
+    }
+
+    private sealed class ProductionWithoutCertificate : ApiFactory
+    {
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            base.ConfigureWebHost(builder);
+            builder.UseEnvironment("Production");
         }
     }
 

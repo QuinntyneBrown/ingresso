@@ -1,4 +1,6 @@
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.IdentityModel.Tokens;
 using Ingresso.Application.Common;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -7,6 +9,9 @@ namespace Ingresso.Api.Auth;
 /// <summary>The OpenID Connect server (ADR 0014): authorization code with PKCE (S256) for registered apps (L2-091 to L2-094).</summary>
 public static class IdentityProviderSetup
 {
+    private static readonly Lazy<RsaSecurityKey> DevelopmentSigningKey = new(() => new RsaSecurityKey(RSA.Create(2048)));
+    private static readonly Lazy<RsaSecurityKey> DevelopmentEncryptionKey = new(() => new RsaSecurityKey(RSA.Create(2048)));
+
     public static IServiceCollection AddIngressoIdentityProvider(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         var devOrTest = environment.IsDevelopment() || environment.IsEnvironment("Testing");
@@ -34,8 +39,9 @@ public static class IdentityProviderSetup
             }
             else if (devOrTest)
             {
-                // Keys change on restart; journey 26 moves them to the database with rotation.
-                options.AddEphemeralSigningKey().AddEphemeralEncryptionKey();
+                // Keys change on restart; journey 26 moves them to the database with rotation. They are made once per
+                // process, so test hosts don't each pay for new RSA keys.
+                options.AddSigningKey(DevelopmentSigningKey.Value).AddEncryptionKey(DevelopmentEncryptionKey.Value);
             }
             else
             {
