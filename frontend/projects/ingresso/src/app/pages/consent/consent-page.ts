@@ -6,6 +6,7 @@ import { catchError, of } from 'rxjs';
 import { Consent, CONSENT_API } from 'api';
 import { Alert, Button, List, ListItem, Skeleton, SkipLink } from 'components';
 import { AuthLayout } from '../../shared/auth-layout';
+import { scopePhrase } from '../../shared/scope-phrase';
 
 /**
  * Approve an app: what an app asks to see, in plain words, with Allow and Deny (L2-121 to L2-125). Allow records the
@@ -124,18 +125,10 @@ export class ConsentPage {
   protected readonly busy = signal(false);
   protected readonly failed = signal(false);
 
-  /**
-   * "see your display name and email address": the approved scopes' titles, lower-cased, with a repeated "see your"
-   * said once (L2-125).
-   */
+  /** "see your display name and email address": what was approved before, as one phrase (L2-125). */
   protected readonly approvedBefore = computed(() => {
-    const titles = (this.consent()?.approved ?? [])
-      .map((s) => s.title.charAt(0).toLowerCase() + s.title.slice(1))
-      .map((title, i, all) =>
-        i > 0 && title.startsWith('see your ') && all[i - 1].startsWith('see your ') ? title.slice(9) : title,
-      );
-    if (!titles.length) return null;
-    return titles.length === 1 ? titles[0] : `${titles.slice(0, -1).join(', ')} and ${titles.at(-1)}`;
+    const approved = this.consent()?.approved ?? [];
+    return approved.length ? scopePhrase(approved.map((s) => s.title)) : null;
   });
 
   protected allow(): void {

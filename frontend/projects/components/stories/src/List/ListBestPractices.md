@@ -2,7 +2,7 @@
 
 #### Do
 
-- Put the name in `title` and secondary detail in `meta`.
+- Put the name in `title` and secondary detail in `meta`; use `detail` for one more line, such as dates.
 - Name the object in each row action for screen readers ("Add Asana").
 - Make interactive rows real links or buttons.
 

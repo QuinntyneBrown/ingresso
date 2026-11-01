@@ -10,6 +10,8 @@ import {
   HttpClientsApi,
   HttpProfileApi,
   CONSENT_API,
+  CONNECTED_APPS_API,
+  HttpConnectedAppsApi,
   HttpConsentApi,
   PROFILE_API,
   HttpTilesApi,
@@ -37,5 +39,6 @@ export const appConfig: ApplicationConfig = {
     { provide: CLIENTS_API, useClass: HttpClientsApi },
     { provide: PROFILE_API, useClass: HttpProfileApi },
     { provide: CONSENT_API, useClass: HttpConsentApi },
+    { provide: CONNECTED_APPS_API, useClass: HttpConnectedAppsApi },
   ],
 };

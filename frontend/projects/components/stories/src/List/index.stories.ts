@@ -14,4 +14,5 @@ const meta: Meta<List> = {
 export default meta;
 
 export { Default } from './ListDefault.stories';
+export { WithDetail } from './ListWithDetail.stories';
 export { Catalog } from './ListCatalog.stories';

@@ -15,6 +15,7 @@ test.describe('Share profile details, visually', () => {
     const settings = new SettingsPage(page);
     await signInAs(page);
     await settings.showMockProfile(displayName);
+    await settings.showMockConnectedApps();
     await settings.open();
     await settings.profileShown();
     return settings;

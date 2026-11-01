@@ -14,6 +14,7 @@ test.describe('Settings, visually', () => {
       await page.emulateMedia({ colorScheme: scheme });
       await new DashboardPage(page).open();
       await settings.showMockProfile();
+      await settings.showMockConnectedApps();
       await settings.open();
       await expect(settings.heading).toBeVisible();
       await settings.profileShown();

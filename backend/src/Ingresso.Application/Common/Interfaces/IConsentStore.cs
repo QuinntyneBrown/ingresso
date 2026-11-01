@@ -6,6 +6,12 @@ namespace Ingresso.Application.Common.Interfaces;
 /// </summary>
 public sealed record ConsentApp(string Name, bool FirstParty, IReadOnlyList<string> AllowedScopes);
 
+/// <summary>
+/// An app the person approved: everything approved across their approvals, the earliest approval, and when the app
+/// last got a token for them (L2-128, ADR 0019).
+/// </summary>
+public sealed record ConnectedApp(string ClientId, string Name, IReadOnlyList<string> Scopes, DateTimeOffset ApprovedAt, DateTimeOffset? LastUsedAt);
+
 /// <summary>People's approvals of what apps may see, kept as permanent OpenIddict authorizations (ADR 0018).</summary>
 public interface IConsentStore
 {
@@ -19,6 +25,9 @@ public interface IConsentStore
 
     /// <summary>Records an approval of <paramref name="scopes"/>; returns its id.</summary>
     Task<string> ApproveAsync(Guid userId, string clientId, IReadOnlyCollection<string> scopes, CancellationToken cancellationToken);
+
+    /// <summary>The apps the person has a valid approval for.</summary>
+    Task<IReadOnlyList<ConnectedApp>> ListConnectedAsync(Guid userId, CancellationToken cancellationToken);
 
     /// <summary>The name of the API each scope belongs to, for the scopes that are API scopes.</summary>
     Task<IReadOnlyDictionary<string, string>> ApiNamesAsync(IReadOnlyCollection<string> scopes, CancellationToken cancellationToken);

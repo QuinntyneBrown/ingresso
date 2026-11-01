@@ -25,7 +25,10 @@ export class List {
   );
 }
 
-/** One row of an `ig-list`: `title`, an optional `meta` line, `[slot=media]` before and `[slot=action]` after. */
+/**
+ * One row of an `ig-list`: `title`, an optional `meta` line and a second `detail` line, `[slot=media]` before and
+ * `[slot=action]` after.
+ */
 @Component({
   selector: 'li[ig-list-item]',
   template: `
@@ -43,6 +46,9 @@ export class List {
         @if (meta()) {
           <div class="list__meta">{{ meta() }}</div>
         }
+        @if (detail()) {
+          <div class="list__meta">{{ detail() }}</div>
+        }
       </div>
     }
     <ng-content select="[slot=action]" />
@@ -56,6 +62,8 @@ export class ListItem {
 
   readonly title = input.required<string>();
   readonly meta = input<string>();
+  /** A second meta line, such as dates under a description. */
+  readonly detail = input<string>();
   /** Highlights the row on hover; use when the row holds the one link or button it acts on. */
   readonly interactive = input(false, { transform: booleanAttribute });
 
