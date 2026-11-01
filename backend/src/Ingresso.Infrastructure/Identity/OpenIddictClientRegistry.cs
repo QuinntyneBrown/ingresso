@@ -55,6 +55,18 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
         return descriptor.ClientId;
     }
 
+    public async Task<ClientDto?> RemoveAsync(string clientId, CancellationToken cancellationToken)
+    {
+        if (await applications.FindByClientIdAsync(clientId, cancellationToken) is not { } app)
+        {
+            return null;
+        }
+
+        var removed = await ToDtoAsync(app, cancellationToken);
+        await applications.DeleteAsync(app, cancellationToken);
+        return removed;
+    }
+
     private async Task<ClientDto> ToDtoAsync(object app, CancellationToken cancellationToken) => new(
         (await applications.GetClientIdAsync(app, cancellationToken))!,
         (await applications.GetDisplayNameAsync(app, cancellationToken)) ?? "",

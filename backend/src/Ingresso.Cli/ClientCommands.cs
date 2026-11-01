@@ -10,7 +10,8 @@ namespace Ingresso.Cli;
 public static class ClientCommands
 {
     public const string Usage =
-        "Usage: ingresso clients add --name <name> --redirect-uri <address> [--redirect-uri <address>] [--post-logout-redirect-uri <address>]";
+        "Usage: ingresso clients <add --name <name> --redirect-uri <address> [--redirect-uri <address>] [--post-logout-redirect-uri <address>]"
+        + " | list | remove --client-id <id>>";
 
     public static async Task<int> RunAsync(string[] args, IServiceProvider services, TextWriter output, CancellationToken cancellationToken)
     {
@@ -34,6 +35,13 @@ public static class ClientCommands
                     await output.WriteLineAsync($"Registered {client.Name}.");
                     await output.WriteLineAsync($"Client ID: {client.ClientId}");
                     return 0;
+                case "list" when options.Count == 0:
+                    await PrintAsync(await sender.Send(new GetClientsQuery(), cancellationToken), output);
+                    return 0;
+                case "remove" when Single(options, "--client-id", out var clientId) && options.Count == 1:
+                    var removed = await sender.Send(new RemoveClientCommand(clientId), cancellationToken);
+                    await output.WriteLineAsync($"Removed {removed.Name}.");
+                    return 0;
                 default:
                     await output.WriteLineAsync(Usage);
                     return 1;
@@ -52,6 +60,30 @@ public static class ClientCommands
         {
             await output.WriteLineAsync(ex.Message);
             return 1;
+        }
+    }
+
+    private static async Task PrintAsync(IReadOnlyList<ClientDto> clients, TextWriter output)
+    {
+        if (clients.Count == 0)
+        {
+            await output.WriteLineAsync("No apps are registered.");
+            return;
+        }
+
+        foreach (var client in clients)
+        {
+            await output.WriteLineAsync(client.Name);
+            await output.WriteLineAsync($"  Client ID: {client.ClientId}");
+            foreach (var address in client.RedirectUris)
+            {
+                await output.WriteLineAsync($"  Redirect: {address}");
+            }
+
+            foreach (var address in client.PostLogoutRedirectUris)
+            {
+                await output.WriteLineAsync($"  Sign-out return: {address}");
+            }
         }
     }
 

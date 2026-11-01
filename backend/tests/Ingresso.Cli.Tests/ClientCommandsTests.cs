@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,9 @@ public sealed partial class ClientCommandsTests : IDisposable
     private const string Redirect = "https://localhost:5201/signin-oidc";
     private const string SignOutReturn = "https://localhost:5201/signout-callback-oidc";
 
+    // OpenIddict's stores delete a client's tokens with ExecuteDelete, which needs a relational provider,
+    // so these tests run on in-memory SQLite rather than EF Core InMemory.
+    private readonly SqliteConnection connection = new("Data Source=:memory:");
     private readonly ServiceProvider services;
 
     public ClientCommandsTests()
@@ -23,13 +27,15 @@ public sealed partial class ClientCommandsTests : IDisposable
         {
             ["Clock:FixedUtcNow"] = "2026-11-02T14:00:00Z",
         }).Build();
-        var databaseName = Guid.NewGuid().ToString();
+        connection.Open();
         services = new ServiceCollection()
             .AddLogging()
-            .AddDbContext<AppDbContext>(o => o.UseInMemoryDatabase(databaseName))
+            .AddDbContext<AppDbContext>(o => o.UseSqlite(connection))
             .AddApplication()
             .AddInfrastructureServices(configuration)
             .BuildServiceProvider();
+        using var scope = services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.EnsureCreated();
     }
 
     // Acceptance Test
@@ -155,6 +161,90 @@ public sealed partial class ClientCommandsTests : IDisposable
         Assert.Equal(0, await ApplicationCount());
     }
 
+    // Acceptance Test
+    // Traces to: L2-089
+    // Description: clients list prints each app's name, client ID and addresses, ordered by name.
+    [Fact]
+    public async Task List_prints_each_app_ordered_by_name()
+    {
+        var (_, notes) = await Run("clients", "add", "--name", "Notes", "--redirect-uri", "https://notes.example.com/signin-oidc");
+        var (_, sample) = await Run(
+            "clients", "add", "--name", "Budget", "--redirect-uri", Redirect, "--post-logout-redirect-uri", SignOutReturn);
+
+        var (code, output) = await Run("clients", "list");
+
+        Assert.Equal(0, code);
+        Assert.Equal(
+            $"""
+            Budget
+              Client ID: {ClientIdIn(sample)}
+              Redirect: {Redirect}
+              Sign-out return: {SignOutReturn}
+            Notes
+              Client ID: {ClientIdIn(notes)}
+              Redirect: https://notes.example.com/signin-oidc
+
+            """.ReplaceLineEndings(),
+            output.ReplaceLineEndings());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-089
+    // Description: With no registered apps, clients list says so and succeeds.
+    [Fact]
+    public async Task List_says_when_no_apps_are_registered()
+    {
+        var (code, output) = await Run("clients", "list");
+
+        Assert.Equal(0, code);
+        Assert.Contains("No apps are registered.", output);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-089
+    // Description: clients remove removes the app with that client ID and prints its name.
+    [Fact]
+    public async Task Remove_removes_the_app_and_prints_its_name()
+    {
+        var (_, added) = await Run("clients", "add", "--name", "Sample app", "--redirect-uri", Redirect);
+
+        var (code, output) = await Run("clients", "remove", "--client-id", ClientIdIn(added));
+
+        Assert.Equal(0, code);
+        Assert.Contains("Removed Sample app.", output);
+        Assert.Equal(0, await ApplicationCount());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-089
+    // Description: An unknown client ID changes nothing and fails with a message.
+    [Fact]
+    public async Task Remove_with_an_unknown_client_id_changes_nothing()
+    {
+        await Run("clients", "add", "--name", "Sample app", "--redirect-uri", Redirect);
+
+        var (code, output) = await Run("clients", "remove", "--client-id", "unknown");
+
+        Assert.Equal(1, code);
+        Assert.Contains("No app has client ID 'unknown'.", output);
+        Assert.Equal(1, await ApplicationCount());
+    }
+
+    // Acceptance Test
+    // Traces to: L2-090
+    // Description: Running seed again leaves registered apps unchanged.
+    [Fact]
+    public async Task Seed_keeps_registered_apps()
+    {
+        await Run("seed");
+        await Run("clients", "add", "--name", "Sample app", "--redirect-uri", Redirect);
+        var (_, before) = await Run("clients", "list");
+
+        Assert.Equal(0, (await Run("seed")).Code);
+
+        Assert.Equal(before, (await Run("clients", "list")).Output);
+    }
+
     private async Task<(int Code, string Output)> Run(params string[] args)
     {
         var output = new StringWriter();
@@ -179,5 +269,9 @@ public sealed partial class ClientCommandsTests : IDisposable
     [GeneratedRegex(@"Client ID: ([0-9a-f]{32})")]
     private static partial Regex ClientIdPattern();
 
-    public void Dispose() => services.Dispose();
+    public void Dispose()
+    {
+        services.Dispose();
+        connection.Dispose();
+    }
 }

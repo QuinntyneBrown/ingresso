@@ -60,7 +60,7 @@ Non-obvious rules:
 
 ### Tests
 
-Tests never need a database server: API and Infrastructure tests run on a per-fixture in-memory SQLite database, and Application and CLI tests on EF Core InMemory. Tests of SQL Server-only behaviour use `[SqlServerFact]` with `[Trait("Category", "SqlServer")]` and are skipped unless `INGRESSO_TEST_SQLSERVER` is set. API tests run sequentially. Follow the existing test-project patterns when adding coverage.
+Tests never need a database server: API and Infrastructure tests run on a per-fixture in-memory SQLite database, and Application and CLI tests on EF Core InMemory, except tests that touch OpenIddict's stores, which use in-memory SQLite because those stores need a relational provider. Tests of SQL Server-only behaviour use `[SqlServerFact]` with `[Trait("Category", "SqlServer")]` and are skipped unless `INGRESSO_TEST_SQLSERVER` is set. API tests run sequentially. Follow the existing test-project patterns when adding coverage.
 
 Playwright runs against the API backed by a seeded SQLite database (no LocalDB).
 
