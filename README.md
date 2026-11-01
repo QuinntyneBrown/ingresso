@@ -126,6 +126,18 @@ dotnet run --project backend/src/Ingresso.Cli -- clients list
 dotnet run --project backend/src/Ingresso.Cli -- clients remove --client-id <client-id>
 ```
 
+An app that calls its own API registers the API and its scopes first, then asks to be allowed them. The API
+validates ingresso's access tokens with standard JWT bearer authentication against
+`/.well-known/openid-configuration`; `backend/samples/Ingresso.SampleApp` shows how.
+
+```bash
+dotnet run --project backend/src/Ingresso.Cli -- resources add --name "Notes API" --audience notes-api --scope notes.read
+dotnet run --project backend/src/Ingresso.Cli -- clients add --name "Notes" \
+  --redirect-uri https://notes.example.com/signin-oidc --scope notes.read
+dotnet run --project backend/src/Ingresso.Cli -- resources list
+dotnet run --project backend/src/Ingresso.Cli -- resources remove --audience notes-api
+```
+
 ### Run the app
 
 ```bash

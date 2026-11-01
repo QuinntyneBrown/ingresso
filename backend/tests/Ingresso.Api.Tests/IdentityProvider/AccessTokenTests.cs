@@ -135,9 +135,10 @@ public sealed class AccessTokenTests(ApiFactory factory) : IClassFixture<ApiFact
     public async Task An_api_refuses_an_expired_tampered_or_other_audience_token(string problem)
     {
         var (audience, scope) = await RelyingParty.RegisterApiAsync(factory);
-        var (_, otherScope) = await RelyingParty.RegisterApiAsync(factory);
+        var (otherAudience, otherScope) = await RelyingParty.RegisterApiAsync(factory);
         var app = await RelyingParty.RegisterAsync(factory, "Sample app", scope, otherScope);
         var accessToken = await app.AccessTokenAsync(problem == "other audience" ? otherScope : scope);
+        Assert.Equal([problem == "other audience" ? otherAudience : audience], new JsonWebToken(accessToken).Audiences);
         if (problem == "tampered")
         {
             var signature = accessToken[(accessToken.LastIndexOf('.') + 1)..];
