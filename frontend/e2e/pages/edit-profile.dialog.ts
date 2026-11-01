@@ -24,12 +24,13 @@ export class EditProfileDialog {
 
   /** Fails the next save with a server error. */
   async failNextSave(): Promise<void> {
-    await this.page.route(
-      '**/api/profile',
-      (route) =>
-        route.request().method() === 'PUT' ? route.fulfill({ status: 500, json: {} }) : route.fallback(),
-      { times: 1 },
-    );
+    // Counts only the PUT: a times-limited route would also count other requests that fall through.
+    let pending = true;
+    await this.page.route('**/api/profile', (route) => {
+      if (!pending || route.request().method() !== 'PUT') return route.fallback();
+      pending = false;
+      return route.fulfill({ status: 500, json: {} });
+    });
   }
 
   /** Holds the next save until the test ends, to look at the busy state. */

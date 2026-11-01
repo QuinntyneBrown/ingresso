@@ -69,12 +69,13 @@ export class SettingsPage {
 
   /** Fails the next profile load with a server error. */
   async failProfileOnce(): Promise<void> {
-    await this.page.route(
-      '**/api/profile',
-      (route) =>
-        route.request().method() === 'GET' ? route.fulfill({ status: 500, json: {} }) : route.fallback(),
-      { times: 1 },
-    );
+    // Counts only the GET: a times-limited route would also count other requests that fall through.
+    let pending = true;
+    await this.page.route('**/api/profile', (route) => {
+      if (!pending || route.request().method() !== 'GET') return route.fallback();
+      pending = false;
+      return route.fulfill({ status: 500, json: {} });
+    });
   }
 
   /** Holds the profile load until the test ends, to look at the loading state. */

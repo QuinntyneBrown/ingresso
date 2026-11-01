@@ -1,6 +1,7 @@
 import { expect, test } from '../fixtures';
 import { AppShell } from '../pages/app-shell';
 import { EditProfileDialog } from '../pages/edit-profile.dialog';
+import { SampleAppPage } from '../pages/sample-app.page';
 import { SettingsPage } from '../pages/settings.page';
 import { signInAsNewPerson } from '../support/session';
 
@@ -103,5 +104,57 @@ test.describe('Share profile details with apps', () => {
     await settings.profileTryAgain.click();
 
     await expect(settings.profileValue('Email')).toHaveText(email);
+  });
+
+  // Acceptance Test
+  // Traces to: L2-118, L2-117
+  // Description: The sample app, asking for profile, greets the person by the display name set in Settings.
+  test('the sample app greets the person by their display name', async ({ page }) => {
+    const settings = new SettingsPage(page);
+    const edit = new EditProfileDialog(page);
+    const sample = new SampleAppPage(page);
+    await signInAsNewPerson(page);
+    await settings.open();
+    await settings.editProfile.click();
+    await edit.displayName.fill('Maya Reyes');
+    await edit.save.click();
+    await expect(settings.profileValue('Display name')).toHaveText('Maya Reyes');
+
+    await sample.open();
+    await sample.signInWithIngresso.click();
+
+    await expect(sample.greeting).toHaveText('Hello, Maya Reyes');
+  });
+
+  // Acceptance Test
+  // Traces to: L2-118
+  // Description: Without a display name, the sample app greets the person by their email.
+  test('without a display name the sample app uses the email', async ({ page }) => {
+    const sample = new SampleAppPage(page);
+    const email = await signInAsNewPerson(page);
+
+    await sample.open();
+    await sample.signInWithIngresso.click();
+
+    await expect(sample.greeting).toHaveText(`Hello, ${email}`);
+  });
+
+  // Acceptance Test
+  // Traces to: L2-117
+  // Description: A display name that looks like markup is shown as text in Settings and in the app.
+  test('a display name is always text', async ({ page }) => {
+    const settings = new SettingsPage(page);
+    const edit = new EditProfileDialog(page);
+    const sample = new SampleAppPage(page);
+    await signInAsNewPerson(page);
+    await settings.open();
+    await settings.editProfile.click();
+    await edit.displayName.fill('<b>Maya</b>');
+    await edit.save.click();
+
+    await expect(settings.profileValue('Display name')).toHaveText('<b>Maya</b>');
+    await sample.open();
+    await sample.signInWithIngresso.click();
+    await expect(sample.greeting).toHaveText('Hello, <b>Maya</b>');
   });
 });
