@@ -1,0 +1,107 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: '1'
+
+jobs:
+  deploy:
+    name: Deploy to Azure
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy infrastructure
+        id: infra
+        run: |
+          az group create --name "$RESOURCE_GROUP" --location "${{ vars.AZURE_LOCATION || 'canadacentral' }}" --output none
+          az deployment group create --resource-group "$RESOURCE_GROUP" --template-file infra/main.bicep \
+            --parameters sqlAdminPassword='${{ secrets.SQL_ADMIN_PASSWORD }}' certificatePassword='${{ secrets.IDP_CERT_PASSWORD }}' \
+            --query properties.outputs --output json > outputs.json
+          echo "site=$(jq -r .siteName.value outputs.json)" >> "$GITHUB_OUTPUT"
+          echo "url=$(jq -r .siteUrl.value outputs.json)" >> "$GITHUB_OUTPUT"
+          echo "sql=$(jq -r .sqlServerName.value outputs.json)" >> "$GITHUB_OUTPUT"
+          echo "sqlfqdn=$(jq -r .sqlServerFqdn.value outputs.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Set the public address
+        run: |
+          az webapp config appsettings set --resource-group "$RESOURCE_GROUP" --name "${{ steps.infra.outputs.site }}" \
+            --settings "Site__PublicBaseUrl=${{ vars.PUBLIC_BASE_URL || steps.infra.outputs.url }}" --output none
+
+      - name: Build web app
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publish API and CLI
+        run: |
+          dotnet publish backend/src/Ingresso.Api -c Release -o publish/api
+          dotnet publish backend/src/Ingresso.Cli -c Release -o publish/cli
+          mkdir -p publish/api/wwwroot publish/api/certs
+          cp -r frontend/dist/ingresso/browser/. publish/api/wwwroot/
+          echo '${{ secrets.IDP_CERT_PFX_BASE64 }}' | base64 -d > publish/api/certs/ingresso.pfx
+          (cd publish/api && zip -qr ../api.zip .)
+
+      - name: Migrate the database
+        env:
+          ConnectionStrings__Default: Server=tcp:${{ steps.infra.outputs.sqlfqdn }},1433;Database=Ingresso;User ID=ingressoadmin;Password=${{ secrets.SQL_ADMIN_PASSWORD }};Encrypt=True;
+          DataProtection__Certificate__Path: ${{ github.workspace }}/publish/api/certs/ingresso.pfx
+          DataProtection__Certificate__Password: ${{ secrets.IDP_CERT_PASSWORD }}
+          IdentityProvider__SigningCertificate__Path: ${{ github.workspace }}/publish/api/certs/ingresso.pfx
+          IdentityProvider__SigningCertificate__Password: ${{ secrets.IDP_CERT_PASSWORD }}
+          DOTNET_ENVIRONMENT: Production
+        run: |
+          ip=$(curl -fsS https://api.ipify.org)
+          az sql server firewall-rule create --resource-group "$RESOURCE_GROUP" --server "${{ steps.infra.outputs.sql }}" \
+            --name "ci-runner" --start-ip-address "$ip" --end-ip-address "$ip" --output none
+          trap 'az sql server firewall-rule delete --resource-group "$RESOURCE_GROUP" --server "${{ steps.infra.outputs.sql }}" --name ci-runner --yes' EXIT
+          dotnet publish/cli/Ingresso.Cli.dll migrate
+
+      - name: Deploy API
+        run: |
+          az webapp deploy --resource-group "$RESOURCE_GROUP" --name "${{ steps.infra.outputs.site }}" \
+            --src-path publish/api.zip --type zip
+
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 12); do
+            curl -fsS "${{ steps.infra.outputs.url }}/health/ready" && exit 0
+            sleep 10
+          done
+          exit 1

@@ -266,3 +266,11 @@ See [SUPPORT.md](SUPPORT.md) for how to get help and where to report a problem.
 ## License
 
 [MIT](LICENSE) © 2026 Quinntyne Brown
+
+## Deploying to Azure
+
+`.github/workflows/deploy.yml` deploys `main` to Azure App Service (Basic B1) and Azure SQL (Basic), about USD 18 a
+month (ADR 0023). One-time setup: create an Entra app registration with a federated credential for the `production`
+GitHub environment and Contributor on the subscription, then set secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`,
+`AZURE_SUBSCRIPTION_ID`, `SQL_ADMIN_PASSWORD`, `IDP_CERT_PFX_BASE64`, `IDP_CERT_PASSWORD` and variable
+`AZURE_RESOURCE_GROUP` (optional `AZURE_LOCATION`, `PUBLIC_BASE_URL`).

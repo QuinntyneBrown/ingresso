@@ -37,7 +37,8 @@ docs/
   adr/                        architecture decision records for choices the designs leave open
   demos/                      one folder per journey: narrated demo.mp4 (Git LFS), screenshots, narration, credits
 .claude/skills/, .agents/skills/  agent skills; keep both copies in sync
-.github/                      CI workflows and copilot-instructions.md
+.github/                      CI and deploy workflows and copilot-instructions.md
+infra/                        Azure Bicep (App Service B1 + Azure SQL Basic), see ADR 0023
 ```
 
 New code goes in the folder that owns it; don't add top-level folders or new projects without updating this tree.
