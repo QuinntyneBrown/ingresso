@@ -15,4 +15,12 @@ public sealed class SessionsController(ISender sender) : ControllerBase
     [HttpGet]
     public async Task<IReadOnlyList<DeviceDto>> List(CancellationToken cancellationToken) =>
         await sender.Send(new GetDevicesQuery(), cancellationToken);
+
+    /// <summary>Ends the session on another of the person's devices: 204, or 404 when it isn't one.</summary>
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> End(Guid id, CancellationToken cancellationToken)
+    {
+        await sender.Send(new EndSessionCommand(id), cancellationToken);
+        return NoContent();
+    }
 }

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Ingresso.Api.Tests.IdentityProvider;
 using Ingresso.Api.Tests.Infrastructure;
 
 namespace Ingresso.Api.Tests.Identity;
@@ -94,5 +95,78 @@ public sealed class DevicesTests(ApiFactory factory) : IClassFixture<ApiFactory>
     public async Task The_list_needs_a_session()
     {
         Assert.Equal(HttpStatusCode.Unauthorized, (await factory.CreateHttpsClient().GetAsync("/api/sessions")).StatusCode);
+    }
+
+    private static async Task<Guid> OtherDeviceIdAsync(HttpClient browser) =>
+        (await ListAsync(browser)).Single(d => !d.GetProperty("current").GetBoolean()).GetProperty("id").GetGuid();
+
+    // Acceptance Test
+    // Traces to: L2-133, L2-031
+    // Description: Ending another device's session removes it, and that device's next request is refused.
+    [Fact]
+    public async Task Ending_another_devices_session_signs_it_out()
+    {
+        var email = NewEmail();
+        var phone = await DeviceAsync(email, IPhoneSafari);
+        var mac = await DeviceAsync(email, MacChrome);
+
+        var ended = await mac.DeleteAsync($"/api/sessions/{await OtherDeviceIdAsync(mac)}");
+
+        Assert.Equal(HttpStatusCode.NoContent, ended.StatusCode);
+        Assert.Equal("Chrome on macOS", Assert.Single(await ListAsync(mac)).GetProperty("device").GetString());
+        Assert.Equal(HttpStatusCode.Unauthorized, (await phone.GetAsync("/api/sessions")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await mac.GetAsync("/api/sessions")).StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-133
+    // Description: This device's session, someone else's, or an unknown one can't be ended here.
+    [Fact]
+    public async Task Only_your_other_sessions_can_be_ended()
+    {
+        var mac = await DeviceAsync(NewEmail(), MacChrome);
+        var someoneElse = await DeviceAsync(NewEmail(), IPhoneSafari);
+        var thisDevice = Assert.Single(await ListAsync(mac)).GetProperty("id").GetGuid();
+        var theirs = Assert.Single(await ListAsync(someoneElse)).GetProperty("id").GetGuid();
+
+        Assert.Equal(HttpStatusCode.NotFound, (await mac.DeleteAsync($"/api/sessions/{thisDevice}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await mac.DeleteAsync($"/api/sessions/{theirs}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await mac.DeleteAsync($"/api/sessions/{Guid.NewGuid()}")).StatusCode);
+        Assert.Single(await ListAsync(someoneElse));
+    }
+
+    // Acceptance Test
+    // Traces to: L2-133, L2-034
+    // Description: Ending a session without the anti-forgery token is refused and nothing changes.
+    [Fact]
+    public async Task Ending_a_session_needs_the_anti_forgery_token()
+    {
+        var email = NewEmail();
+        await DeviceAsync(email, IPhoneSafari);
+        var mac = await DeviceAsync(email, MacChrome);
+        var phone = await OtherDeviceIdAsync(mac);
+        mac.DefaultRequestHeaders.Remove("X-XSRF-TOKEN");
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await mac.DeleteAsync($"/api/sessions/{phone}")).StatusCode);
+        Assert.Equal(2, (await ListAsync(mac)).Count);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-135
+    // Description: An app signed in under a session another device ended can no longer renew its tokens.
+    [Fact]
+    public async Task Ending_a_session_stops_its_apps_refresh_tokens()
+    {
+        var app = await RelyingParty.RegisterWithOfflineAccessAsync(factory);
+        var email = NewEmail();
+        var phone = await DeviceAsync(email, IPhoneSafari);
+        var refreshToken = (await app.SignInOfflineAsync(phone)).GetProperty("refresh_token").GetString()!;
+        var mac = await DeviceAsync(email, MacChrome);
+
+        await mac.DeleteAsync($"/api/sessions/{await OtherDeviceIdAsync(mac)}");
+
+        var refreshed = await app.RefreshAsync(refreshToken);
+        Assert.Equal(HttpStatusCode.BadRequest, refreshed.StatusCode);
+        Assert.Equal("invalid_grant", (await RelyingParty.JsonAsync(refreshed)).GetProperty("error").GetString());
     }
 }

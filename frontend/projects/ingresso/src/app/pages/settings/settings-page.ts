@@ -6,7 +6,7 @@ import { SessionStore } from '../../state/session-store';
 import { ThemePreference, ThemeStore } from '../../state/theme-store';
 import { AppAction, AppsCard } from './apps-card';
 import { ConnectedAppAction, ConnectedAppsCard } from './connected-apps-card';
-import { DevicesCard } from './devices-card';
+import { DeviceAction, DevicesCard } from './devices-card';
 import { ProfileCard, ProfileEdit } from './profile-card';
 
 const CHOICES: { value: ThemePreference; label: string }[] = [
@@ -65,7 +65,7 @@ const CHOICES: { value: ThemePreference; label: string }[] = [
           </ig-field-set>
         </ig-card>
         <ig-connected-apps-card (revoke)="revokeAccess($event)" />
-        <ig-devices-card />
+        <ig-devices-card (end)="endSessions($event)" />
         @if (administrator()) {
           <ig-apps-card
             (register)="register($event)"
@@ -89,6 +89,7 @@ export class SettingsPage {
   private readonly appsCard = viewChild(AppsCard);
   private readonly profileCard = viewChild(ProfileCard);
   private readonly connectedAppsCard = viewChild(ConnectedAppsCard);
+  private readonly devicesCard = viewChild(DevicesCard);
 
   /** Edit the profile; the saved name is announced and shown in the card and the header (L2-117). */
   protected editProfile({ profile, trigger }: ProfileEdit): void {
@@ -171,6 +172,16 @@ export class SettingsPage {
         text: `${app.name} has to ask again next time.`,
       });
       this.connectedAppsCard()?.reload();
+    });
+  }
+
+  /** End another device's session once confirmed; a toast confirms it and the list reloads (L2-133). */
+  protected endSessions({ device, trigger }: DeviceAction): void {
+    if (device === 'others') return;
+    this.dialogs.openEndSession(device, trigger).subscribe((ended) => {
+      if (!ended) return;
+      this.toasts.show({ kind: 'success', title: 'Session ended', text: `${device.device} is signed out.` });
+      this.devicesCard()?.reload();
     });
   }
 }
