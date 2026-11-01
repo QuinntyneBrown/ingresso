@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -5,9 +6,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Extensions.Options;
 
-// A minimal app that signs people in with ingresso over OpenID Connect (journey 16) and calls its own API with the
-// access token ingresso issues (journey 17). Playwright and the demos use it as the relying party; it is also the
+// A minimal app that signs people in with ingresso over OpenID Connect (journey 16), calls its own API with the
+// access token ingresso issues (journey 17), and renews that token with a refresh token when it expires (journey 20). Playwright and the demos use it as the relying party; it is also the
 // reference for configuring an ASP.NET Core app and its API against ingresso.
 var builder = WebApplication.CreateBuilder(args);
 var authority = builder.Configuration["SampleApp:Authority"] ?? "http://localhost:4200";
@@ -34,6 +36,8 @@ builder.Services.AddAuthentication(options =>
         options.Scope.Add("openid");
         options.Scope.Add("email");
         options.Scope.Add(apiScope);
+        // A refresh token, so the app renews its access token without sending the person back (journey 20).
+        options.Scope.Add("offline_access");
         // Keep the access token in the session cookie, so the app can call its API for the person.
         options.SaveTokens = true;
         options.MapInboundClaims = false;
@@ -51,6 +55,8 @@ builder.Services.AddAuthentication(options =>
         options.Authority = authority;
         options.Audience = audience;
         options.MapInboundClaims = false;
+        // An expired token is refused at once, not five minutes later; the app renews it instead.
+        options.TokenValidationParameters.ClockSkew = TimeSpan.Zero;
         options.RequireHttpsMetadata = !localAuthority;
     });
 builder.Services.AddAuthorization();
@@ -60,19 +66,32 @@ var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/", async (HttpContext context, IHttpClientFactory http) =>
+app.MapGet("/", async (HttpContext context, IHttpClientFactory http, IOptionsMonitor<OpenIdConnectOptions> oidc) =>
 {
+    const string signIn = """<p><a class="button" href="/signin">Sign in with ingresso</a></p>""";
     var email = context.User.FindFirst("email")?.Value;
-    var body = email is null
-        ? """
-          <p>You’re not signed in.</p>
-          <p><a class="button" href="/signin">Sign in with ingresso</a></p>
-          """
-        : $"""
-          <p data-signed-in-as>Signed in as {WebUtility.HtmlEncode(email)}</p>
-          <p class="api" data-api-result>{WebUtility.HtmlEncode(await CallApiAsync(context, http))}</p>
-          <p><a class="button" href="/signout">Sign out</a></p>
-          """;
+    if (email is null)
+    {
+        return Results.Content(Page($"<p>You’re not signed in.</p>{signIn}"), "text/html; charset=utf-8");
+    }
+
+    var renewals = await RenewIfExpiredAsync(context, http, oidc.Get(OpenIdConnectDefaults.AuthenticationScheme));
+    if (renewals is null)
+    {
+        // ingresso refused the renewal: its session ended, or the token was revoked. Sign out here too.
+        await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return Results.Content(Page($"<p>Your ingresso session has ended. Sign in again.</p>{signIn}"), "text/html; charset=utf-8");
+    }
+
+    var renewed = renewals > 0
+        ? $"""<p data-token-renewals>Access token renewed quietly {renewals} {(renewals == 1 ? "time" : "times")}.</p>"""
+        : "";
+    var body = $"""
+        <p data-signed-in-as>Signed in as {WebUtility.HtmlEncode(email)}</p>
+        <p class="api" data-api-result>{WebUtility.HtmlEncode(await CallApiAsync(context, http))}</p>
+        {renewed}
+        <p><a class="button" href="/signout">Sign out</a></p>
+        """;
     return Results.Content(Page(body), "text/html; charset=utf-8");
 });
 
@@ -105,6 +124,42 @@ app.MapGet("/frontchannel-logout", async (HttpContext context, string? sid) =>
 });
 
 app.Run();
+
+// Renews the access token with the refresh token once it has expired, and keeps the new tokens in the cookie. Returns
+// how many times this sign-in has renewed, or null when ingresso refused (L2-107, L2-110).
+static async Task<int?> RenewIfExpiredAsync(HttpContext context, IHttpClientFactory http, OpenIdConnectOptions oidc)
+{
+    var result = await context.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    var properties = result.Properties!;
+    var renewals = properties.Items.TryGetValue("renewals", out var saved) && int.TryParse(saved, out var count) ? count : 0;
+    var expiresAt = DateTimeOffset.Parse(properties.GetTokenValue("expires_at")!, CultureInfo.InvariantCulture);
+    if (expiresAt > DateTimeOffset.UtcNow.AddSeconds(1))
+    {
+        return renewals;
+    }
+
+    var configuration = await oidc.ConfigurationManager!.GetConfigurationAsync(context.RequestAborted);
+    using var response = await http.CreateClient().PostAsync(configuration.TokenEndpoint, new FormUrlEncodedContent(new Dictionary<string, string>
+    {
+        ["grant_type"] = "refresh_token",
+        ["client_id"] = oidc.ClientId!,
+        ["refresh_token"] = properties.GetTokenValue("refresh_token") ?? "",
+    }));
+    if (!response.IsSuccessStatusCode)
+    {
+        return null;
+    }
+
+    var tokens = await response.Content.ReadFromJsonAsync<JsonElement>();
+    properties.UpdateTokenValue("access_token", tokens.GetProperty("access_token").GetString()!);
+    properties.UpdateTokenValue("refresh_token", tokens.GetProperty("refresh_token").GetString()!);
+    properties.UpdateTokenValue("id_token", tokens.GetProperty("id_token").GetString()!);
+    properties.UpdateTokenValue(
+        "expires_at", DateTimeOffset.UtcNow.AddSeconds(tokens.GetProperty("expires_in").GetInt32()).ToString("o", CultureInfo.InvariantCulture));
+    properties.Items["renewals"] = (renewals + 1).ToString(CultureInfo.InvariantCulture);
+    await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, result.Principal!, properties);
+    return renewals + 1;
+}
 
 // Calls the app's own API with the person's access token and says what it answered.
 static async Task<string> CallApiAsync(HttpContext context, IHttpClientFactory http)

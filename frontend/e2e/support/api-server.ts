@@ -28,6 +28,8 @@ export function apiEnvironment(databaseName = 'e2e'): NodeJS.ProcessEnv {
     // seed registers the sample relying party at this address (journey 16).
     SampleApp__BaseUrl: SAMPLE_APP_URL,
     Outbox__PollInterval: '00:00:00.5',
+    // Short-lived access tokens, so a test can watch the sample app renew one (journey 20).
+    IdentityProvider__AccessTokenLifetime: '00:00:05',
     DOTNET_CLI_TELEMETRY_OPTOUT: '1',
   };
 }

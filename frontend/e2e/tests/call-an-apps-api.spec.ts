@@ -17,7 +17,7 @@ test.describe("Call an app's API with a token", () => {
     await app.waitUntilShown();
 
     await expect(app.apiResult).toHaveText(
-      `Your API says: hello, ${MAYA}. Scope: openid email sample-api.read`,
+      `Your API says: hello, ${MAYA}. Scope: openid email sample-api.read offline_access`,
     );
   });
 });

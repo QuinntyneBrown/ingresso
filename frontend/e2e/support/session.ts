@@ -26,3 +26,13 @@ export async function signInAsUnverified(page: Page): Promise<string> {
   if (!response.ok()) throw new Error(`Test sign-in failed for ${email}: ${response.status()}`);
   return email;
 }
+
+/**
+ * Ends the context's ingresso session on the server without opening the signed-out page, so no app is told by a
+ * front-channel frame: as when the session ends while the app isn't looking (L2-110).
+ */
+export async function endIngressoSessionQuietly(page: Page): Promise<void> {
+  const xsrf = (await page.context().cookies()).find((c) => c.name === 'XSRF-TOKEN')?.value ?? '';
+  const response = await page.request.post('/api/auth/sign-out', { headers: { 'X-XSRF-TOKEN': xsrf } });
+  if (!response.ok()) throw new Error(`Ending the ingresso session failed: ${response.status()}`);
+}
