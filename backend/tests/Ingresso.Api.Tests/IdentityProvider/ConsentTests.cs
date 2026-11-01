@@ -209,4 +209,37 @@ public sealed class ConsentTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    // Acceptance Test
+    // Traces to: L2-124
+    // Description: Deny returns to the app's redirect address with access_denied and its state, and issues no code.
+    [Fact]
+    public async Task Deny_tells_the_app_no()
+    {
+        var app = await RelyingParty.RegisterAskingConsentAsync(factory);
+        var browser = await SignedInBrowserAsync();
+
+        var response = await browser.GetAsync(app.AuthorizePath(new Dictionary<string, string?> { ["scope"] = "openid profile", ["consent"] = "deny" }));
+
+        Assert.StartsWith(RelyingParty.RedirectUri, response.Headers.Location!.AbsoluteUri);
+        var callback = RelyingParty.CallbackParameters(response);
+        Assert.Equal("access_denied", callback["error"]);
+        Assert.Equal(app.State, callback["state"]);
+        Assert.False(callback.ContainsKey("code"));
+    }
+
+    // Acceptance Test
+    // Traces to: L2-124
+    // Description: A denial records nothing, so the next request asks again.
+    [Fact]
+    public async Task A_denial_asks_again_next_time()
+    {
+        var app = await RelyingParty.RegisterAskingConsentAsync(factory);
+        var browser = await SignedInBrowserAsync();
+        await browser.GetAsync(app.AuthorizePath(new Dictionary<string, string?> { ["scope"] = "openid profile", ["consent"] = "deny" }));
+
+        var again = await browser.GetAsync(app.AuthorizePath(Scope("openid profile")));
+
+        Assert.StartsWith("/consent?", again.Headers.Location!.OriginalString);
+    }
 }

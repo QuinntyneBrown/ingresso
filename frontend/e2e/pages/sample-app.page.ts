@@ -15,6 +15,8 @@ export class SampleAppPage {
   readonly renewals: Locator;
   /** Shown when the app's renewal was refused and the person must sign in again (L2-110). */
   readonly sessionEnded: Locator;
+  /** What the app says when the person chose Deny on ingresso's consent page (L2-124). */
+  readonly denied: Locator;
 
   constructor(private readonly page: Page) {
     this.heading = page.getByRole('heading', { level: 1 });
@@ -25,6 +27,7 @@ export class SampleAppPage {
     this.signOut = page.getByRole('link', { name: 'Sign out' });
     this.renewals = page.locator('[data-token-renewals]');
     this.sessionEnded = page.getByText('Your ingresso session has ended. Sign in again.');
+    this.denied = page.getByText('You chose not to let Sample app use your ingresso account.');
   }
 
   async open(): Promise<void> {

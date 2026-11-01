@@ -28,6 +28,9 @@ namespace Ingresso.Api.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 public sealed class AuthorizationController(ISender sender, IOpenIddictScopeManager scopes, IClock clock, IConfiguration configuration) : ControllerBase
 {
+    /// <summary>The parameter the consent page adds to the authorize request when the person chooses Deny (ADR 0018).</summary>
+    public const string ConsentParameter = "consent";
+
     [HttpGet("connect/authorize")]
     [HttpPost("connect/authorize")]
     public async Task<IActionResult> Authorize(CancellationToken cancellationToken)
@@ -56,6 +59,18 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
         if (!person.EmailVerified)
         {
             return Redirect("/verify-email");
+        }
+
+        // Deny on the consent page: OpenIddict returns access_denied to the checked redirect address (L2-124).
+        if ((string?)request[ConsentParameter] == "deny")
+        {
+            return Forbid(
+                new AuthenticationProperties(new Dictionary<string, string?>
+                {
+                    [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.AccessDenied,
+                    [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = "The person chose not to let the app sign them in.",
+                }),
+                OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
 
         // Ask before the app gets more than sign-in; the consent page resumes this request (L2-121, ADR 0018).

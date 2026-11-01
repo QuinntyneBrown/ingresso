@@ -67,4 +67,24 @@ test.describe('Approve what an app can see', () => {
     await expect(consent.failed).toBeVisible();
     await expect(consent.allow).toBeEnabled();
   });
+
+  // Acceptance Test
+  // Traces to: L2-124
+  // Description: Deny returns to the app, which is told no and stays signed out; signing in again asks again.
+  test('Deny tells the app no', async ({ page }) => {
+    const sample = new SampleAppPage(page);
+    const consent = new ConsentPage(page);
+    await signInAsNewPerson(page);
+    await sample.open();
+    await sample.signInWithIngresso.click();
+    await consent.waitUntilShown();
+
+    await consent.deny.click();
+    await sample.waitUntilShown();
+
+    await expect(sample.denied).toBeVisible();
+    await expect(sample.signInWithIngresso).toBeVisible();
+    await sample.signInWithIngresso.click();
+    await consent.waitUntilShown();
+  });
 });

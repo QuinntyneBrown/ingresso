@@ -50,6 +50,13 @@ builder.Services.AddAuthentication(options =>
         options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
         options.NonceCookie.SameSite = SameSiteMode.Lax;
         options.NonceCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        // Deny on ingresso's consent page comes back as access_denied: say so on the home page, not as an error (L2-124).
+        options.Events.OnAccessDenied = context =>
+        {
+            context.Response.Redirect("/?denied=1");
+            context.HandleResponse();
+            return Task.CompletedTask;
+        };
     })
     // The app's API: accepts only ingresso access tokens issued for its audience, validated against discovery.
     .AddJwtBearer(options =>
@@ -74,7 +81,10 @@ app.MapGet("/", async (HttpContext context, IHttpClientFactory http, IOptionsMon
     var email = context.User.FindFirst("email")?.Value;
     if (email is null)
     {
-        return Results.Content(Page($"<p>You’re not signed in.</p>{signIn}"), "text/html; charset=utf-8");
+        var status = context.Request.Query.ContainsKey("denied")
+            ? "<p data-denied>You chose not to let Sample app use your ingresso account.</p>"
+            : "<p>You’re not signed in.</p>";
+        return Results.Content(Page($"{status}{signIn}"), "text/html; charset=utf-8");
     }
 
     var renewals = await RenewIfExpiredAsync(context, http, oidc.Get(OpenIdConnectDefaults.AuthenticationScheme));
