@@ -42,6 +42,7 @@ public sealed class OpenIddictClientRegistry(IOpenIddictApplicationManager appli
             {
                 Permissions.Endpoints.Authorization,
                 Permissions.Endpoints.Token,
+                Permissions.Endpoints.Revocation,
                 Permissions.GrantTypes.AuthorizationCode,
                 Permissions.ResponseTypes.Code,
                 Permissions.Scopes.Email,

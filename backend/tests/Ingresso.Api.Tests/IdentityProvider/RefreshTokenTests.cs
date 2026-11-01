@@ -105,4 +105,60 @@ public sealed class RefreshTokenTests(ApiFactory factory) : IClassFixture<ApiFac
 
         await AssertInvalidGrantAsync(await app.RefreshAsync(newest));
     }
+
+    // Acceptance Test
+    // Traces to: L2-110
+    // Description: After the person signs out of ingresso, a refresh token issued under that session is refused.
+    [Fact]
+    public async Task Signing_out_of_ingresso_stops_the_refresh_token()
+    {
+        var app = await RelyingParty.RegisterWithOfflineAccessAsync(factory);
+        var browser = factory.CreateHttpsClient();
+        await browser.SignInAsAsync(HttpClientExtensions.DevUser);
+        var refreshToken = RefreshTokenIn(await app.SignInOfflineAsync(browser));
+
+        (await browser.PostAsync("/api/auth/sign-out", null)).EnsureSuccessStatusCode();
+
+        await AssertInvalidGrantAsync(await app.RefreshAsync(refreshToken));
+    }
+
+    // Acceptance Test
+    // Traces to: L2-111
+    // Description: A refresh token the app revokes is refused from then on.
+    [Fact]
+    public async Task A_revoked_refresh_token_is_refused()
+    {
+        var app = await RelyingParty.RegisterWithOfflineAccessAsync(factory);
+        var refreshToken = RefreshTokenIn(await app.SignInOfflineAsync());
+
+        var revoked = await app.RevokeAsync(refreshToken);
+
+        Assert.Equal(HttpStatusCode.OK, revoked.StatusCode);
+        await AssertInvalidGrantAsync(await app.RefreshAsync(refreshToken));
+    }
+
+    // Acceptance Test
+    // Traces to: L2-111
+    // Description: Revoking a token ingresso doesn't know still answers 200.
+    [Fact]
+    public async Task Revoking_an_unknown_token_answers_200()
+    {
+        var app = await RelyingParty.RegisterWithOfflineAccessAsync(factory);
+
+        var response = await app.RevokeAsync("not-a-token");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    // Acceptance Test
+    // Traces to: L2-111
+    // Description: Discovery names the revocation endpoint and lists the refresh_token grant.
+    [Fact]
+    public async Task Discovery_names_the_revocation_endpoint_and_the_refresh_token_grant()
+    {
+        var discovery = await RelyingParty.JsonAsync(await factory.CreateHttpsClient().GetAsync("/.well-known/openid-configuration"));
+
+        Assert.EndsWith("/connect/revoke", discovery.GetProperty("revocation_endpoint").GetString());
+        Assert.Contains("refresh_token", discovery.GetProperty("grant_types_supported").EnumerateArray().Select(g => g.GetString()));
+    }
 }

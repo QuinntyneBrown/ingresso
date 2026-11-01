@@ -30,6 +30,7 @@ public static class IdentityProviderSetup
             options.SetEndSessionEndpointUris("connect/endsession");
             options.SetAuthorizationEndpointUris("connect/authorize")
                 .SetTokenEndpointUris("connect/token")
+                .SetRevocationEndpointUris("connect/revoke")
                 .SetJsonWebKeySetEndpointUris(".well-known/jwks");
             options.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
             // Apps allowed offline access renew their tokens with rolling refresh tokens (L2-107).
@@ -99,7 +100,10 @@ public static class IdentityProviderSetup
                 .SetOrder(int.MinValue + 100_000)
                 .SetType(OpenIddictServerHandlerType.Custom));
 
-            var aspNetCore = options.UseAspNetCore().EnableAuthorizationEndpointPassthrough().EnableEndSessionEndpointPassthrough();
+            var aspNetCore = options.UseAspNetCore()
+                .EnableAuthorizationEndpointPassthrough()
+                .EnableEndSessionEndpointPassthrough()
+                .EnableTokenEndpointPassthrough();
             if (devOrTest)
             {
                 // Development, Playwright and demos run on http://localhost.

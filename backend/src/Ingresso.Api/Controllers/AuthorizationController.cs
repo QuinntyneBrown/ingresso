@@ -75,6 +75,39 @@ public sealed class AuthorizationController(ISender sender, IOpenIddictScopeMana
     }
 
     /// <summary>
+    /// The token endpoint, after OpenIddict has validated the grant. A code is exchanged as OpenIddict validated it. A
+    /// refresh token renews only while the ingresso session it came from is active, and renewing counts as using that
+    /// session (L2-110).
+    /// </summary>
+    [HttpPost("connect/token")]
+    public async Task<IActionResult> Exchange(CancellationToken cancellationToken)
+    {
+        var request = HttpContext.GetOpenIddictServerRequest()
+            ?? throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
+        var principal = (await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)).Principal
+            ?? throw new InvalidOperationException("The validated grant has no principal.");
+
+        if (request.IsRefreshTokenGrantType())
+        {
+            if (!Guid.TryParse(principal.GetClaim("sid"), out var sessionId)
+                || !await sender.Send(new TouchSessionCommand(sessionId), cancellationToken))
+            {
+                return Refuse("The ingresso session this token came from has ended.");
+            }
+        }
+
+        return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
+    private ForbidResult Refuse(string description) => Forbid(
+        new AuthenticationProperties(new Dictionary<string, string?>
+        {
+            [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.InvalidGrant,
+            [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = description,
+        }),
+        OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+
+    /// <summary>
     /// An app's sign-out (RP-initiated logout), after OpenIddict has checked the ID token hint and that the return address
     /// is registered for the app: ends the session and goes to the signed-out page, which notifies the session's apps
     /// and continues to the return address with the app's state (L2-100). Without a hint nothing happens (L2-102).
