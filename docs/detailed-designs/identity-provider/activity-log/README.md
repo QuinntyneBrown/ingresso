@@ -23,28 +23,31 @@ changes), a short subject (an app's name or a device description) and when
     `AppEnabled`, `AppDeleted` (the app), and `SigningKeyRotated` (subject `scheduled` when the schedule rotated).
   - `ActivityCategories.Of(type)` maps a type to its category.
 - **Recording** — `IActivityLog.Record(type, userId, subject)` and `RecordChange(type, subject)` (the actor is the
-  current user, or none from the CLI) add the event to `IAppDbContext`. The handler's own `SaveChangesAsync`
+  current user, or none from the CLI, where `NoCurrentUser` stands in for `ICurrentUser`) add the event to
+  `IAppDbContext`. The handler's own `SaveChangesAsync`
   saves it with the change (ADR 0022):
   - `RedeemSignInLinkCommand` and `StartSessionCommand` record `SignedIn`.
   - `RecordAppSignInCommand` records `SignedInToApp` once per ingresso session and app.
   - `ApproveConsentCommand` records `AppApproved`; `RecordConsentDeniedCommand`, sent by the authorize endpoint on
     Deny, records `AppDenied`; `RevokeConnectedAppCommand` records `AppAccessRevoked`.
   - `EndSessionCommand` and `EndOtherSessionsCommand` record the session events.
-  - The client commands and `RotateSigningKeyCommand` record the app and key events.
+  - The client commands and `RotateSigningKeyCommand` record the app and key events;
+    `RotateSigningKeyCommand(Scheduled: true)`, sent by `RotateIfDueCommand`, records the subject `scheduled`.
   - Events never hold tokens, secrets, codes, tile addresses or IP addresses (L2-038).
 - **Query** — `GetActivityQuery(Category?, Before?)` returns `ActivityPageDto(Events, Next)`, 20 events per page,
   newest first. A person gets their own events; an administrator also gets every app and key event. `Before` is
   the last event id of the previous page and `Next` the cursor for the following one, or null.
   `ActivityEventDto(Id, Type, Category, Subject, Actor, OccurredAt)`; `Actor` is the administrator's display name
   or email, or null.
-- **Retention** — `PruneActivityCommand` deletes events older than `Activity:RetentionPeriod` (90 days by
-  default). The daily `TokenPruningService` sends it.
+- **Retention** — `PruneActivityCommand` deletes events older than `ActivityRetention.Period`, which
+  Infrastructure reads from `Activity:RetentionPeriod` (90 days by default). The daily `TokenPruningService` sends it.
 - **API** — `GET /api/activity?category=sign-ins|app-access|sessions|apps-and-keys&before=<id>` for the signed-in
   person (`ActivityController`).
 - **Frontend**:
   - `ACTIVITY_API` (`list(category, before)`), `ActivityPage` at `/settings/activity`, and an Activity card in
     Settings that links to it.
-  - The page shows a chip row (All, Sign-ins, App access, Sessions, and Apps and keys for administrators), the
+  - The page shows a row of `choice` chips (All, Sign-ins, App access, Sessions, and Apps and keys for
+    administrators; exactly one is pressed, and pressing it again keeps it pressed), the
     list, and Show more; `EmptyState`, `Skeleton` and a danger `Alert` with Try again cover the other states.
   - `activityTitle` and `activityMeta` turn an event into its words, such as “Signed in to Sample app” and
     “Chrome on macOS · 15 minutes ago”.

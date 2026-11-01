@@ -13,4 +13,4 @@
 | connected-apps | 3 days | 100% |
 | devices | 2.5 days | 100% |
 | signing-keys | 3 days | 100% |
-| activity-log | 4 days | 0% |
+| activity-log | 4 days | 100% |
