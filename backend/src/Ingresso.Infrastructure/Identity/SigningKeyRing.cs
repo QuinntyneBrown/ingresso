@@ -14,8 +14,8 @@ namespace Ingresso.Infrastructure.Identity;
 
 /// <summary>
 /// The active and retiring signing keys, decrypted, for OpenIddict to sign with, validate with and publish
-/// (L2-137, L2-138). Each is an X.509 key over a self-signed certificate made in memory: a newer key's certificate
-/// expires later, and OpenIddict signs with the credential whose certificate expires last, so the active key signs.
+/// (L2-137, L2-138). Each is an X.509 key over a self-signed certificate made in memory. OpenIddict signs with the
+/// credential whose certificate expires last, so the active key's certificate expires after every retiring key's.
 /// </summary>
 public sealed class SigningKeyRing(
     IServiceScopeFactory scopes, IDataProtectionProvider dataProtection, SigningKeyPolicy policy, ILogger<SigningKeyRing> logger)
@@ -86,14 +86,20 @@ public sealed class SigningKeyRing(
         }
 
         var published = stored
-            .Where(k => k.State(now, policy.RetirementPeriod) != SigningKeyState.Retired)
-            .OrderByDescending(k => k.CreatedAtUtc)
+            .Select(k => (Key: k, State: k.State(now, policy.RetirementPeriod)))
+            .Where(k => k.State != SigningKeyState.Retired)
+            .OrderBy(k => k.State)
+            .ThenByDescending(k => k.Key.CreatedAtUtc)
             .ToList();
 
         CancellationTokenSource? fire = null;
         lock (gate)
         {
-            var next = published.Select(k => decrypted.TryGetValue(k.Kid, out var key) ? key : decrypted[k.Kid] = Decrypt(k.Kid, k.ProtectedKey, k.CreatedAtUtc)).ToList();
+            var next = published.Select(k =>
+            {
+                var cacheKey = $"{k.Key.Kid}:{k.State}";
+                return decrypted.TryGetValue(cacheKey, out var key) ? key : decrypted[cacheKey] = Decrypt(k.Key.Kid, k.Key.ProtectedKey, k.State);
+            }).ToList();
             if (keys is null || !keys.Select(k => k.KeyId).SequenceEqual(next.Select(k => k.KeyId)))
             {
                 var first = keys is null;
@@ -109,13 +115,13 @@ public sealed class SigningKeyRing(
         fire?.Cancel();
     }
 
-    private X509SecurityKey Decrypt(string kid, string protectedKey, DateTimeOffset createdAt)
+    private X509SecurityKey Decrypt(string kid, string protectedKey, SigningKeyState state)
     {
         using var rsa = RSA.Create();
         rsa.ImportPkcs8PrivateKey(Convert.FromBase64String(dataProtection.CreateProtector(DataProtectionSigningKeyFactory.Purpose).Unprotect(protectedKey)), out _);
         var request = new CertificateRequest($"CN=ingresso signing key {kid}", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-        // Valid from long ago, so OpenIddict never sees it as not yet valid; expiring later for newer keys.
-        var certificate = request.CreateSelfSigned(DateTimeOffset.UnixEpoch, createdAt.AddYears(100));
+        // Valid from long ago, so OpenIddict never sees it as not yet valid; the active key's expires last.
+        var certificate = request.CreateSelfSigned(DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch.AddYears(state == SigningKeyState.Active ? 300 : 200));
         return new X509SecurityKey(certificate, kid);
     }
 }

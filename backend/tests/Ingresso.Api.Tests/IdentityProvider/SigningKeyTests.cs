@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -5,7 +6,10 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using MediatR;
+using Ingresso.Api.Auth;
 using Ingresso.Api.Tests.Infrastructure;
+using Ingresso.Application.SigningKeys;
 
 namespace Ingresso.Api.Tests.IdentityProvider;
 
@@ -65,6 +69,40 @@ public sealed class SigningKeyTests(ApiFactory factory) : IClassFixture<ApiFacto
         rsa.ImportPkcs8PrivateKey(Convert.FromBase64String(protector.Unprotect(active.ProtectedKey)), out _);
         var published = (await JwksAsync()).Single(k => k.GetProperty("kid").GetString() == active.Kid);
         Assert.Equal(rsa.ExportParameters(false).Modulus, Base64UrlDecode(published.GetProperty("n").GetString()!));
+    }
+
+    /// <summary>Rotates as <c>keys rotate</c> does, then runs the API's key check, as it does every minute.</summary>
+    private async Task<RotatedSigningKey> RotateAsync()
+    {
+        using var scope = factory.Services.CreateScope();
+        var rotated = await scope.ServiceProvider.GetRequiredService<IMediator>().Send(new RotateSigningKeyCommand());
+        await factory.Services.GetRequiredService<SigningKeyMaintenance>().RunOnceAsync(CancellationToken.None);
+        return rotated;
+    }
+
+    // Acceptance Test
+    // Traces to: L2-136, L2-137
+    // Description: After a rotation new tokens carry the new key's kid, the JWKS lists both keys, and an access token signed before still works.
+    [Fact]
+    public async Task After_a_rotation_new_tokens_use_the_new_key_and_earlier_tokens_keep_working()
+    {
+        var app = await RelyingParty.RegisterWithOfflineAccessAsync(factory);
+        var before = await app.SignInOfflineAsync();
+        var previousKid = Header(before.GetProperty("id_token").GetString()!).GetProperty("kid").GetString();
+
+        var rotated = await RotateAsync();
+
+        Assert.NotEqual(previousKid, rotated.ActiveKid);
+        Assert.Equal(previousKid, rotated.RetiringKid);
+        Assert.Equal(ApiFactory.Today.AddDays(14), rotated.PublishedUntil);
+        var refreshed = await RelyingParty.JsonAsync(await app.RefreshAsync(before.GetProperty("refresh_token").GetString()!));
+        Assert.Equal(rotated.ActiveKid, Header(refreshed.GetProperty("id_token").GetString()!).GetProperty("kid").GetString());
+        var kids = (await JwksAsync()).Select(k => k.GetProperty("kid").GetString()).ToList();
+        Assert.Contains(rotated.ActiveKid, kids);
+        Assert.Contains(previousKid, kids);
+        var userinfo = new HttpRequestMessage(HttpMethod.Get, "/connect/userinfo");
+        userinfo.Headers.Authorization = new("Bearer", before.GetProperty("access_token").GetString());
+        Assert.Equal(HttpStatusCode.OK, (await factory.CreateHttpsClient().SendAsync(userinfo)).StatusCode);
     }
 
     // Acceptance Test

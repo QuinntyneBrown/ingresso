@@ -37,6 +37,8 @@ public static class IdentityProviderSetup
 
         services.AddSingleton<IConfigureOptions<OpenIddictServerOptions>, SigningKeyOptionsSetup>();
         services.AddSingleton<IOptionsChangeTokenSource<OpenIddictServerOptions>, SigningKeyChangeTokenSource>();
+        services.AddSingleton<SigningKeyMaintenance>();
+        services.AddHostedService(sp => sp.GetRequiredService<SigningKeyMaintenance>());
         services.AddOpenIddict().AddServer(options =>
         {
             options.SetIssuer(new Uri(issuer.TrimEnd('/') + "/"));

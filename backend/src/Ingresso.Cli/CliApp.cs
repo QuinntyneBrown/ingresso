@@ -5,11 +5,11 @@ namespace Ingresso.Cli;
 
 /// <summary>
 /// Runs one command: migrate, seed, reset, clients (the apps that sign in with ingresso), resources (the APIs they
-/// call with ingresso access tokens) or users (administrators).
+/// call with ingresso access tokens), keys (token signing keys) or users (administrators).
 /// </summary>
 public static class CliApp
 {
-    public const string Usage = "Usage: ingresso <migrate|seed|reset --confirm|clients ...|resources ...|users ...>";
+    public const string Usage = "Usage: ingresso <migrate|seed|reset --confirm|clients ...|resources ...|keys ...|users ...>";
 
     public static async Task<int> RunAsync(string[] args, IServiceProvider services, TextWriter output, CancellationToken cancellationToken = default)
     {
@@ -22,6 +22,11 @@ public static class CliApp
         if (command == "resources")
         {
             return await RunSafelyAsync(command, () => ResourceCommands.RunAsync(args[1..], services, output, cancellationToken), output);
+        }
+
+        if (command == "keys")
+        {
+            return await RunSafelyAsync(command, () => KeyCommands.RunAsync(args[1..], services, output, cancellationToken), output);
         }
 
         if (command == "users")
