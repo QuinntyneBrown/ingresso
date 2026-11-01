@@ -59,7 +59,12 @@ The CLI `clients` commands keep working and use the same Application handlers.
 
 - Secrets never reach logs: request logging records method, path and status only (L2-038), and responses are
   not logged.
-- A confidential app still uses PKCE; the secret is an extra check at the token endpoint.
+- A confidential app still uses PKCE; the secret is an extra check at the token endpoint. A missing or wrong secret
+  gets `401 invalid_client` (RFC 6749 section 5.2) and no tokens.
+- Validation is the server's: the dialog sends what was typed and shows the API's messages, so the CLI and the
+  dialog always agree. A name in use (`409`) is shown on the name field.
+- Settings → Apps reloads the list after each registration; a confidential app's list reload waits until the
+  client secret dialog closes.
 - The list shows the type and client ID only. Addresses and scopes stay in the CLI's `clients list` until
   journey 21 adds editing.
 
