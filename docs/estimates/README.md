@@ -1,7 +1,7 @@
 # Estimates
 
-- Overall effort: 61.5 days
-- Complete: 99%
+- Overall effort: 64.5 days
+- Complete: 95%
 
 | Subsystem | Effort | Complete |
 |---|---|---|
@@ -9,7 +9,7 @@
 | [platform](platform.md) | 12 days | 100% |
 | [tiles](tiles.md) | 9 days | 100% |
 | [dashboard](dashboard.md) | 13 days | 100% |
-| [identity-provider](identity-provider.md) | 19.5 days | 100% |
+| [identity-provider](identity-provider.md) | 22.5 days | 87% |
 
 ## Roadmap
 

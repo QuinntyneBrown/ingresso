@@ -74,6 +74,10 @@ behind their backdrop; only the dialog is mapped.
   primary `Button` (Register an app), `List` (`surface`) of `ListItem` (`title` = app name, `meta` = type and
   client ID), `EmptyState` with a primary `Button` when there are none, `Skeleton` while loading, and a danger
   `Alert` with a Try again `Button` on error. Local: the card's header row (title, lead and button).
+- Apps row actions (journey 21, `apps`, `apps-menu`): each `ListItem`'s `[slot=action]` holds a neutral `Badge`
+  (Disabled) when the app is disabled and a ghost icon `Button` (`more`, “Actions for <name>”) with
+  `MenuTrigger` + `Menu` + `MenuItem`: Edit, Rotate secret (confidential apps), Disable or Enable, a
+  `MenuDivider`, and Delete (`kind="danger"`). Changes are confirmed with `ToastService` toasts.
 
 ### Brand guide — `/brand` (`pages/brand`: default, loading, error)
 
@@ -108,8 +112,10 @@ All dialogs open through Angular CDK `Dialog` with `modalDialogConfig` and rende
 | Dialog (mock folder: states)                                           | Library components                                                          | Local UI         |
 | ---------------------------------------------------------------------- | --------------------------------------------------------------------------- | ---------------- |
 | Add app (`dialogs/add-app`: default, busy, invalid, failed, duplicate) | `DialogShell`, `Button` (`busy`), `Alert` (failed; `warning` for duplicate) | App form         |
-| Register an app (`dialogs/register-app`: default, invalid, busy, error) | `DialogShell`, `ErrorSummary`, `FormField`, `Input` (text, and `textarea` for the address lists, one per line), `FieldSet` + `Choice` + `Check` (APIs as checkboxes, type as radios), `Alert` (error), `Button` (`busy`) | — |
-| Client secret (`dialogs/client-secret`: default, copied) | `DialogShell`, `Alert` (`warning`), `FormField`, `Input` (`readonly`, monospace), `Button` (Copy / Copied, Done) | Copy row (`Input` and `Button` side by side); polite status region for “copied” |
+| Register an app (`dialogs/register-app`: default, invalid, busy, error, edit, edit-busy) | `DialogShell`, `ErrorSummary`, `FormField`, `Input` (text, and `textarea` for the address lists, one per line), `FieldSet` + `Choice` + `Check` (APIs and staying signed in as checkboxes, type as radios), `Alert` (error), `Button` (`busy`). Edit mode (journey 21) fills the values, shows the type as text, and saves with Save changes | — |
+| Rotate secret (`dialogs/rotate-secret`: default, busy, error) | `DialogShell`, `Alert` (error), `Button` (`appearance="danger"`, `busy`) | — |
+| Delete app — registered app (`dialogs/delete-client`: default, busy, error) | `DialogShell`, `FormField`, `Input` (type the name to confirm), `Alert` (error), `Button` (`appearance="danger"`, `busy`, disabled until the name matches) | — |
+| Client secret (`dialogs/client-secret`: default, copied, rotated) | `DialogShell`, `Alert` (`warning`), `FormField`, `Input` (`readonly`, monospace), `Button` (Copy / Copied, Done) | Copy row (`Input` and `Button` side by side); polite status region for “copied” |
 | Edit app (`dialogs/edit-app`: default, busy, invalid, failed)          | `DialogShell`, `Button`, `Alert` (failed, delete confirmation)              | App form         |
 | Delete app (`dialogs/delete-app`: default, busy, failed)               | `DialogShell`, `AppIcon`, `Button` (`appearance="danger"`), `Alert`         | Tile preview row |
 | Reset layout (`dialogs/reset-layout`: default, busy, failed)                   | `DialogShell`, `Button`, `Alert` (failed)                                   | —                |

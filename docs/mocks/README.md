@@ -36,33 +36,35 @@ Legend: ✅ mock exists · ➖ not applicable (reason in manifest) · ❌ missin
 
 ### Pages
 
-| Screen | default | loading | empty | error | no-results | search-results | editing | offline | editing-refused | editing-narrow | account-menu | invalid | submitting | sent | expired | used | link-invalid | rate-limited | for-app | for-app-sent | sending | success | apps | apps-empty | apps-loading | apps-error | sign-out | signing-out | done | Requirements |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Dashboard (`dashboard`) | [✅](pages/dashboard/default.html) | [✅](pages/dashboard/loading.html) | [✅](pages/dashboard/empty.html) | [✅](pages/dashboard/error.html) | [✅](pages/dashboard/no-results.html) | [✅](pages/dashboard/search-results.html) | [✅](pages/dashboard/editing.html) | [✅](pages/dashboard/offline.html) | [✅](pages/dashboard/editing-refused.html) | [✅](pages/dashboard/editing-narrow.html) | [✅](pages/dashboard/account-menu.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| Directory (`directory`) | [✅](pages/directory/default.html) | [✅](pages/directory/loading.html) | [✅](pages/directory/empty.html) | [✅](pages/directory/error.html) |  | [✅](pages/directory/search-results.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| Sign in (`sign-in`) | [✅](pages/sign-in/default.html) | ➖ | ➖ | [✅](pages/sign-in/error.html) |  |  |  |  |  |  |  | [✅](pages/sign-in/invalid.html) | [✅](pages/sign-in/submitting.html) | [✅](pages/sign-in/sent.html) | [✅](pages/sign-in/expired.html) | [✅](pages/sign-in/used.html) | [✅](pages/sign-in/link-invalid.html) | [✅](pages/sign-in/rate-limited.html) | [✅](pages/sign-in/for-app.html) | [✅](pages/sign-in/for-app-sent.html) |  |  |  |  |  |  |  |  |  |  |
-| Verify your email (`verify-email`) | [✅](pages/verify-email/default.html) | ➖ | ➖ | [✅](pages/verify-email/error.html) |  |  |  |  |  |  |  |  |  | [✅](pages/verify-email/sent.html) |  |  | [✅](pages/verify-email/link-invalid.html) | [✅](pages/verify-email/rate-limited.html) |  |  | [✅](pages/verify-email/sending.html) |  |  |  |  |  |  |  |  |  |
-| Reset password (`reset-password`) | [✅](pages/reset-password/default.html) | ➖ | ➖ | [✅](pages/reset-password/error.html) |  |  |  |  |  |  |  | [✅](pages/reset-password/invalid.html) | [✅](pages/reset-password/submitting.html) |  |  |  |  |  |  |  |  | [✅](pages/reset-password/success.html) |  |  |  |  |  |  |  |  |
-| Settings (`settings`) | [✅](pages/settings/default.html) | [✅](pages/settings/loading.html) | ➖ | [✅](pages/settings/error.html) |  |  |  |  |  |  |  | [✅](pages/settings/invalid.html) |  |  |  |  |  |  |  |  |  | [✅](pages/settings/success.html) | [✅](pages/settings/apps.html) | [✅](pages/settings/apps-empty.html) | [✅](pages/settings/apps-loading.html) | [✅](pages/settings/apps-error.html) |  |  |  |  |
-| Brand guide (`brand`) | [✅](pages/brand/default.html) | [✅](pages/brand/loading.html) | ➖ | [✅](pages/brand/error.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| Page not found (`not-found`) | [✅](pages/not-found/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| Access denied (`forbidden`) | [✅](pages/forbidden/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| Something went wrong (`server-error`) | [✅](pages/server-error/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| You’re offline (`offline`) | [✅](pages/offline/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| Can’t sign in to this app (`authorize-error`) | [✅](pages/authorize-error/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | [✅](pages/authorize-error/sign-out.html) |  |  |  |
-| Signed out (`signed-out`) | ➖ | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | [✅](pages/signed-out/signing-out.html) | [✅](pages/signed-out/done.html) |  |
+| Screen | default | loading | empty | error | no-results | search-results | editing | offline | editing-refused | editing-narrow | account-menu | invalid | submitting | sent | expired | used | link-invalid | rate-limited | for-app | for-app-sent | sending | success | apps | apps-menu | apps-empty | apps-loading | apps-error | sign-out | signing-out | done | Requirements |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Dashboard (`dashboard`) | [✅](pages/dashboard/default.html) | [✅](pages/dashboard/loading.html) | [✅](pages/dashboard/empty.html) | [✅](pages/dashboard/error.html) | [✅](pages/dashboard/no-results.html) | [✅](pages/dashboard/search-results.html) | [✅](pages/dashboard/editing.html) | [✅](pages/dashboard/offline.html) | [✅](pages/dashboard/editing-refused.html) | [✅](pages/dashboard/editing-narrow.html) | [✅](pages/dashboard/account-menu.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Directory (`directory`) | [✅](pages/directory/default.html) | [✅](pages/directory/loading.html) | [✅](pages/directory/empty.html) | [✅](pages/directory/error.html) |  | [✅](pages/directory/search-results.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Sign in (`sign-in`) | [✅](pages/sign-in/default.html) | ➖ | ➖ | [✅](pages/sign-in/error.html) |  |  |  |  |  |  |  | [✅](pages/sign-in/invalid.html) | [✅](pages/sign-in/submitting.html) | [✅](pages/sign-in/sent.html) | [✅](pages/sign-in/expired.html) | [✅](pages/sign-in/used.html) | [✅](pages/sign-in/link-invalid.html) | [✅](pages/sign-in/rate-limited.html) | [✅](pages/sign-in/for-app.html) | [✅](pages/sign-in/for-app-sent.html) |  |  |  |  |  |  |  |  |  |  |  |
+| Verify your email (`verify-email`) | [✅](pages/verify-email/default.html) | ➖ | ➖ | [✅](pages/verify-email/error.html) |  |  |  |  |  |  |  |  |  | [✅](pages/verify-email/sent.html) |  |  | [✅](pages/verify-email/link-invalid.html) | [✅](pages/verify-email/rate-limited.html) |  |  | [✅](pages/verify-email/sending.html) |  |  |  |  |  |  |  |  |  |  |
+| Reset password (`reset-password`) | [✅](pages/reset-password/default.html) | ➖ | ➖ | [✅](pages/reset-password/error.html) |  |  |  |  |  |  |  | [✅](pages/reset-password/invalid.html) | [✅](pages/reset-password/submitting.html) |  |  |  |  |  |  |  |  | [✅](pages/reset-password/success.html) |  |  |  |  |  |  |  |  |  |
+| Settings (`settings`) | [✅](pages/settings/default.html) | [✅](pages/settings/loading.html) | ➖ | [✅](pages/settings/error.html) |  |  |  |  |  |  |  | [✅](pages/settings/invalid.html) |  |  |  |  |  |  |  |  |  | [✅](pages/settings/success.html) | [✅](pages/settings/apps.html) | [✅](pages/settings/apps-menu.html) | [✅](pages/settings/apps-empty.html) | [✅](pages/settings/apps-loading.html) | [✅](pages/settings/apps-error.html) |  |  |  |  |
+| Brand guide (`brand`) | [✅](pages/brand/default.html) | [✅](pages/brand/loading.html) | ➖ | [✅](pages/brand/error.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Page not found (`not-found`) | [✅](pages/not-found/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Access denied (`forbidden`) | [✅](pages/forbidden/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Something went wrong (`server-error`) | [✅](pages/server-error/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| You’re offline (`offline`) | [✅](pages/offline/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Can’t sign in to this app (`authorize-error`) | [✅](pages/authorize-error/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | [✅](pages/authorize-error/sign-out.html) |  |  |  |
+| Signed out (`signed-out`) | ➖ | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | [✅](pages/signed-out/signing-out.html) | [✅](pages/signed-out/done.html) |  |
 
 ### Dialogs
 
-| Screen | default | busy | invalid | failed | duplicate | error | copied | Requirements |
-|---|---|---|---|---|---|---|---|---|
-| Add app (`add-app`) | [✅](dialogs/add-app/default.html) | [✅](dialogs/add-app/busy.html) | [✅](dialogs/add-app/invalid.html) | [✅](dialogs/add-app/failed.html) | [✅](dialogs/add-app/duplicate.html) |  |  |  |
-| Edit app (`edit-app`) | [✅](dialogs/edit-app/default.html) | [✅](dialogs/edit-app/busy.html) | [✅](dialogs/edit-app/invalid.html) | [✅](dialogs/edit-app/failed.html) |  |  |  |  |
-| Delete app (`delete-app`) | [✅](dialogs/delete-app/default.html) | [✅](dialogs/delete-app/busy.html) | ➖ | [✅](dialogs/delete-app/failed.html) |  |  |  |  |
-| Reset layout (`reset-layout`) | [✅](dialogs/reset-layout/default.html) | [✅](dialogs/reset-layout/busy.html) | ➖ | [✅](dialogs/reset-layout/failed.html) |  |  |  |  |
-| Sign out (`sign-out`) | [✅](dialogs/sign-out/default.html) | [✅](dialogs/sign-out/busy.html) | ➖ | [✅](dialogs/sign-out/failed.html) |  |  |  |  |
-| Register an app (`register-app`) | [✅](dialogs/register-app/default.html) | [✅](dialogs/register-app/busy.html) | [✅](dialogs/register-app/invalid.html) |  |  | [✅](dialogs/register-app/error.html) |  |  |
-| Client secret (`client-secret`) | [✅](dialogs/client-secret/default.html) | ➖ | ➖ |  |  | ➖ | [✅](dialogs/client-secret/copied.html) |  |
+| Screen | default | busy | invalid | failed | duplicate | error | edit | edit-busy | copied | rotated | Requirements |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Add app (`add-app`) | [✅](dialogs/add-app/default.html) | [✅](dialogs/add-app/busy.html) | [✅](dialogs/add-app/invalid.html) | [✅](dialogs/add-app/failed.html) | [✅](dialogs/add-app/duplicate.html) |  |  |  |  |  |  |
+| Edit app (`edit-app`) | [✅](dialogs/edit-app/default.html) | [✅](dialogs/edit-app/busy.html) | [✅](dialogs/edit-app/invalid.html) | [✅](dialogs/edit-app/failed.html) |  |  |  |  |  |  |  |
+| Delete app (`delete-app`) | [✅](dialogs/delete-app/default.html) | [✅](dialogs/delete-app/busy.html) | ➖ | [✅](dialogs/delete-app/failed.html) |  |  |  |  |  |  |  |
+| Reset layout (`reset-layout`) | [✅](dialogs/reset-layout/default.html) | [✅](dialogs/reset-layout/busy.html) | ➖ | [✅](dialogs/reset-layout/failed.html) |  |  |  |  |  |  |  |
+| Sign out (`sign-out`) | [✅](dialogs/sign-out/default.html) | [✅](dialogs/sign-out/busy.html) | ➖ | [✅](dialogs/sign-out/failed.html) |  |  |  |  |  |  |  |
+| Register an app (`register-app`) | [✅](dialogs/register-app/default.html) | [✅](dialogs/register-app/busy.html) | [✅](dialogs/register-app/invalid.html) |  |  | [✅](dialogs/register-app/error.html) | [✅](dialogs/register-app/edit.html) | [✅](dialogs/register-app/edit-busy.html) |  |  |  |
+| Client secret (`client-secret`) | [✅](dialogs/client-secret/default.html) | ➖ | ➖ |  |  | ➖ |  |  | [✅](dialogs/client-secret/copied.html) | [✅](dialogs/client-secret/rotated.html) |  |
+| Rotate secret (`rotate-secret`) | [✅](dialogs/rotate-secret/default.html) | [✅](dialogs/rotate-secret/busy.html) | ➖ |  |  | [✅](dialogs/rotate-secret/error.html) |  |  |  |  |  |
+| Delete app (`delete-client`) | [✅](dialogs/delete-client/default.html) | [✅](dialogs/delete-client/busy.html) | ➖ |  |  | [✅](dialogs/delete-client/error.html) |  |  |  |  |  |
 
 ### Notifications
 
