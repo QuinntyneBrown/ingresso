@@ -27,7 +27,7 @@ public sealed record RedeemSignInLinkCommand(string Token, string? UserAgent = n
 /// Marks the token used, finds or creates the user, verifies their address and starts a session, all in one unit of
 /// work, so a token can start at most one session.
 /// </summary>
-public sealed class RedeemSignInLinkCommandHandler(IAppDbContext db, IClock clock, ISecurityTokenService tokens)
+public sealed class RedeemSignInLinkCommandHandler(IAppDbContext db, IClock clock, ISecurityTokenService tokens, IActivityLog activity)
     : IRequestHandler<RedeemSignInLinkCommand, RedeemResult>
 {
     public async Task<RedeemResult> Handle(RedeemSignInLinkCommand request, CancellationToken cancellationToken)
@@ -66,6 +66,7 @@ public sealed class RedeemSignInLinkCommandHandler(IAppDbContext db, IClock cloc
 
         var session = Session.Start(user.Id, now, DeviceDescription.From(request.UserAgent));
         db.Sessions.Add(session);
+        activity.Record(ActivityEventType.SignedIn, user.Id, session.Device);
         await db.SaveChangesAsync(cancellationToken);
 
         const string home = "/";
@@ -80,7 +81,7 @@ public sealed class RedeemSignInLinkCommandHandler(IAppDbContext db, IClock cloc
 /// </summary>
 public sealed record StartSessionCommand(string Email, bool CreateUnverified = false, bool Administrator = false, string? UserAgent = null) : IRequest<SignedIn?>;
 
-public sealed class StartSessionCommandHandler(IAppDbContext db, IClock clock) : IRequestHandler<StartSessionCommand, SignedIn?>
+public sealed class StartSessionCommandHandler(IAppDbContext db, IClock clock, IActivityLog activity) : IRequestHandler<StartSessionCommand, SignedIn?>
 {
     public async Task<SignedIn?> Handle(StartSessionCommand request, CancellationToken cancellationToken)
     {
@@ -115,6 +116,7 @@ public sealed class StartSessionCommandHandler(IAppDbContext db, IClock clock) :
 
         var session = Session.Start(user.Id, clock.UtcNow, DeviceDescription.From(request.UserAgent));
         db.Sessions.Add(session);
+        activity.Record(ActivityEventType.SignedIn, user.Id, session.Device);
         await db.SaveChangesAsync(cancellationToken);
         return new SignedIn(session.Id, user.Id, user.Email, user.Name ?? user.Email, user.Role, "/");
     }

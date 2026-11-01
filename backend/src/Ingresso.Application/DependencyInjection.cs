@@ -17,6 +17,7 @@ public static class DependencyInjection
         });
         services.AddValidatorsFromAssembly(assembly);
         services.AddScoped<IAuditLog, Common.AuditLog>();
+        services.AddScoped<IActivityLog, Common.ActivityLog>();
         return services;
     }
 }
