@@ -128,6 +128,25 @@ test.describe('Dashboard grid', () => {
   // Acceptance Test
   // Traces to: L2-040
   // Description: With 200 tiles the dashboard is drawn and its Add app button works in under 2 seconds.
+  // Acceptance Test
+  // Traces to: L2-042
+  // Description: On a phone, a long name with no spaces wraps and the tiles fit, so the page never scrolls sideways.
+  test('a long unbroken name does not push the phone dashboard sideways', async ({ page }) => {
+    await stubTiles(page, [tile(1, 'Saturdaze', 0, 0, 4, 3), tile(2, 'Faithtech', 4, 0, 4, 3)], {
+      name: 'quinntynebrown@averylongdomainname.example',
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    const dashboard = new DashboardPage(page);
+    await dashboard.open();
+    await expect(dashboard.tiles).toHaveCount(2);
+
+    expect(await dashboard.scrollsSideways()).toBe(false);
+    for (const tile of await dashboard.tiles.all()) {
+      const box = (await tile.boundingBox())!;
+      expect(box.x + box.width).toBeLessThanOrEqual(390);
+    }
+  });
+
   test('200 tiles are interactive in under two seconds', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     const many = Array.from({ length: 200 }, (_, i) =>

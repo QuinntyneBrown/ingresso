@@ -89,12 +89,16 @@ const json = (route: Route, body: unknown, status = 200) =>
  * Answers /api/auth/me and /api/tiles in the browser from an in-memory list, with the same contract as the
  * .NET API. Used when E2E_FAKE_API is set, and by tests that need a state the seed data does not hold.
  */
-export async function installFakeApi(page: Page, initial: FakeTile[] = DEFAULT_TILES): Promise<void> {
+export async function installFakeApi(
+  page: Page,
+  initial: FakeTile[] = DEFAULT_TILES,
+  me: Partial<typeof ME> = {},
+): Promise<void> {
   let tiles = initial.map((t) => ({ ...t }));
   let nextId = 100;
   const ordered = () => [...tiles].sort((a, b) => a.y - b.y || a.x - b.x);
 
-  await page.route('**/api/auth/me', (route) => json(route, ME));
+  await page.route('**/api/auth/me', (route) => json(route, { ...ME, ...me }));
   await page.route('**/api/auth/sign-out', (route) => route.fulfill({ status: 204 }));
   await page.route(/\/api\/tiles(\/.*)?$/, async (route) => {
     const request = route.request();
@@ -153,8 +157,8 @@ export async function installFakeApi(page: Page, initial: FakeTile[] = DEFAULT_T
 }
 
 /** Answers GET /api/tiles with these tiles (the rest of the fake API keeps working). */
-export async function stubTiles(page: Page, tiles: FakeTile[]): Promise<void> {
-  await installFakeApi(page, tiles);
+export async function stubTiles(page: Page, tiles: FakeTile[], me: Partial<typeof ME> = {}): Promise<void> {
+  await installFakeApi(page, tiles, me);
 }
 
 /** Delays every GET /api/tiles response by `ms` before it reaches the page. */

@@ -5,11 +5,17 @@
   margin-inline: auto;
   padding: var(--ig-space-10) var(--ig-layout-margin) var(--ig-space-16);
   display: grid;
+  /* One column that never grows past the page, so a long word cannot widen the tiles. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--spacingVerticalXXL);
 }
 .intro {
   display: grid;
   gap: var(--spacingVerticalXS);
+}
+.intro h1 {
+  /* A name with no spaces, such as an email address, wraps rather than running off a phone screen. */
+  overflow-wrap: anywhere;
 }
 .grid {
   display: grid;
