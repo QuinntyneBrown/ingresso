@@ -15,6 +15,7 @@ test.describe('Register an app, visually', () => {
     const settings = new SettingsPage(page);
     await signInAsAdministrator(page);
     await settings.showMockProfile();
+    await settings.showMockConnectedApps();
     return settings;
   }
 

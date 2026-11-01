@@ -1,7 +1,7 @@
 import { Dialog } from '@angular/cdk/dialog';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AppRegistered, Profile, RegisteredApp, Tile, TileInput } from 'api';
+import { AppRegistered, ConnectedApp, Profile, RegisteredApp, Tile, TileInput } from 'api';
 import { modalDialogConfig } from 'components';
 import { AddAppDialog, ADD_APP_TITLE_ID } from '../dialogs/add-app/add-app-dialog';
 import {
@@ -11,6 +11,7 @@ import {
 } from '../dialogs/client-secret/client-secret-dialog';
 import { DeleteClientDialog, DELETE_CLIENT_TITLE_ID } from '../dialogs/delete-client/delete-client-dialog';
 import { RotateSecretDialog, ROTATE_SECRET_TITLE_ID } from '../dialogs/rotate-secret/rotate-secret-dialog';
+import { RevokeAccessDialog, REVOKE_ACCESS_TITLE_ID } from '../dialogs/revoke-access/revoke-access-dialog';
 import { EditAppDialog, EDIT_APP_TITLE_ID } from '../dialogs/edit-app/edit-app-dialog';
 import { EditProfileDialog, EDIT_PROFILE_TITLE_ID } from '../dialogs/edit-profile/edit-profile-dialog';
 import {
@@ -115,6 +116,14 @@ export class AppDialogs {
     return this.dialog.open<AppRegistered>(
       RotateSecretDialog,
       modalDialogConfig({ ariaLabelledBy: ROTATE_SECRET_TITLE_ID, restoreFocus: trigger ?? true, data: app }),
+    ).closed;
+  }
+
+  /** Asks, then revokes a connected app's access (L2-129); emits true when it was revoked. */
+  openRevokeAccess(app: ConnectedApp, trigger?: HTMLElement): Observable<boolean | undefined> {
+    return this.dialog.open<boolean>(
+      RevokeAccessDialog,
+      modalDialogConfig({ ariaLabelledBy: REVOKE_ACCESS_TITLE_ID, restoreFocus: trigger ?? true, data: app }),
     ).closed;
   }
 }

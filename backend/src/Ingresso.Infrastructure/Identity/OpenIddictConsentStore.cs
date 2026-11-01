@@ -7,7 +7,8 @@ namespace Ingresso.Infrastructure.Identity;
 
 /// <summary>Approvals as permanent OpenIddict authorizations; first-party as the implicit consent type (ADR 0018).</summary>
 public sealed class OpenIddictConsentStore(
-    IOpenIddictApplicationManager applications, IOpenIddictAuthorizationManager authorizations, IOpenIddictScopeManager scopes, IClock clock)
+    IOpenIddictApplicationManager applications, IOpenIddictAuthorizationManager authorizations, IOpenIddictScopeManager scopes,
+    IOpenIddictTokenManager tokens)
     : IConsentStore
 {
     public async Task<ConsentApp?> FindAppAsync(string clientId, CancellationToken cancellationToken)
@@ -76,12 +77,96 @@ public sealed class OpenIddictConsentStore(
             Subject = userId.ToString(),
             Status = Statuses.Valid,
             Type = AuthorizationTypes.Permanent,
-            CreationDate = clock.UtcNow,
+            // OpenIddict's own clock and whole seconds, as it dates tokens, so "approved" and "last used" compare (ADR 0019).
+            CreationDate = WholeSeconds(TimeProvider.System.GetUtcNow()),
         };
         descriptor.Scopes.UnionWith(scopes);
         var approval = await authorizations.CreateAsync(descriptor, cancellationToken);
         return (await authorizations.GetIdAsync(approval, cancellationToken))!;
     }
+
+    public async Task<IReadOnlyList<ConnectedApp>> ListConnectedAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        // The person's authorizations, by app: approvals make an app connected; every authorization's tokens count as use.
+        var byApp = new Dictionary<string, List<object>>(StringComparer.Ordinal);
+        await foreach (var authorization in authorizations.FindBySubjectAsync(userId.ToString(), cancellationToken))
+        {
+            if (await authorizations.GetApplicationIdAsync(authorization, cancellationToken) is { } appId)
+            {
+                (byApp.TryGetValue(appId, out var list) ? list : byApp[appId] = []).Add(authorization);
+            }
+        }
+
+        var connected = new List<ConnectedApp>();
+        foreach (var (appId, owned) in byApp)
+        {
+            var approvals = new List<object>();
+            foreach (var authorization in owned)
+            {
+                if (await authorizations.HasStatusAsync(authorization, Statuses.Valid, cancellationToken)
+                    && await authorizations.HasTypeAsync(authorization, AuthorizationTypes.Permanent, cancellationToken))
+                {
+                    approvals.Add(authorization);
+                }
+            }
+
+            if (approvals.Count == 0 || await applications.FindByIdAsync(appId, cancellationToken) is not { } app)
+            {
+                continue;
+            }
+
+            var approvedScopes = new HashSet<string>(StringComparer.Ordinal);
+            var approvedAt = DateTimeOffset.MaxValue;
+            foreach (var approval in approvals)
+            {
+                approvedScopes.UnionWith(await authorizations.GetScopesAsync(approval, cancellationToken));
+                approvedAt = Min(approvedAt, await authorizations.GetCreationDateAsync(approval, cancellationToken) ?? approvedAt);
+            }
+
+            DateTimeOffset? lastUsed = null;
+            foreach (var authorization in owned)
+            {
+                await foreach (var token in tokens.FindByAuthorizationIdAsync((await authorizations.GetIdAsync(authorization, cancellationToken))!, cancellationToken))
+                {
+                    if (await tokens.GetCreationDateAsync(token, cancellationToken) is { } created && (lastUsed is null || created > lastUsed))
+                    {
+                        lastUsed = created;
+                    }
+                }
+            }
+
+            connected.Add(new ConnectedApp(
+                (await applications.GetClientIdAsync(app, cancellationToken))!,
+                (await applications.GetDisplayNameAsync(app, cancellationToken)) ?? "",
+                [.. approvedScopes], approvedAt, lastUsed));
+        }
+
+        return connected;
+    }
+
+    public async Task<bool> RevokeAsync(Guid userId, string clientId, CancellationToken cancellationToken)
+    {
+        if (await applications.FindByClientIdAsync(clientId, cancellationToken) is not { } app
+            || await applications.GetIdAsync(app, cancellationToken) is not { } appId)
+        {
+            return false;
+        }
+
+        var connected = false;
+        await foreach (var authorization in authorizations.FindAsync(userId.ToString(), appId, status: null, type: null, scopes: null, cancellationToken))
+        {
+            connected |= await authorizations.HasStatusAsync(authorization, Statuses.Valid, cancellationToken)
+                && await authorizations.HasTypeAsync(authorization, AuthorizationTypes.Permanent, cancellationToken);
+            await authorizations.TryRevokeAsync(authorization, cancellationToken);
+            await tokens.RevokeByAuthorizationIdAsync((await authorizations.GetIdAsync(authorization, cancellationToken))!, cancellationToken);
+        }
+
+        return connected;
+    }
+
+    private static DateTimeOffset WholeSeconds(DateTimeOffset value) => value.AddTicks(-(value.Ticks % TimeSpan.TicksPerSecond));
+
+    private static DateTimeOffset Min(DateTimeOffset a, DateTimeOffset b) => a < b ? a : b;
 
     public async Task<IReadOnlyDictionary<string, string>> ApiNamesAsync(IReadOnlyCollection<string> names, CancellationToken cancellationToken)
     {

@@ -1,0 +1,24 @@
+@startuml
+title UML sequence behaviour — Revoke, then the app asks again
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Person" as person
+participant "Settings" as web
+participant "ConnectedAppsController" as ctl
+participant "OpenIddict stores" as oi
+participant "Sample app" as app
+person -> web : Open Settings
+web -> ctl : GET /api/connected-apps
+ctl --> web : Sample app, scopes, approved, last used
+person -> web : Revoke, then Revoke access
+web -> ctl : DELETE /api/connected-apps/{clientId} (X-XSRF-TOKEN)
+ctl -> oi : revoke authorizations and their tokens
+ctl --> web : 204
+web --> person : "Access revoked" toast
+app -> oi : refresh_token grant
+oi --> app : invalid_grant
+person -> app : Sign in with ingresso
+app -> web : /connect/authorize → /consent
+@enduml

@@ -19,6 +19,7 @@ test.describe('Manage registered apps, visually', () => {
     const settings = new SettingsPage(page);
     await signInAsAdministrator(page);
     await settings.showMockProfile();
+    await settings.showMockConnectedApps();
     await settings.showMockApps();
     await new RegisterAppDialog(page).showMockApis();
     await settings.open();

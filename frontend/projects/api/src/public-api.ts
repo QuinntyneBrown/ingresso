@@ -9,5 +9,6 @@ export * from './lib/auth/auth-api';
 export * from './lib/clients/clients-api';
 export * from './lib/profile/profile-api';
 export * from './lib/consent/consent-api';
+export * from './lib/connected-apps/connected-apps-api';
 export * from './lib/tiles/tile';
 export * from './lib/tiles/tiles-api';

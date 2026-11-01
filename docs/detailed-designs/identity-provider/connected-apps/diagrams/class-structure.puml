@@ -1,0 +1,32 @@
+@startuml
+title Class structure — Connected apps
+hide empty members
+class GetConnectedAppsQuery <<record>>
+class RevokeConnectedAppCommand <<record>> {
+  ClientId : string
+}
+class ConnectedAppDto <<record>> {
+  ClientId : string
+  Name : string
+  Scopes : ConsentScope[]
+  ApprovedAt : DateTimeOffset
+  LastUsedAt : DateTimeOffset?
+}
+class ConnectedApp <<record>> {
+  ClientId : string
+  Name : string
+  Scopes : string[]
+  ApprovedAt : DateTimeOffset
+  LastUsedAt : DateTimeOffset?
+}
+interface IConsentStore {
+  ListConnectedAsync(userId)
+  RevokeAsync(userId, clientId) : bool
+}
+class OpenIddictConsentStore
+GetConnectedAppsQuery ..> ConnectedAppDto : returns
+GetConnectedAppsQuery ..> IConsentStore
+RevokeConnectedAppCommand ..> IConsentStore
+IConsentStore ..> ConnectedApp
+OpenIddictConsentStore ..|> IConsentStore
+@enduml

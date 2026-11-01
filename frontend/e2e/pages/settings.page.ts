@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { TODAY } from '../fixtures';
 
 export type ThemeChoice = 'Match my system' | 'Light' | 'Dark';
 
@@ -13,6 +14,13 @@ export class SettingsPage {
   readonly profileFailed: Locator;
   readonly profileTryAgain: Locator;
   readonly backToApps: Locator;
+  /** Connected apps: the apps the person approved (journey 24). */
+  readonly connectedApps: Locator;
+  readonly connectedRows: Locator;
+  readonly noConnectedApps: Locator;
+  readonly connectedLoading: Locator;
+  readonly connectedFailed: Locator;
+  readonly connectedTryAgain: Locator;
   readonly apps: Locator;
   readonly appRows: Locator;
   readonly registerApp: Locator;
@@ -30,7 +38,15 @@ export class SettingsPage {
     this.profileFailed = this.profile.getByRole('alert');
     this.profileTryAgain = this.profile.getByRole('button', { name: 'Try again' });
     this.backToApps = page.getByRole('link', { name: 'Back to your apps' });
-    this.apps = page.getByRole('region', { name: 'Apps' });
+    this.connectedApps = page.getByRole('region', { name: 'Connected apps', exact: true });
+    this.connectedRows = this.connectedApps
+      .getByRole('list', { name: 'Connected apps' })
+      .getByRole('listitem');
+    this.noConnectedApps = this.connectedApps.getByRole('heading', { name: 'No connected apps' });
+    this.connectedLoading = this.connectedApps.locator('[aria-busy="true"]');
+    this.connectedFailed = this.connectedApps.getByRole('alert');
+    this.connectedTryAgain = this.connectedApps.getByRole('button', { name: 'Try again' });
+    this.apps = page.getByRole('region', { name: 'Apps', exact: true });
     this.appRows = this.apps.getByRole('list', { name: 'Registered apps' }).getByRole('listitem');
     this.registerApp = this.apps.getByRole('button', { name: 'Register an app' }).first();
     this.noApps = this.apps.getByRole('heading', { name: 'No apps yet' });
@@ -59,6 +75,72 @@ export class SettingsPage {
       route.request().method() === 'GET'
         ? route.fulfill({ json: { displayName, email: 'maya@northwind.com', emailVerified: true } })
         : route.fallback(),
+    );
+  }
+
+  /** A connected app's row, by its name. */
+  connectedApp(name: string): Locator {
+    return this.connectedRows.filter({ has: this.page.getByText(name, { exact: true }) });
+  }
+
+  /** The Revoke button on a connected app's row. */
+  revokeAccessFor(name: string): Locator {
+    return this.connectedApps.getByRole('button', { name: `Revoke ${name}’s access` });
+  }
+
+  /** Fails the next connected-apps load with a server error. */
+  async failConnectedAppsOnce(): Promise<void> {
+    let pending = true;
+    await this.page.route('**/api/connected-apps', (route) => {
+      if (!pending || route.request().method() !== 'GET') return route.fallback();
+      pending = false;
+      return route.fulfill({ status: 500, json: {} });
+    });
+  }
+
+  /** Keeps the connected-apps load waiting, to show the loading state. */
+  async holdConnectedApps(): Promise<void> {
+    await this.page.route('**/api/connected-apps', (route) =>
+      route.request().method() === 'GET' ? undefined : route.fallback(),
+    );
+  }
+
+  /**
+   * Answers the connected apps with the mocks' two apps (or none), so screenshots don't depend on the database or
+   * the date: "Last used" is two hours and five days before now.
+   */
+  async showMockConnectedApps(apps: 'mocks' | 'none' = 'mocks'): Promise<void> {
+    const hoursAgo = (hours: number) => new Date(TODAY.getTime() - hours * 3600_000).toISOString();
+    const title = (scope: string, text: string) => ({ scope, title: text });
+    const json =
+      apps === 'none'
+        ? []
+        : [
+            {
+              clientId: 'notes',
+              name: 'Notes',
+              scopes: [
+                title('email', 'See your email address'),
+                title('notes.read', 'Use Notes API for you'),
+              ],
+              approvedAt: '2026-09-03T10:00:00Z',
+              lastUsedAt: hoursAgo(5 * 24),
+            },
+            {
+              clientId: 'ingresso-sample-app',
+              name: 'Sample app',
+              scopes: [
+                title('profile', 'See your display name'),
+                title('email', 'See your email address'),
+                title('sample-api.read', 'Use Sample API for you'),
+                title('offline_access', 'Stay signed in when you’re not using it'),
+              ],
+              approvedAt: '2026-10-12T10:00:00Z',
+              lastUsedAt: hoursAgo(2),
+            },
+          ];
+    await this.page.route('**/api/connected-apps', (route) =>
+      route.request().method() === 'GET' ? route.fulfill({ json }) : route.fallback(),
     );
   }
 

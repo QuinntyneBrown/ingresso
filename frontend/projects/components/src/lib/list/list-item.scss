@@ -58,3 +58,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+:host(.list__item--wrap) .list__meta {
+  white-space: normal;
+}
