@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System context — Connected apps
+Person(person, "Person", "Signs in with ingresso")
+System(ingresso, "ingresso", "Front door and identity provider")
+System_Ext(app, "Published app", "Holds tokens for the person")
+Rel(person, ingresso, "Reviews and revokes connected apps")
+Rel(app, ingresso, "Renews tokens; refused after revoking")
+@enduml

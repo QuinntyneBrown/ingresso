@@ -120,6 +120,9 @@
         "error",
         "success",
         "profile-unset",
+        "connected-empty",
+        "connected-loading",
+        "connected-error",
         "apps",
         "apps-menu",
         "apps-empty",
@@ -389,6 +392,21 @@
       ],
       "opens_from": "settings",
       "requirements": []
+    },
+    {
+      "id": "revoke-access",
+      "kind": "dialog",
+      "title": "Revoke access",
+      "states": [
+        "default",
+        "busy",
+        "error"
+      ],
+      "opens_from": "settings",
+      "requirements": [],
+      "not_applicable": {
+        "invalid": "It has no input; it only confirms."
+      }
     },
     {
       "id": "app-toast",

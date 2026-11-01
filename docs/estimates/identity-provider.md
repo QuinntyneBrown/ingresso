@@ -10,3 +10,4 @@
 | refresh-tokens | 3 days | 100% |
 | share-profile-claims | 3 days | 100% |
 | consent | 4 days | 100% |
+| connected-apps | 3 days | 0% |

@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Connected apps
+Container_Boundary(api, "Ingresso.Api") {
+  Component(ctl, "ConnectedAppsController", "Controller", "GET, DELETE api/connected-apps")
+}
+Container_Boundary(appl, "Ingresso.Application") {
+  Component(list, "GetConnectedAppsQueryHandler", "MediatR handler", "The person's approvals, by app")
+  Component(revoke, "RevokeConnectedAppCommandHandler", "MediatR handler", "Revokes authorizations and tokens")
+  Component(store, "IConsentStore", "Interface", "ListConnectedAsync, RevokeAsync")
+}
+Container_Boundary(infra, "Ingresso.Infrastructure") {
+  Component(oi, "OpenIddictConsentStore", "IConsentStore", "Authorization and token managers")
+}
+Rel(ctl, list, "Sends")
+Rel(ctl, revoke, "Sends")
+Rel(list, store, "Uses")
+Rel(revoke, store, "Uses")
+Rel(oi, store, "Implements")
+@enduml
