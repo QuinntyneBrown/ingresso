@@ -1,0 +1,60 @@
+@startuml
+title Class structure — Activity log
+hide empty members
+class ActivityEvent {
+  Id : long
+  UserId : Guid?
+  ActorId : Guid?
+  Type : ActivityEventType
+  Subject : string
+  OccurredAtUtc : DateTimeOffset
+}
+enum ActivityEventType {
+  SignedIn
+  SignedInToApp
+  AppApproved
+  AppDenied
+  AppAccessRevoked
+  SessionEnded
+  OtherSessionsEnded
+  AppRegistered
+  AppUpdated
+  AppSecretRotated
+  AppDisabled
+  AppEnabled
+  AppDeleted
+  SigningKeyRotated
+}
+enum ActivityCategory {
+  SignIns
+  AppAccess
+  Sessions
+  AppsAndKeys
+}
+interface IActivityLog {
+  Record(type, userId, subject)
+  RecordChange(type, subject)
+}
+class GetActivityQuery <<record>> {
+  Category : ActivityCategory?
+  Before : long?
+}
+class ActivityPageDto <<record>> {
+  Events : IReadOnlyList<ActivityEventDto>
+  Next : long?
+}
+class ActivityEventDto <<record>> {
+  Id : long
+  Type : string
+  Category : string
+  Subject : string
+  Actor : string?
+  OccurredAt : DateTimeOffset
+}
+class PruneActivityCommand <<record>>
+ActivityEvent ..> ActivityEventType
+ActivityEventType ..> ActivityCategory : falls under
+GetActivityQuery ..> ActivityPageDto : returns
+ActivityPageDto o-- ActivityEventDto
+IActivityLog ..> ActivityEvent : adds
+@enduml

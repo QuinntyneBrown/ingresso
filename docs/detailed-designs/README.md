@@ -55,4 +55,5 @@ Each folder holds one vertical feature slice. Its `README.md` traces to the L2 r
 | [Connected apps](identity-provider/connected-apps/README.md) | `L2-128`, `L2-129`, `L2-130`, `L2-131` |
 | [Devices](identity-provider/devices/README.md) | `L2-132`, `L2-133`, `L2-134`, `L2-135` |
 | [Signing keys](identity-provider/signing-keys/README.md) | `L2-136`, `L2-137`, `L2-138`, `L2-139`, `L2-140` |
+| [Activity log](identity-provider/activity-log/README.md) | `L2-141`, `L2-142`, `L2-143`, `L2-144`, `L2-145` |
 | [Stay signed in to an app](identity-provider/refresh-tokens/README.md) | `L2-107`, `L2-108`, `L2-109`, `L2-110`, `L2-111` |

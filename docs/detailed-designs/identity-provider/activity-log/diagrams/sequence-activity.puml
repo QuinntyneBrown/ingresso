@@ -1,0 +1,24 @@
+@startuml
+title UML sequence behaviour — An event is recorded and reviewed
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+actor "Person" as person
+participant "Web app" as web
+participant "ConnectedAppsController" as revoke
+participant "RevokeConnectedAppCommandHandler" as handler
+participant "IActivityLog" as log
+database "Database" as db
+participant "ActivityController" as act
+person -> web : Revoke Calendar's access
+web -> revoke : DELETE /api/connected-apps/calendar
+revoke -> handler : Send
+handler -> log : Record(AppAccessRevoked, person, "Calendar")
+handler -> db : SaveChanges (revocation and event together)
+person -> web : Settings → Activity
+web -> act : GET /api/activity
+act -> db : own events, newest first, 20 per page
+act --> web : events, next
+web --> person : "Revoked Calendar's access · just now"
+@enduml

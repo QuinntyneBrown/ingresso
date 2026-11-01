@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Activity · admin — ingresso mocks</title>
+<meta name="mock:kind" content="page">
+<meta name="mock:screen" content="activity">
+<meta name="mock:state" content="admin">
+<meta name="description" content="Activity, admin state: an administrator also sees changes to registered apps and signing keys.">
+<link rel="icon" href="../../assets/favicon.svg">
+<link rel="stylesheet" href="../../../design-system/tokens/tokens.css">
+<link rel="stylesheet" href="../../../design-system/assets/components.css">
+<link rel="stylesheet" href="../../assets/mock.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="app-header"><div class="app-header__inner">
+  <a class="brand-logo" href="../dashboard/default.html" aria-label="ingresso home"><img class="brand-logo__light" src="../../assets/ingresso-logo.svg" alt="ingresso" height="32"><img class="brand-logo__dark" src="../../assets/ingresso-logo-dark.svg" alt="" height="32"></a>
+  <form class="search app-header__search" role="search">
+    <label class="visually-hidden" for="q">Jump to an app</label>
+    <svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input class="input" id="q" type="search" placeholder="Jump to an app">
+    <kbd class="kbd-hint" aria-hidden="true">/</kbd>
+  </form>
+  <div class="app-header__actions">
+    <button class="btn" type="button" aria-pressed="false"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="btn__label">Edit layout</span></button>
+    <a class="btn btn--primary" href="../directory/default.html"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="btn__label">Add app</span></a>
+    <button class="avatar avatar--ink" type="button" aria-label="Account menu for Maya Reyes" style="border:0;cursor:pointer;">MR</button>
+  </div>
+</div></header><main id="main" class="container container--narrow"><a class="back" href="../settings/default.html"><svg class="icon icon--sm" aria-hidden="true" viewBox="0 0 24 24"><path d="M19 12H5m6-6-6 6 6 6"/></svg>Back to settings</a><section class="intro"><h1>Activity</h1><p class="text-muted">Sign-ins and other security events on your account, newest first. ingresso keeps them for 90 days.</p></section><div class="stack"><div class="cluster" role="group" aria-label="Show"><button class="chip" type="button" aria-pressed="true">All</button><button class="chip" type="button" aria-pressed="false">Sign-ins</button><button class="chip" type="button" aria-pressed="false">App access</button><button class="chip" type="button" aria-pressed="false">Sessions</button><button class="chip" type="button" aria-pressed="false">Apps and keys</button></div><ul class="list card card--flush" aria-label="Activity"><li class="list__item"><div class="list__body"><div class="list__title">Signed in to Sample app</div><div class="list__meta">12 minutes ago</div></div></li><li class="list__item"><div class="list__body"><div class="list__title">Signed in to ingresso</div><div class="list__meta">Chrome on macOS · 15 minutes ago</div></div></li><li class="list__item"><div class="list__body"><div class="list__title">Registered Notes</div><div class="list__meta">By Maya Reyes · 1 hour ago</div></div></li><li class="list__item"><div class="list__body"><div class="list__title">Approved Sample app</div><div class="list__meta">Yesterday</div></div></li><li class="list__item"><div class="list__body"><div class="list__title">Ended the session on Safari on iPhone</div><div class="list__meta">2 days ago</div></div></li><li class="list__item"><div class="list__body"><div class="list__title">Denied Notes</div><div class="list__meta">3 days ago</div></div></li><li class="list__item"><div class="list__body"><div class="list__title">Signed in to ingresso</div><div class="list__meta">Safari on iPhone · 4 days ago</div></div></li><li class="list__item"><div class="list__body"><div class="list__title">Rotated the signing key</div><div class="list__meta">From the CLI · 5 days ago</div></div></li><li class="list__item"><div class="list__body"><div class="list__title">Revoked Calendar’s access</div><div class="list__meta">6 days ago</div></div></li></ul><div class="cluster" style="justify-content:center"><button class="btn" type="button">Show more</button></div></div></main>
+<nav class="mock-bar" aria-label="Mock navigation">
+  <a class="mock-bar__home" href="../../index.html" aria-label="All mocks">⌂</a>
+  <span class="mock-bar__screen">Activity</span>
+  <ul class="mock-bar__states"><li><a href="default.html">default</a></li><li><a href="filtered.html">filtered</a></li><li><a href="empty.html">empty</a></li><li><a href="loading.html">loading</a></li><li><a href="error.html">error</a></li><li><a href="admin.html" aria-current="page">admin</a></li></ul>
+  <button type="button" data-theme-toggle aria-pressed="false">☾ Dark</button>
+  <button type="button" data-chrome-toggle aria-label="Hide mock chrome">×</button>
+</nav>
+<script src="../../assets/mock.js"></script>
+</body>
+</html>

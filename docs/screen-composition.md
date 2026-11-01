@@ -90,6 +90,8 @@ behind their backdrop; only the dialog is mapped.
   with a Try again `Button` on error, a muted line (“You’re not signed in anywhere else.”) when only this device is
   signed in, and a success toast after ending sessions (“Session ended”, “<device> is signed out.”; “Signed out of
   other devices”, “Only this device is signed in now.”). Local: the card's lead line.
+- Activity (journey 27, every state; everyone): a `Card` with a secondary `Button` (View activity) that links to
+  `/settings/activity`. Local: the card's header row.
 - Apps (journey 19, `apps`, `apps-empty`, `apps-loading`, `apps-error`; administrators only): a `Card` with a
   primary `Button` (Register an app), `List` (`surface`) of `ListItem` (`title` = app name, `meta` = type and
   client ID), `EmptyState` with a primary `Button` when there are none, `Skeleton` while loading, and a danger
@@ -98,6 +100,17 @@ behind their backdrop; only the dialog is mapped.
   (Disabled) when the app is disabled and a ghost icon `Button` (`more`, “Actions for <name>”) with
   `MenuTrigger` + `Menu` + `MenuItem`: Edit, Rotate secret (confidential apps), Disable or Enable, a
   `MenuDivider`, and Delete (`kind="danger"`). Changes are confirmed with `ToastService` toasts.
+
+### Activity — `/settings/activity` (`pages/activity`: default, filtered, empty, loading, error, admin)
+
+- Library: `Link` (`variant="back"`, Back to settings), `Chip` (one per type filter, single choice through
+  `pressed`: All, Sign-ins, App access, Sessions, and Apps and keys for administrators), `List` (`surface`, labelled
+  “Activity”) of `ListItem`s (`title` = what happened, such as “Signed in to Sample app” or “Revoked Calendar’s
+  access”; `meta` = where or by whom, when known, · the relative time, such as “Chrome on macOS · 15 minutes ago”,
+  “By Maya Reyes · 1 hour ago” or “From the CLI · 5 days ago”), a secondary `Button` (Show more) under the list while
+  there are older events, `EmptyState` (no action) when there are none, `Skeleton` while loading, and a danger
+  `Alert` with a Try again `Button` on error.
+- Local: page intro; the chip row (a labelled group, “Show”); centring the Show more button.
 
 ### Brand guide — `/brand` (`pages/brand`: default, loading, error)
 

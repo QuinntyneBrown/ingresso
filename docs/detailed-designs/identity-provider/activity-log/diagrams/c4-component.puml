@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Activity log
+Container_Boundary(api, "Ingresso.Api") {
+  Component(ctrl, "ActivityController", "Controller", "GET /api/activity")
+  Component(prune, "TokenPruningService", "Hosted service", "Sends PruneActivityCommand daily")
+}
+Container_Boundary(appl, "Ingresso.Application") {
+  Component(log, "IActivityLog", "Service", "Adds events to the unit of work")
+  Component(query, "GetActivityQueryHandler", "MediatR handler", "Own events, plus app and key events for administrators")
+  Component(handlers, "Existing handlers", "MediatR handlers", "Sign-in, consent, sessions, clients, keys")
+  Component(pruner, "PruneActivityCommandHandler", "MediatR handler", "Deletes events past retention")
+}
+Rel(ctrl, query, "Sends")
+Rel(prune, pruner, "Sends")
+Rel(handlers, log, "Record")
+@enduml
